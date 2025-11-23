@@ -481,17 +481,28 @@ router.get('/linuxdo/callback', async (request, response) => {
             }
         }
 
-        // Linux.do 的特殊情况：access_token 本身可能就是 JWT，包含用户信息
+        // Linux.do 的特殊情况：access_token 本身可能就是 JWT
+        // 但需要验证是否包含完整的用户信息（username/email），而不仅仅是认证信息（sub）
+        let jwtUserData = null;
         if (!userData && tokenData.access_token && tokenData.access_token.split('.').length === 3) {
             const decodedToken = decodeJWT(tokenData.access_token);
             if (decodedToken && decodedToken.sub) {
                 console.log('从 access_token 解码的数据:', JSON.stringify(decodedToken, null, 2));
-                userData = decodedToken;
+                // 只有当 JWT 包含实际用户信息（username/email/name）时才使用
+                if (decodedToken.username || decodedToken.email || decodedToken.name || decodedToken.preferred_username) {
+                    console.log('✓ JWT 包含用户信息，直接使用');
+                    userData = decodedToken;
+                } else {
+                    console.log('⚠ JWT 只包含认证信息，需要调用 API 获取用户详情');
+                    jwtUserData = decodedToken; // 保存 JWT 数据供后续使用
+                }
             }
         }
 
-        // 最后才尝试使用userinfo端点（可能被Cloudflare拦截）
+        // 如果没有获取到完整用户信息，尝试使用 userinfo 端点
         if (!userData && tokenData.access_token) {
+            console.log('🔍 开始尝试通过 API 端点获取用户信息...');
+
             // 尝试多个可能的端点
             const endpoints = [
                 oauthConfig.linuxdo.userInfoUrl,
@@ -504,7 +515,7 @@ router.get('/linuxdo/callback', async (request, response) => {
                 if (userData) break; // 如果已经获取到数据，跳出循环
 
                 try {
-                    console.log('尝试访问端点:', endpoint);
+                    console.log(`\n📡 尝试访问端点: ${endpoint}`);
                     const userResponse = await fetch(endpoint, {
                         headers: {
                             'Authorization': `Bearer ${String(tokenData.access_token)}`,
@@ -513,32 +524,40 @@ router.get('/linuxdo/callback', async (request, response) => {
                         },
                     });
 
-                    console.log(`端点 ${endpoint} 响应状态:`, userResponse.status, userResponse.statusText);
+                    console.log(`   响应状态: ${userResponse.status} ${userResponse.statusText}`);
 
                     // 检查用户信息响应状态
                     if (userResponse.ok) {
                         const contentType = userResponse.headers.get('content-type');
+                        console.log(`   Content-Type: ${contentType}`);
+
                         if (contentType && contentType.includes('application/json')) {
                             /** @type {any} */
                             const data = await userResponse.json();
-                            console.log(`从端点 ${endpoint} 获取的完整数据:`, JSON.stringify(data, null, 2));
+                            console.log(`   ✅ 获取到 JSON 数据:`, JSON.stringify(data, null, 2));
 
-                            // 检查数据是否包含有效的用户信息
-                            if (data && (data.username || data.preferred_username || data.name || data.sub || data.id)) {
+                            // 检查数据是否包含有效的用户信息（必须有 username 或 id）
+                            if (data && (data.username || data.id)) {
                                 userData = data;
-                                console.log('✓ 成功从此端点获取用户数据');
+                                console.log(`   🎉 成功！从端点 ${endpoint} 获取到完整用户数据`);
                                 break;
+                            } else {
+                                console.log(`   ⚠ 数据不完整，缺少 username 或 id 字段`);
                             }
                         } else {
-                            console.log(`端点 ${endpoint} 返回的不是 JSON:`, contentType);
+                            console.log(`   ❌ 返回的不是 JSON 格式`);
                         }
                     } else {
                         const errorText = await userResponse.text();
-                        console.error(`端点 ${endpoint} 请求失败:`, errorText.substring(0, 200));
+                        console.error(`   ❌ 请求失败:`, errorText.substring(0, 200));
                     }
                 } catch (error) {
-                    console.error(`访问端点 ${endpoint} 时出错:`, error.message);
+                    console.error(`   ❌ 访问端点时出错:`, error.message);
                 }
+            }
+
+            if (!userData) {
+                console.log('\n❌ 所有端点尝试完毕，未能获取用户信息');
             }
         }
 
