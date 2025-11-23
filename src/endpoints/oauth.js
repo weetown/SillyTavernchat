@@ -490,6 +490,18 @@ router.get('/linuxdo/callback', async (request, response) => {
             return response.status(400).send('Failed to get user information');
         }
 
+        // 调试日志：输出获取到的用户数据
+        console.log('Linux.do OAuth 用户数据:', JSON.stringify({
+            sub: userData.sub,
+            id: userData.id,
+            username: userData.username,
+            preferred_username: userData.preferred_username,
+            name: userData.name,
+            email: userData.email,
+            picture: userData.picture,
+            avatar_url: userData.avatar_url,
+        }, null, 2));
+
         // 处理OAuth登录
         await handleOAuthLogin(request, response, 'linuxdo', userData);
     } catch (error) {
@@ -523,9 +535,10 @@ async function handleOAuthLogin(request, response, provider, userData) {
                 break;
             case 'linuxdo':
                 userId = `linuxdo_${userData.sub || userData.id}`;
-                username = userData.preferred_username || userData.name || `linuxdo_user_${userData.sub || userData.id}`;
+                // Discourse 返回的字段：username (主要), preferred_username (OIDC), name (备用)
+                username = userData.username || userData.preferred_username || userData.name || `linuxdo_user_${userData.sub || userData.id}`;
                 email = userData.email;
-                avatar = userData.picture;
+                avatar = userData.picture || userData.avatar_url;
                 break;
             default:
                 throw new Error('Unknown OAuth provider');
