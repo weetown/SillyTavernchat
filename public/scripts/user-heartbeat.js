@@ -8,7 +8,8 @@ class UserHeartbeat {
         this.heartbeatInterval = null;
         this.isActive = false;
         this.lastActivity = Date.now();
-        this.heartbeatIntervalMs = 2 * 60 * 1000; // 2分钟
+        this.heartbeatIntervalMs = 2 * 60 * 1000; // 2分钟（页面可见时）
+        this.hiddenHeartbeatIntervalMs = 5 * 60 * 1000; // 5分钟（页面隐藏时）
         this.inactivityThreshold = 5 * 60 * 1000; // 5分钟无活动则暂停心跳
 
         // 绑定页面活动监听器
@@ -26,22 +27,36 @@ class UserHeartbeat {
      */
     start() {
         if (this.heartbeatInterval) {
-            return; // 已经在运行
+            // 如果已经在运行，立即发送一次心跳以确保状态更新
+            this.sendHeartbeat();
+            return;
         }
 
         console.log('User heartbeat started');
         this.isActive = true;
         this.lastActivity = Date.now();
 
-        // 延迟发送第一次心跳，确保CSRF token已经初始化
+        // 立即发送第一次心跳，确保用户状态及时更新（特别是页面重新打开时）
         setTimeout(() => {
             this.sendHeartbeat();
-        }, 1000);
+        }, 500);
 
         // 设置定时心跳
+        this.scheduleHeartbeat();
+    }
+
+    /**
+     * 根据页面可见性调度心跳
+     */
+    scheduleHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+        }
+
+        const interval = document.hidden ? this.hiddenHeartbeatIntervalMs : this.heartbeatIntervalMs;
         this.heartbeatInterval = setInterval(() => {
             this.checkAndSendHeartbeat();
-        }, this.heartbeatIntervalMs);
+        }, interval);
     }
 
     /**
@@ -63,18 +78,14 @@ class UserHeartbeat {
         const now = Date.now();
         const timeSinceLastActivity = now - this.lastActivity;
 
-        // 如果用户长时间无活动，暂停心跳
-        if (timeSinceLastActivity > this.inactivityThreshold) {
+        // 如果用户长时间无活动，暂停心跳（但页面隐藏时仍然发送，因为用户可能只是切换了应用）
+        if (!document.hidden && timeSinceLastActivity > this.inactivityThreshold) {
             console.log('User inactive, skipping heartbeat');
             return;
         }
 
-        // 如果页面不可见，也暂停心跳
-        if (document.hidden) {
-            console.log('Page hidden, skipping heartbeat');
-            return;
-        }
-
+        // 页面隐藏时仍然发送心跳，但频率较低（已在scheduleHeartbeat中处理）
+        // 这样可以确保即使用户用任务管理器划掉页面，心跳仍然会继续
         this.sendHeartbeat();
     }
 
@@ -186,15 +197,19 @@ class UserHeartbeat {
     bindVisibilityListeners() {
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                // 页面隐藏时暂停心跳活动记录
-                this.lastActivity = Date.now() - this.inactivityThreshold + 60000; // 留1分钟缓冲
+                // 页面隐藏时调整心跳频率，但不停止
+                this.scheduleHeartbeat();
             } else {
                 // 页面重新可见时恢复活动
                 this.recordActivity();
 
-                // 页面重新可见时，立即发送一次心跳
+                // 页面重新可见时，立即发送一次心跳并调整频率
                 if (this.isActive) {
                     this.sendHeartbeat();
+                    this.scheduleHeartbeat();
+                } else {
+                    // 如果心跳已停止，重新启动
+                    this.start();
                 }
             }
         });
@@ -240,9 +255,9 @@ function initUserHeartbeat() {
     return userHeartbeat;
 }
 
-/**
- * 启动用户心跳（仅在用户已登录时）
- */
+    /**
+     * 启动用户心跳（仅在用户已登录时）
+     */
 function startUserHeartbeat() {
     // 检查用户是否已登录 - 多种方式检测
     const checkLoginStatus = () => {
@@ -259,6 +274,10 @@ function startUserHeartbeat() {
         if (isLoggedIn) {
             const heartbeat = initUserHeartbeat();
             heartbeat.start();
+            // 页面加载时立即发送心跳，确保状态及时更新
+            setTimeout(() => {
+                heartbeat.sendHeartbeat();
+            }, 1000);
             return true;
         } else if (attempt < 5) {
             // 最多重试5次，每次延迟递增
@@ -303,6 +322,10 @@ if (typeof window !== 'undefined') {
             console.log('Force starting user heartbeat...');
             const heartbeat = initUserHeartbeat();
             heartbeat.start();
+            // 强制启动时立即发送心跳
+            setTimeout(() => {
+                heartbeat.sendHeartbeat();
+            }, 500);
             return heartbeat;
         },
     };

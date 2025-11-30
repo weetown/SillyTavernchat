@@ -299,8 +299,9 @@ class SystemMonitor {
      */
     getOnlineUserCount() {
         const now = Date.now();
-        const heartbeatTimeout = 5 * 60 * 1000;
-        const inactiveTimeout = 15 * 60 * 1000;
+        const heartbeatTimeout = 5 * 60 * 1000; // 5分钟心跳超时
+        const inactiveTimeout = 15 * 60 * 1000; // 15分钟活动超时
+        const recentLoginThreshold = 5 * 60 * 1000; // 5分钟内登录的用户即使无心跳也认为在线
         let onlineCount = 0;
 
         for (const [, stats] of this.userLoadStats) {
@@ -308,14 +309,25 @@ class SystemMonitor {
 
             const lastActivity = stats.lastActivity || 0;
             const lastHeartbeat = stats.lastHeartbeat || 0;
+            const lastSessionTime = stats.lastSessionTime || 0;
             const timeSinceLastActivity = now - lastActivity;
             const timeSinceLastHeartbeat = lastHeartbeat ? now - lastHeartbeat : null;
+            const timeSinceLastSession = now - lastSessionTime;
 
-            const hasRecentHeartbeat = timeSinceLastHeartbeat !== null && timeSinceLastHeartbeat <= heartbeatTimeout;
-            const hasRecentActivity = timeSinceLastActivity <= inactiveTimeout;
+            // 如果用户标记为在线
+            if (stats.isOnline) {
+                // 有最近的心跳（5分钟内）
+                const hasRecentHeartbeat = timeSinceLastHeartbeat !== null && timeSinceLastHeartbeat <= heartbeatTimeout;
 
-            if (stats.isOnline && (hasRecentHeartbeat || hasRecentActivity)) {
-                onlineCount++;
+                // 有最近的活动（15分钟内）
+                const hasRecentActivity = timeSinceLastActivity <= inactiveTimeout;
+
+                // 最近登录的用户（5分钟内），即使没有心跳也认为在线（可能是刚登录，心跳还没发送）
+                const isRecentLogin = timeSinceLastSession <= recentLoginThreshold;
+
+                if (hasRecentHeartbeat || hasRecentActivity || isRecentLogin) {
+                    onlineCount++;
+                }
             }
         }
 
@@ -534,33 +546,37 @@ class SystemMonitor {
 
         const now = Date.now();
 
-        if (this.userLoadStats.has(userHandle)) {
-            const userStats = this.userLoadStats.get(userHandle);
+        // 如果用户不存在，创建新记录（可能是登录时调用但记录还未创建）
+        if (!this.userLoadStats.has(userHandle)) {
+            this.recordUserLogin(userHandle, {
+                userName: options.userName || userHandle,
+            });
+        }
 
-            // 记录活动类型
-            const activityType = options.isHeartbeat ? 'heartbeat' : 'request';
+        const userStats = this.userLoadStats.get(userHandle);
+        if (!userStats) return;
 
-            // 更新最后活动时间
-            userStats.lastActivity = now;
-            userStats.lastHeartbeat = options.isHeartbeat ? now : userStats.lastHeartbeat;
-            userStats.isOnline = true;
+        // 记录活动类型
+        const activityType = options.isHeartbeat ? 'heartbeat' : 'request';
 
-            // 如果用户之前被标记为离线，重新开始会话
-            if (!userStats.currentSessionStart) {
-                userStats.currentSessionStart = now;
-                userStats.sessionCount++;
-                console.log(`User ${userHandle} session resumed (${activityType})`);
-            }
+        // 更新最后活动时间
+        userStats.lastActivity = now;
+        if (options.isHeartbeat) {
+            userStats.lastHeartbeat = now;
+            userStats.lastHeartbeatTime = now;
+        }
+        userStats.isOnline = true;
 
-            // 更新用户名
-            if (options.userName && options.userName !== userStats.userName) {
-                userStats.userName = options.userName;
-            }
+        // 如果用户之前被标记为离线，重新开始会话
+        if (!userStats.currentSessionStart) {
+            userStats.currentSessionStart = now;
+            userStats.sessionCount++;
+            console.log(`User ${userHandle} session resumed (${activityType})`);
+        }
 
-            // 记录活动日志（可选，用于调试）
-            if (options.isHeartbeat) {
-                userStats.lastHeartbeatTime = now;
-            }
+        // 更新用户名
+        if (options.userName && options.userName !== userStats.userName) {
+            userStats.userName = options.userName;
         }
     }
 
@@ -571,28 +587,35 @@ class SystemMonitor {
         const now = Date.now();
         const heartbeatTimeout = 5 * 60 * 1000; // 5分钟没有心跳认为可能离线
         const inactiveTimeout = 15 * 60 * 1000; // 15分钟没有任何活动认为离线
+        const recentLoginThreshold = 5 * 60 * 1000; // 5分钟内登录的用户不标记为离线
 
         for (const [userHandle, userStats] of this.userLoadStats.entries()) {
             if (userStats.isOnline && userStats.currentSessionStart) {
                 const timeSinceLastActivity = now - userStats.lastActivity;
-                const timeSinceLastHeartbeat = userStats.lastHeartbeat ? now - userStats.lastHeartbeat : timeSinceLastActivity;
+                const timeSinceLastSession = now - userStats.lastSessionTime;
+                const timeSinceLastHeartbeat = userStats.lastHeartbeat ? now - userStats.lastHeartbeat : null;
+
+                // 如果用户最近登录（5分钟内），不标记为离线（可能是刚登录，心跳还没发送）
+                if (timeSinceLastSession <= recentLoginThreshold) {
+                    continue;
+                }
 
                 // 智能离线检测逻辑
                 let shouldMarkOffline = false;
                 let reason = '';
 
                 // 如果有心跳记录，优先使用心跳超时
-                if (userStats.lastHeartbeat && timeSinceLastHeartbeat > heartbeatTimeout) {
+                if (timeSinceLastHeartbeat !== null && timeSinceLastHeartbeat > heartbeatTimeout) {
                     // 心跳超时，但还要检查是否有其他活动
-                    if (timeSinceLastActivity > heartbeatTimeout) {
+                    if (timeSinceLastActivity > inactiveTimeout) {
                         shouldMarkOffline = true;
-                        reason = `heartbeat timeout (${Math.floor(timeSinceLastHeartbeat / 60000)}min)`;
+                        reason = `heartbeat timeout (${Math.floor(timeSinceLastHeartbeat / 60000)}min) and no activity`;
                     }
                 }
                 // 如果没有心跳记录，使用传统的活动超时
-                else if (!userStats.lastHeartbeat && timeSinceLastActivity > inactiveTimeout) {
+                else if (timeSinceLastHeartbeat === null && timeSinceLastActivity > inactiveTimeout) {
                     shouldMarkOffline = true;
-                    reason = `activity timeout (${Math.floor(timeSinceLastActivity / 60000)}min)`;
+                    reason = `no heartbeat and activity timeout (${Math.floor(timeSinceLastActivity / 60000)}min)`;
                 }
                 // 如果有心跳但总活动时间过长，也认为离线
                 else if (timeSinceLastActivity > inactiveTimeout) {
@@ -663,15 +686,28 @@ class SystemMonitor {
         // 计算在线状态描述
         let onlineStatusText = '离线';
         if (userStats.isOnline) {
+            const timeSinceLastActivity = currentTime - userStats.lastActivity;
+            const timeSinceLastSession = currentTime - userStats.lastSessionTime;
+            const recentLoginThreshold = 5 * 60 * 1000; // 5分钟内登录
+            const activityTimeout = 15 * 60 * 1000; // 15分钟活动超时
+
             if (userStats.lastHeartbeat) {
                 const heartbeatAge = currentTime - userStats.lastHeartbeat;
                 if (heartbeatAge < 5 * 60 * 1000) { // 5分钟内有心跳
+                    onlineStatusText = '在线';
+                } else if (timeSinceLastActivity <= activityTimeout) {
+                    // 心跳超时但有最近活动，仍认为在线
                     onlineStatusText = '在线';
                 } else {
                     onlineStatusText = '可能离线';
                 }
             } else {
-                onlineStatusText = '在线（无心跳）';
+                // 没有心跳记录，但如果有最近活动或最近登录，仍认为在线
+                if (timeSinceLastActivity <= activityTimeout || timeSinceLastSession <= recentLoginThreshold) {
+                    onlineStatusText = '在线';
+                } else {
+                    onlineStatusText = '在线（无心跳）';
+                }
             }
         }
 

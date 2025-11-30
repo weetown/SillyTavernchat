@@ -185,6 +185,12 @@ router.post('/login', async (request, response) => {
         // 记录用户登录到系统监控器
         systemMonitor.recordUserLogin(user.handle, { userName: user.name });
 
+        // 立即更新用户活动状态，确保在线状态准确
+        systemMonitor.updateUserActivity(user.handle, {
+            userName: user.name,
+            isHeartbeat: false, // 登录时不是心跳，但会触发活动更新
+        });
+
         console.info('Login successful:', user.handle, 'from', ip, 'at', new Date().toLocaleString());
         return response.json({ handle: user.handle });
     } catch (error) {
