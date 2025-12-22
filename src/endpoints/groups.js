@@ -10,6 +10,20 @@ import { getFileNameValidationFunction } from '../middleware/validateFileName.js
 
 export const router = express.Router();
 
+function getGroupChatBytes(filePath) {
+    const chunkDir = `${filePath}.chunks`;
+    if (fs.existsSync(chunkDir)) {
+        let total = 0;
+        const entries = fs.readdirSync(chunkDir);
+        for (const entry of entries) {
+            const stats = fs.statSync(path.join(chunkDir, entry));
+            total += stats.size;
+        }
+        return total;
+    }
+    return fs.statSync(filePath).size;
+}
+
 router.post('/all', (request, response) => {
     const groups = [];
 
@@ -36,7 +50,7 @@ router.post('/all', (request, response) => {
                 for (const chat of chats) {
                     if (group.chats.includes(path.parse(chat).name)) {
                         const chatStat = fs.statSync(path.join(request.user.directories.groupChats, chat));
-                        chat_size += chatStat.size;
+                        chat_size += getGroupChatBytes(path.join(request.user.directories.groupChats, chat));
                         date_last_chat = Math.max(date_last_chat, chatStat.mtimeMs);
                     }
                 }
@@ -119,6 +133,18 @@ router.post('/delete', getFileNameValidationFunction('id'), async (request, resp
 
                 if (fs.existsSync(pathToFile)) {
                     fs.unlinkSync(pathToFile);
+                    const indexPath = `${pathToFile}.index.json`;
+                    if (fs.existsSync(indexPath)) {
+                        fs.unlinkSync(indexPath);
+                    }
+                    const chunkDir = `${pathToFile}.chunks`;
+                    if (fs.existsSync(chunkDir)) {
+                        const entries = fs.readdirSync(chunkDir);
+                        for (const entry of entries) {
+                            fs.unlinkSync(path.join(chunkDir, entry));
+                        }
+                        fs.rmdirSync(chunkDir);
+                    }
                 }
             }
         }

@@ -79,6 +79,13 @@ import {
     unshallowCharacter,
     chatElement,
     ensureMessageMediaIsArray,
+    getChatPagingPageSize,
+    getChatPagingState,
+    getCachedChatPage,
+    isChatPagingEnabled,
+    resetChatPagingState,
+    setChatPagingState,
+    setCachedChatPage,
 } from '../script.js';
 import { printTagList, createTagMapFromList, applyTagsOnCharacterSelect, tag_map, applyTagsOnGroupSelect } from './tags.js';
 import { FILTER_TYPES, FilterHelper } from './filters.js';
@@ -194,6 +201,28 @@ async function loadGroupChat(chatId) {
     return [];
 }
 
+async function loadGroupChatPage(chatId, { before = null, limit = null } = {}) {
+    const payload = { id: chatId };
+    if (before !== null && before !== undefined) {
+        payload.before = before;
+    }
+    if (limit !== null && limit !== undefined) {
+        payload.limit = limit;
+    }
+
+    const response = await fetch('/api/chats/group/get-range', {
+        method: 'POST',
+        headers: getRequestHeaders(),
+        body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+        return await response.json();
+    }
+
+    return { messages: [], cursor: 0, hasMore: false };
+}
+
 async function validateGroup(group) {
     if (!group) return;
 
@@ -237,7 +266,39 @@ export async function getGroupChat(groupId, reload = false) {
     await unshallowGroupMembers(groupId);
 
     const chat_id = group.chat_id;
-    const data = await loadGroupChat(chat_id);
+    resetChatPagingState({ isGroup: true });
+    let data = [];
+    if (isChatPagingEnabled()) {
+        const cached = getCachedChatPage({ isGroup: true });
+        if (cached && Array.isArray(cached.messages)) {
+            data = cached.messages;
+            setChatPagingState({
+                active: true,
+                cursor: Number.isFinite(cached.cursor) ? cached.cursor : null,
+                hasMore: Boolean(cached.hasMore),
+                isGroup: true,
+            });
+        } else {
+            const page = await loadGroupChatPage(chat_id, { limit: getChatPagingPageSize() });
+            data = Array.isArray(page?.messages) ? page.messages : [];
+            setChatPagingState({
+                active: true,
+                cursor: Number.isFinite(page?.cursor) ? page.cursor : null,
+                hasMore: Boolean(page?.hasMore),
+                isGroup: true,
+            });
+            setCachedChatPage({
+                isGroup: true,
+                messages: data,
+                header: null,
+                cursor: page?.cursor,
+                hasMore: page?.hasMore,
+            });
+        }
+    } else {
+        data = await loadGroupChat(chat_id);
+        setChatPagingState({ active: false, isGroup: true });
+    }
     const metadata = group.chat_metadata ?? {};
     const freshChat = !metadata.tainted && (!Array.isArray(data) || !data.length);
 
@@ -570,16 +631,30 @@ async function saveGroupChat(groupId, shouldSaveGroup) {
     const group = groups.find(x => x.id == groupId);
     const chat_id = group.chat_id;
     group['date_last_chat'] = Date.now();
-    const response = await fetch('/api/chats/group/save', {
+    const pagingState = getChatPagingState();
+    const useTailSave = pagingState.active && pagingState.isGroup;
+    const response = await fetch(useTailSave ? '/api/chats/group/save-tail' : '/api/chats/group/save', {
         method: 'POST',
         headers: getRequestHeaders(),
-        body: JSON.stringify({ id: chat_id, chat: [...chat] }),
+        body: JSON.stringify(useTailSave
+            ? { id: chat_id, messages: [...chat], before: Number.isFinite(pagingState.cursor) ? pagingState.cursor : 0 }
+            : { id: chat_id, chat: [...chat] }),
     });
 
     if (!response.ok) {
         toastr.error(t`Check the server connection and reload the page to prevent data loss.`, t`Group Chat could not be saved`);
         console.error('Group chat could not be saved', response);
         return;
+    }
+
+    if (useTailSave) {
+        setCachedChatPage({
+            isGroup: true,
+            messages: chat,
+            header: null,
+            cursor: Number.isFinite(pagingState.cursor) ? pagingState.cursor : null,
+            hasMore: Boolean(pagingState.hasMore),
+        });
     }
 
     if (shouldSaveGroup) {

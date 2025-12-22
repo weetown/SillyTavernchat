@@ -621,11 +621,45 @@ export class DataMaidService {
      */
     async #parseChatFile(filePath) {
         try {
+            const indexPath = `${filePath}.index.json`;
+            const chunkDir = `${filePath}.chunks`;
+            if (fs.existsSync(indexPath) || fs.existsSync(chunkDir)) {
+                return await this.#parseChunkedChat(filePath);
+            }
             const content = await fs.promises.readFile(filePath, 'utf-8');
             const chatData = content.split('\n').map(tryParse).filter(Boolean);
             return chatData;
         } catch (error) {
             console.error(`[Data Maid] Error reading chat file ${filePath}:`, error);
+            return [];
+        }
+    }
+
+    async #parseChunkedChat(filePath) {
+        try {
+            const chatData = [];
+            if (fs.existsSync(filePath)) {
+                const headerLine = (await fs.promises.readFile(filePath, 'utf-8')).split('\n')[0] ?? '';
+                const header = tryParse(headerLine);
+                if (header) {
+                    chatData.push(header);
+                }
+            }
+
+            const chunkDir = `${filePath}.chunks`;
+            if (!fs.existsSync(chunkDir)) {
+                return chatData;
+            }
+            const shardFiles = (await fs.promises.readdir(chunkDir)).filter(name => name.endsWith('.jsonl')).sort();
+            for (const shard of shardFiles) {
+                const shardPath = path.join(chunkDir, shard);
+                const shardContent = await fs.promises.readFile(shardPath, 'utf-8');
+                const shardMessages = shardContent.split('\n').map(tryParse).filter(Boolean);
+                chatData.push(...shardMessages);
+            }
+            return chatData;
+        } catch (error) {
+            console.error(`[Data Maid] Error reading chunked chat file ${filePath}:`, error);
             return [];
         }
     }

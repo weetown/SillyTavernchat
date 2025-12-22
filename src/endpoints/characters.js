@@ -33,6 +33,7 @@ const isAndroid = process.platform === 'android';
 // Use shallow character data for the character list
 const useShallowCharacters = !!getConfigValue('performance.lazyLoadCharacters', false, 'boolean');
 const useDiskCache = !!getConfigValue('performance.useDiskCache', true, 'boolean');
+const chatDirStatsCache = new Map();
 
 class DiskCache {
     /**
@@ -343,15 +344,46 @@ const calculateChatSize = (charDir) => {
     let chatSize = 0;
     let dateLastChat = 0;
 
-    if (fs.existsSync(charDir)) {
-        const chats = fs.readdirSync(charDir);
+    if (!fs.existsSync(charDir)) {
+        return { chatSize, dateLastChat };
+    }
+
+    try {
+        const dirStat = fs.statSync(charDir);
+        const cached = chatDirStatsCache.get(charDir);
+        if (cached && cached.dirMtimeMs === dirStat.mtimeMs) {
+            return { chatSize: cached.chatSize, dateLastChat: cached.dateLastChat };
+        }
+
+        const chats = fs.readdirSync(charDir, { withFileTypes: true });
         if (Array.isArray(chats) && chats.length) {
-            for (const chat of chats) {
-                const chatStat = fs.statSync(path.join(charDir, chat));
+            for (const entry of chats) {
+                const entryPath = path.join(charDir, entry.name);
+                if (entry.isDirectory()) {
+                    if (entry.name.endsWith('.jsonl.chunks')) {
+                        const shardFiles = fs.readdirSync(entryPath);
+                        for (const shard of shardFiles) {
+                            const shardStat = fs.statSync(path.join(entryPath, shard));
+                            chatSize += shardStat.size;
+                            dateLastChat = Math.max(dateLastChat, shardStat.mtimeMs);
+                        }
+                    }
+                    continue;
+                }
+
+                const chatStat = fs.statSync(entryPath);
                 chatSize += chatStat.size;
                 dateLastChat = Math.max(dateLastChat, chatStat.mtimeMs);
             }
         }
+
+        chatDirStatsCache.set(charDir, {
+            dirMtimeMs: dirStat.mtimeMs,
+            chatSize,
+            dateLastChat,
+        });
+    } catch (error) {
+        console.warn('Failed to read chat stats for', charDir, error);
     }
 
     return { chatSize, dateLastChat };

@@ -376,6 +376,20 @@ export let name2 = systemUserName;
 /** @type {ChatMessage[]} */
 export let chat = [];
 export let isSwipingAllowed = true; //false when a swipe is in progress, or swiping is blocked.
+const CHAT_PAGE_SIZE_DEFAULT = 20;
+const CHAT_PAGING_MAX_RENDER = isMobile() ? 200 : 400;
+const CHAT_PAGING_ENABLED = true;
+const CHAT_CACHE_TTL_MS = 20_000;
+const chatPagingState = {
+    active: false,
+    enabled: CHAT_PAGING_ENABLED,
+    pageSize: CHAT_PAGE_SIZE_DEFAULT,
+    cursor: null,
+    hasMore: false,
+    isGroup: false,
+    loading: false,
+};
+const chatPageCache = new Map();
 let chatSaveTimeout;
 let importFlashTimeout;
 export let isChatSaving = false;
@@ -507,6 +521,69 @@ export function getCurrentChatId() {
     else if (this_chid !== undefined) {
         return characters[this_chid]?.chat;
     }
+}
+
+export function isChatPagingEnabled() {
+    return chatPagingState.enabled;
+}
+
+export function isChatPagingActive() {
+    return chatPagingState.active;
+}
+
+export function getChatPagingPageSize() {
+    return chatPagingState.pageSize;
+}
+
+export function getChatPagingState() {
+    return { ...chatPagingState };
+}
+
+export function setChatPagingState(nextState = {}) {
+    Object.assign(chatPagingState, nextState);
+}
+
+export function resetChatPagingState({ isGroup = false } = {}) {
+    chatPagingState.active = false;
+    chatPagingState.cursor = null;
+    chatPagingState.hasMore = false;
+    chatPagingState.isGroup = isGroup;
+    chatPagingState.loading = false;
+}
+
+function getChatCacheKey({ isGroup = false } = {}) {
+    if (isGroup) {
+        const groupId = getCurrentChatId();
+        return groupId ? `group:${groupId}` : null;
+    }
+    const avatar = characters[this_chid]?.avatar ?? '';
+    const chatName = characters[this_chid]?.chat ?? '';
+    if (!avatar || !chatName) return null;
+    return `char:${avatar}:${chatName}`;
+}
+
+export function getCachedChatPage({ isGroup = false } = {}) {
+    const key = getChatCacheKey({ isGroup });
+    if (!key) return null;
+    const cached = chatPageCache.get(key);
+    if (!cached) return null;
+    if ((Date.now() - cached.updatedAt) > CHAT_CACHE_TTL_MS) {
+        chatPageCache.delete(key);
+        return null;
+    }
+    return cached;
+}
+
+export function setCachedChatPage({ isGroup = false, messages, header, cursor, hasMore } = {}) {
+    const key = getChatCacheKey({ isGroup });
+    if (!key) return;
+    chatPageCache.set(key, {
+        messages: Array.isArray(messages) ? messages.slice() : [],
+        header: header ?? null,
+        cursor: Number.isFinite(cursor) ? cursor : null,
+        hasMore: Boolean(hasMore),
+        updatedAt: Date.now(),
+    });
 }
 
 export const talkativeness_default = 0.5;
@@ -1408,7 +1485,119 @@ export async function replaceCurrentChat() {
     }
 }
 
+async function fetchChatRange({ before = null, limit = null, isGroup = false } = {}) {
+    const url = isGroup ? '/api/chats/group/get-range' : '/api/chats/get-range';
+    const payload = isGroup ? { id: getCurrentChatId() } : {
+        ch_name: characters[this_chid]?.name,
+        file_name: characters[this_chid]?.chat,
+        avatar_url: characters[this_chid]?.avatar,
+    };
+    payload.limit = Number(limit ?? chatPagingState.pageSize);
+    if (before !== null && before !== undefined) {
+        payload.before = before;
+    }
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: getRequestHeaders(),
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        return null;
+    }
+
+    return await response.json();
+}
+
+function shiftDisplayedMessageIds(offset) {
+    if (!offset) return;
+    chatElement.children('.mes').each((_, element) => {
+        const mesId = Number(element.getAttribute('mesid'));
+        if (!Number.isNaN(mesId)) {
+            element.setAttribute('mesid', String(mesId + offset));
+        }
+    });
+}
+
+async function loadMoreChatMessages(messagesToLoad = null) {
+    if (!chatPagingState.active || !chatPagingState.hasMore || chatPagingState.loading) {
+        return;
+    }
+
+    if (chat.length >= CHAT_PAGING_MAX_RENDER) {
+        toastr.info(t`已达到最大可加载消息数。`, t`加载更多消息`);
+        return;
+    }
+
+    chatPagingState.loading = true;
+    const prevHeight = chatElement.prop('scrollHeight');
+    const isButtonInView = isElementInViewport($('#show_more_messages')[0]);
+
+    try {
+        const data = await fetchChatRange({
+            before: chatPagingState.cursor,
+            limit: messagesToLoad ?? chatPagingState.pageSize,
+            isGroup: chatPagingState.isGroup,
+        });
+
+        if (!data || !Array.isArray(data.messages) || data.messages.length === 0) {
+            chatPagingState.hasMore = false;
+            $('#show_more_messages').remove();
+            return;
+        }
+
+        const newMessages = data.messages;
+        const offset = newMessages.length;
+        chat.unshift(...newMessages);
+        shiftDisplayedMessageIds(offset);
+
+        const insertBeforeId = offset;
+        for (let i = 0; i < newMessages.length; i++) {
+            addOneMessage(newMessages[i], { insertBefore: insertBeforeId, scroll: false, forceId: i, showSwipes: false });
+        }
+
+        chatPagingState.cursor = Number.isFinite(data.cursor) ? data.cursor : chatPagingState.cursor;
+        chatPagingState.hasMore = Boolean(data.hasMore);
+
+        chatElement.find('.mes').removeClass('last_mes');
+        chatElement.find('.mes').last().addClass('last_mes');
+        applyStylePins();
+
+        if (!chatPagingState.hasMore) {
+            $('#show_more_messages').remove();
+        }
+
+        if (isButtonInView) {
+            const newHeight = chatElement.prop('scrollHeight');
+            chatElement.scrollTop(newHeight - prevHeight);
+        }
+
+        setCachedChatPage({
+            isGroup: chatPagingState.isGroup,
+            messages: chat,
+            header: chatPagingState.isGroup ? null : { create_date: chat_create_date, chat_metadata },
+            cursor: chatPagingState.cursor,
+            hasMore: chatPagingState.hasMore,
+        });
+
+        await eventSource.emit(event_types.MORE_MESSAGES_LOADED);
+    } finally {
+        chatPagingState.loading = false;
+    }
+}
+
 export async function showMoreMessages(messagesToLoad = null) {
+    const displayedCount = chatElement.children('.mes').length;
+    if (chatPagingState.active) {
+        if (displayedCount < chat.length) {
+            // Reveal locally cached messages first.
+        } else {
+            await loadMoreChatMessages(messagesToLoad);
+            return;
+        }
+    }
+
     const firstDisplayedMesId = chatElement.children('.mes').first().attr('mesid');
     let messageId = Number(firstDisplayedMesId);
     let count = messagesToLoad || power_user.chat_truncation || Number.MAX_SAFE_INTEGER;
@@ -1446,10 +1635,18 @@ export async function showMoreMessages(messagesToLoad = null) {
 export async function printMessages() {
     let startIndex = 0;
     let count = power_user.chat_truncation || Number.MAX_SAFE_INTEGER;
+    const pagingActive = chatPagingState.active;
+    chatElement.find('#show_more_messages').remove();
+
+    if (pagingActive) {
+        count = Number.MAX_SAFE_INTEGER;
+    }
 
     if (chat.length > count) {
         startIndex = chat.length - count;
-        chatElement.append('<div id="show_more_messages">Show more messages</div>');
+        chatElement.append('<div id="show_more_messages">显示更多消息</div>');
+    } else if (pagingActive && chatPagingState.hasMore) {
+        chatElement.append('<div id="show_more_messages">加载更多消息</div>');
     }
 
     for (let i = startIndex; i < chat.length; i++) {
@@ -6894,6 +7091,60 @@ export function saveChatDebounced() {
     }, DEFAULT_SAVE_EDIT_TIMEOUT);
 }
 
+async function saveChatTail({ fileName, header, messages, force = false } = {}) {
+    const result = await fetch('/api/chats/save-tail', {
+        method: 'POST',
+        cache: 'no-cache',
+        headers: getRequestHeaders(),
+        body: JSON.stringify({
+            ch_name: characters[this_chid].name,
+            file_name: fileName,
+            avatar_url: characters[this_chid].avatar,
+            header,
+            messages,
+            before: Number.isFinite(chatPagingState.cursor) ? chatPagingState.cursor : 0,
+            force: force,
+        }),
+    });
+
+    if (result.ok) {
+        if (chatPagingState.active) {
+            setCachedChatPage({
+                isGroup: false,
+                messages: chat,
+                header,
+                cursor: chatPagingState.cursor,
+                hasMore: chatPagingState.hasMore,
+            });
+        }
+        return;
+    }
+
+    const errorData = await result.json();
+    const isIntegrityError = errorData?.error === 'integrity' && !force;
+    if (!isIntegrityError) {
+        throw new Error(result.statusText);
+    }
+
+    const popupResult = await Popup.show.input(
+        t`ERROR: Chat integrity check failed while saving the file.`,
+        t`<p>After you click OK, the page will be reloaded to prevent data corruption.</p>
+          <p>To confirm an overwrite (and potentially <b>LOSE YOUR DATA</b>), enter <code>OVERWRITE</code> (in all caps) in the box below before clicking OK.</p>`,
+        '',
+        { okButton: 'OK', cancelButton: false },
+    );
+
+    const forceSaveConfirmed = popupResult === 'OVERWRITE';
+
+    if (!forceSaveConfirmed) {
+        console.warn('Chat integrity check failed, and user did not confirm the overwrite. Reloading the page.');
+        window.location.reload();
+        return;
+    }
+
+    await saveChatTail({ fileName, header, messages, force: true });
+}
+
 /**
  * Saves the chat to the server.
  * @param {object} [options] - Additional options.
@@ -6935,13 +7186,26 @@ export async function saveChat({ chatName, withMetadata, mesId, force = false } 
         ? chat.slice(0, Number(mesId) + 1)
         : chat.slice();
 
+    const header = {
+        user_name: name1,
+        character_name: name2,
+        create_date: chat_create_date,
+        chat_metadata: metadata,
+    };
+
+    if (chatPagingState.active) {
+        try {
+            await saveChatTail({ fileName, header, messages: trimmedChat, force });
+            return;
+        } catch (error) {
+            console.error(error);
+            toastr.error(t`Check the server connection and reload the page to prevent data loss.`, t`Chat could not be saved`);
+            return;
+        }
+    }
+
     const chatToSave = [
-        {
-            user_name: name1,
-            character_name: name2,
-            create_date: chat_create_date,
-            chat_metadata: metadata,
-        },
+        header,
         ...trimmedChat,
     ];
 
@@ -7152,27 +7416,79 @@ export async function getChat() {
     //console.log('/api/chats/get -- entered for -- ' + characters[this_chid].name);
     try {
         await unshallowCharacter(this_chid);
+        resetChatPagingState({ isGroup: false });
+        let usedPaging = false;
 
-        const response = await $.ajax({
-            type: 'POST',
-            url: '/api/chats/get',
-            data: JSON.stringify({
-                ch_name: characters[this_chid].name,
-                file_name: characters[this_chid].chat,
-                avatar_url: characters[this_chid].avatar,
-            }),
-            dataType: 'json',
-            contentType: 'application/json',
-        });
-        if (response[0] !== undefined) {
-            chat.splice(0, chat.length, ...response);
-            chat_create_date = chat[0]['create_date'];
-            chat_metadata = chat[0]['chat_metadata'] ?? {};
+        if (chatPagingState.enabled) {
+            const cached = getCachedChatPage({ isGroup: false });
+            if (cached && Array.isArray(cached.messages)) {
+                chat.splice(0, chat.length, ...cached.messages);
+                chat_create_date = cached.header?.create_date ?? humanizedDateTime();
+                chat_metadata = cached.header?.chat_metadata ?? {};
+                chatPagingState.cursor = Number.isFinite(cached.cursor) ? cached.cursor : null;
+                chatPagingState.hasMore = Boolean(cached.hasMore);
+                chatPagingState.active = true;
+                usedPaging = true;
+                chat.forEach(ensureMessageMediaIsArray);
+                if (!chat_metadata['integrity']) {
+                    chat_metadata['integrity'] = uuidv4();
+                }
+                await getChatResult();
+                eventSource.emit('chatLoaded', { detail: { id: this_chid, character: characters[this_chid] } });
+                setTimeout(function () {
+                    if ($(document.activeElement).is('input:visible, textarea:visible')) {
+                        return;
+                    }
+                    $('#send_textarea').trigger('click').trigger('focus');
+                }, 200);
+                return;
+            }
+        }
 
-            chat.shift();
-            chat.forEach(ensureMessageMediaIsArray);
-        } else {
-            chat_create_date = humanizedDateTime();
+        if (chatPagingState.enabled) {
+            const paged = await fetchChatRange({ isGroup: false, limit: chatPagingState.pageSize });
+            if (paged && Array.isArray(paged.messages)) {
+                chat.splice(0, chat.length, ...paged.messages);
+                chat_create_date = paged.header?.create_date ?? humanizedDateTime();
+                chat_metadata = paged.header?.chat_metadata ?? {};
+                chatPagingState.cursor = Number.isFinite(paged.cursor) ? paged.cursor : null;
+                chatPagingState.hasMore = Boolean(paged.hasMore);
+                chatPagingState.active = true;
+                usedPaging = true;
+                chat.forEach(ensureMessageMediaIsArray);
+                setCachedChatPage({
+                    isGroup: false,
+                    messages: chat,
+                    header: paged.header,
+                    cursor: chatPagingState.cursor,
+                    hasMore: chatPagingState.hasMore,
+                });
+            }
+        }
+
+        if (!usedPaging) {
+            const response = await $.ajax({
+                type: 'POST',
+                url: '/api/chats/get',
+                data: JSON.stringify({
+                    ch_name: characters[this_chid].name,
+                    file_name: characters[this_chid].chat,
+                    avatar_url: characters[this_chid].avatar,
+                }),
+                dataType: 'json',
+                contentType: 'application/json',
+            });
+            if (response[0] !== undefined) {
+                chat.splice(0, chat.length, ...response);
+                chat_create_date = chat[0]['create_date'];
+                chat_metadata = chat[0]['chat_metadata'] ?? {};
+
+                chat.shift();
+                chat.forEach(ensureMessageMediaIsArray);
+            } else {
+                chat_create_date = humanizedDateTime();
+            }
+            chatPagingState.active = false;
         }
         if (!chat_metadata['integrity']) {
             chat_metadata['integrity'] = uuidv4();
