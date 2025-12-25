@@ -238,6 +238,44 @@ sudo sh start.sh
 
 ```
 
+### Docker 部署
+
+#### Docker Compose（推荐）
+```bash
+# 在项目根目录执行
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+目录说明（相对 `docker/docker-compose.yml` 所在目录）：
+- `docker/config`：配置文件目录（首次启动会自动生成 `config.yaml`）
+- `docker/data`：数据持久化目录（用户数据、论坛、公共角色卡等）
+- `docker/plugins`：插件目录
+- `docker/extensions`：第三方扩展目录
+
+常用命令：
+```bash
+# 查看日志
+docker compose -f docker/docker-compose.yml logs -f
+
+# 停止并删除容器
+docker compose -f docker/docker-compose.yml down
+```
+
+#### Docker run（可选）
+```bash
+docker build -t sillytavernchat:latest .
+docker run -d --name sillytavernchat \
+  -p 8000:8000 \
+  -e NODE_ENV=production \
+  -e FORCE_COLOR=1 \
+  -v "$(pwd)/docker/config:/home/node/app/config" \
+  -v "$(pwd)/docker/data:/home/node/app/data" \
+  -v "$(pwd)/docker/plugins:/home/node/app/plugins" \
+  -v "$(pwd)/docker/extensions:/home/node/app/public/scripts/extensions/third-party" \
+  sillytavernchat:latest
+```
+
+> 提示：Windows PowerShell 可将 `$(pwd)` 替换为 `$PWD`，并使用反引号换行；如需外网访问，请确保 `config.yaml` 中 `listen: true`，并放行端口 `8000`。
 
 ### 配置说明
 ```yaml

@@ -1,9 +1,9 @@
 services:
   sillytavern:
     build: ..
-    container_name: sillytavern
-    hostname: sillytavern
-    image: ghcr.io/sillytavern/sillytavern:latest
+    container_name: sillytavernchat
+    hostname: sillytavernchat
+    image: sillytavernchat:latest
     environment:
       - NODE_ENV=production
       - FORCE_COLOR=1
