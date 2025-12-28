@@ -98,6 +98,7 @@ router.post('/get', requireAdminMiddleware, async (request, response) => {
                     enabled: user.enabled,
                     created: user.created,
                     password: !!user.password,
+                    email: user.email || undefined,
                     storageSize: storageSize,
                     expiresAt: user.expiresAt || null,
                     loadStats: loadStats ? {
