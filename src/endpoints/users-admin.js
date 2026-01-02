@@ -339,7 +339,7 @@ router.post('/create', requireAdminMiddleware, async (request, response) => {
         await ensurePublicDirectoriesExist();
         const directories = getUserDirectories(newUser.handle);
         await checkForNewContent([directories], [CONTENT_TYPES.SETTINGS]);
-        applyDefaultTemplateToUser(directories);
+        applyDefaultTemplateToUser(directories, { userName: newUser.name });
         return response.json({ handle: newUser.handle });
     } catch (error) {
         console.error('User create failed:', error);

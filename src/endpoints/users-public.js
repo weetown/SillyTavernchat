@@ -575,7 +575,7 @@ router.post('/register', async (request, response) => {
         await ensurePublicDirectoriesExist();
         const directories = getUserDirectories(newUser.handle);
         await checkForNewContent([directories], [CONTENT_TYPES.SETTINGS]);
-        applyDefaultTemplateToUser(directories);
+        applyDefaultTemplateToUser(directories, { userName: newUser.name });
 
         await registerLimiter.delete(ip);
         console.info('User registered successfully:', newUser.handle, 'from', ip);

@@ -149,6 +149,57 @@ function getTargetPath(categoryId, directories) {
     return directories[category.dirKey];
 }
 
+function updateSettingsForNewUser(directories, userName) {
+    if (!userName) {
+        return false;
+    }
+
+    const trimmedName = String(userName).trim();
+    if (!trimmedName) {
+        return false;
+    }
+
+    const settingsPath = path.join(directories.root, SETTINGS_FILE);
+    if (!fs.existsSync(settingsPath)) {
+        return false;
+    }
+
+    try {
+        const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        const avatarId = settings?.user_avatar || 'user-default.png';
+
+        let updated = false;
+        if (settings.username !== trimmedName) {
+            settings.username = trimmedName;
+            updated = true;
+        }
+
+        if (!settings.power_user || typeof settings.power_user !== 'object') {
+            settings.power_user = {};
+            updated = true;
+        }
+
+        if (!settings.power_user.personas || typeof settings.power_user.personas !== 'object') {
+            settings.power_user.personas = {};
+            updated = true;
+        }
+
+        if (settings.power_user.personas[avatarId] !== trimmedName) {
+            settings.power_user.personas[avatarId] = trimmedName;
+            updated = true;
+        }
+
+        if (updated) {
+            fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 4), 'utf8');
+        }
+
+        return updated;
+    } catch (error) {
+        console.error('Failed to update settings for new user:', error);
+        return false;
+    }
+}
+
 export function listDefaultTemplateCategories() {
     return TEMPLATE_CATEGORY_IDS.map((id) => ({
         id,
@@ -226,7 +277,7 @@ export function snapshotDefaultTemplateFromUser(directories, sourceHandle, categ
     };
 }
 
-export function applyDefaultTemplateToUser(directories) {
+export function applyDefaultTemplateToUser(directories, options = {}) {
     const info = getDefaultTemplateInfo();
     if (!info.exists || !info.categories.length) {
         return { applied: false, appliedCategories: [], missing: [] };
@@ -257,6 +308,10 @@ export function applyDefaultTemplateToUser(directories) {
 
         copyDirectoryContents(sourcePath, targetPath);
         appliedCategories.push(categoryId);
+    }
+
+    if (appliedCategories.includes('settings')) {
+        updateSettingsForNewUser(directories, options.userName);
     }
 
     return {

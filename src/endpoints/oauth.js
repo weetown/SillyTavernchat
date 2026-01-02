@@ -654,7 +654,7 @@ async function handleOAuthLogin(request, response, provider, userData) {
             }
             // 检查并创建默认设置文件
             await checkForNewContent([directories], [CONTENT_TYPES.SETTINGS]);
-            applyDefaultTemplateToUser(directories);
+            applyDefaultTemplateToUser(directories, { userName: user.name });
         } else {
             // 更新OAuth信息
             user.oauthProvider = provider;
@@ -752,7 +752,7 @@ router.post('/verify-invitation', async (request, response) => {
         }
         // 检查并创建默认设置文件
         await checkForNewContent([directories], [CONTENT_TYPES.SETTINGS]);
-        applyDefaultTemplateToUser(directories);
+        applyDefaultTemplateToUser(directories, { userName: user.name });
 
         // 清除pending user信息
         if (request.session) {
