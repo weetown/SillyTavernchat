@@ -271,7 +271,7 @@ import { initServerHistory } from './scripts/server-history.js';
 import { initSettingsSearch } from './scripts/setting-search.js';
 import { initBulkEdit } from './scripts/bulk-edit.js';
 import { getContext } from './scripts/st-context.js';
-import { extractReasoningFromData, initReasoning, parseReasoningInSwipes, PromptReasoning, ReasoningHandler, removeReasoningFromString, updateReasoningUI } from './scripts/reasoning.js';
+import { extractReasoningFromData, extractReasoningSignatureFromData, initReasoning, parseReasoningInSwipes, PromptReasoning, ReasoningHandler, removeReasoningFromString, updateReasoningUI } from './scripts/reasoning.js';
 import { accountStorage } from './scripts/util/AccountStorage.js';
 import { initWelcomeScreen, openPermanentAssistantChat, openPermanentAssistantCard, getPermanentAssistantAvatar } from './scripts/welcome-screen.js';
 import { initDataMaid } from './scripts/data-maid.js';
@@ -285,6 +285,7 @@ import { SimpleMutex } from './scripts/util/SimpleMutex.js';
 import { AudioPlayer } from './scripts/audio-player.js';
 import { MacroEnvBuilder } from './scripts/macros/engine/MacroEnvBuilder.js';
 import { MacroEngine } from './scripts/macros/engine/MacroEngine.js';
+import { addChatBackupsBrowser } from './scripts/chat-backups.js';
 
 /**
  * @typedef {Object<string, any>} ChatMessage
@@ -354,6 +355,7 @@ export {
     setCharacterSettingsOverrides as setScenarioOverride,
     /** @deprecated Use appendMediaToMessage instead. */
     appendMediaToMessage as appendImageToMessage,
+    importCharacterChat,
 };
 
 /**
@@ -3682,6 +3684,8 @@ class StreamingProcessor {
         this.promptReasoning = promptReasoning;
         /** @type {string[]} */
         this.images = [];
+        /** @type {string?} */
+        this.reasoningSignature = null;
     }
 
     /**
@@ -3874,6 +3878,12 @@ class StreamingProcessor {
             appendMediaToMessage(chat[messageId], $(this.messageDom));
         }
 
+        // Store reasoning signature for models that support multi-turn context
+        if (this.reasoningSignature) {
+            chat[messageId].extra = chat[messageId].extra || {};
+            chat[messageId].extra.reasoning_signature = this.reasoningSignature;
+        }
+
         if (this.type !== 'impersonate') {
             await eventSource.emit(event_types.MESSAGE_RECEIVED, this.messageId, this.type);
             await eventSource.emit(event_types.CHARACTER_MESSAGE_RENDERED, this.messageId, this.type);
@@ -3969,6 +3979,7 @@ class StreamingProcessor {
                 // Get the updated reasoning string into the handler
                 this.reasoningHandler.updateReasoning(this.messageId, state?.reasoning);
                 this.images = state?.images ?? [];
+                this.reasoningSignature = state?.signature ?? null;
                 await eventSource.emit(event_types.STREAM_TOKEN_RECEIVED, text);
                 await sw.tick(async () => await this.onProgressStreaming(this.messageId, this.continueMessage + text));
             }
@@ -5531,6 +5542,7 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
         let title = extractTitleFromData(data);
         let reasoning = extractReasoningFromData(data);
         let imageUrls = extractImagesFromData(data);
+        const reasoningSignature = extractReasoningSignatureFromData(data);
         kobold_horde_model = title;
 
         const swipes = extractMultiSwipes(data, type);
@@ -5574,10 +5586,10 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
         else {
             // Without streaming we'll be having a full message on continuation. Treat it as a last chunk.
             if (originalType !== 'continue') {
-                ({ type, getMessage } = await saveReply({ type, getMessage, title, swipes, reasoning, imageUrls }));
+                ({ type, getMessage } = await saveReply({ type, getMessage, title, swipes, reasoning, imageUrls, reasoningSignature }));
             }
             else {
-                ({ type, getMessage } = await saveReply({ type: 'appendFinal', getMessage, title, swipes, reasoning, imageUrls }));
+                ({ type, getMessage } = await saveReply({ type: 'appendFinal', getMessage, title, swipes, reasoning, imageUrls, reasoningSignature }));
             }
 
             // This relies on `saveReply` having been called to add the message to the chat, so it must be last.
@@ -6609,16 +6621,17 @@ async function processImageAttachment(message, { imageUrls }) {
  * @property {string[]} [swipes] Extra swipes
  * @property {string} [reasoning] Message reasoning
  * @property {string[]} [imageUrls] Links to images
+ * @property {string?} [reasoningSignature] Encrypted signature of the reasoning text
  *
  * @typedef {object} SaveReplyResult
  * @property {string} type Type of generation
  * @property {string} getMessage Generated message
  */
-export async function saveReply({ type, getMessage, fromStreaming = false, title = '', swipes = [], reasoning = '', imageUrls = [] }) {
+export async function saveReply({ type, getMessage, fromStreaming = false, title = '', swipes = [], reasoning = '', imageUrls = [], reasoningSignature = null }) {
     // Backward compatibility
     if (arguments.length > 1 && typeof arguments[0] !== 'object') {
         console.trace('saveReply called with positional arguments. Please use an object instead.');
-        [type, getMessage, fromStreaming, title, swipes, reasoning, imageUrls] = arguments;
+        [type, getMessage, fromStreaming, title, swipes, reasoning, imageUrls, reasoningSignature] = arguments;
     }
 
     if (type != 'append' && type != 'continue' && type != 'appendFinal' && chat.length && (chat[chat.length - 1]['swipe_id'] === undefined ||
@@ -6654,6 +6667,7 @@ export async function saveReply({ type, getMessage, fromStreaming = false, title
             chat[chat.length - 1]['extra']['model'] = getGeneratingModel();
             chat[chat.length - 1]['extra']['reasoning'] = reasoning;
             chat[chat.length - 1]['extra']['reasoning_duration'] = null;
+            chat[chat.length - 1]['extra']['reasoning_signature'] = reasoningSignature;
             await processImageAttachment(chat[chat.length - 1], { imageUrls });
             if (power_user.message_token_count_enabled) {
                 const tokenCountText = (reasoning || '') + chat[chat.length - 1]['mes'];
@@ -6678,6 +6692,7 @@ export async function saveReply({ type, getMessage, fromStreaming = false, title
         chat[chat.length - 1]['extra']['model'] = getGeneratingModel();
         chat[chat.length - 1]['extra']['reasoning'] = reasoning;
         chat[chat.length - 1]['extra']['reasoning_duration'] = null;
+        chat[chat.length - 1]['extra']['reasoning_signature'] = reasoningSignature;
         await processImageAttachment(chat[chat.length - 1], { imageUrls });
         if (power_user.message_token_count_enabled) {
             const tokenCountText = (reasoning || '') + chat[chat.length - 1]['mes'];
@@ -6698,6 +6713,7 @@ export async function saveReply({ type, getMessage, fromStreaming = false, title
         chat[chat.length - 1]['extra']['api'] = getGeneratingApi();
         chat[chat.length - 1]['extra']['model'] = getGeneratingModel();
         chat[chat.length - 1]['extra']['reasoning'] += reasoning;
+        chat[chat.length - 1]['extra']['reasoning_signature'] = reasoningSignature;
         await processImageAttachment(chat[chat.length - 1], { imageUrls });
         // We don't know if the reasoning duration extended, so we don't update it here on purpose.
         if (power_user.message_token_count_enabled) {
@@ -6720,6 +6736,7 @@ export async function saveReply({ type, getMessage, fromStreaming = false, title
         chat[chat.length - 1]['extra']['model'] = getGeneratingModel();
         chat[chat.length - 1]['extra']['reasoning'] = reasoning;
         chat[chat.length - 1]['extra']['reasoning_duration'] = null;
+        chat[chat.length - 1]['extra']['reasoning_signature'] = reasoningSignature;
         if (power_user.trim_spaces) {
             getMessage = getMessage.trim();
         }
@@ -8649,6 +8666,8 @@ export async function displayPastChats(hightlightNames = []) {
         const textSearchElement = $('#select_chat_search');
         textSearchElement.trigger('click').trigger('focus').trigger('select');
     }, 200);
+
+    addChatBackupsBrowser();
 }
 
 async function displayChats(searchQuery, currentChat, displayName, avatarImg, selected_group, highlightNames) {
