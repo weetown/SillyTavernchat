@@ -73,6 +73,7 @@ import {
     importGroupChat,
     getGroupBlock,
     getGroupCharacterCards,
+    getGroupCharacterCardsLazy,
     getGroupDepthPrompts,
 } from './scripts/group-chats.js';
 
@@ -185,7 +186,7 @@ import {
     trimSpaces,
     clamp,
 } from './scripts/utils.js';
-import { debounce_timeout, GENERATION_TYPE_TRIGGERS, IGNORE_SYMBOL, inject_ids, MEDIA_DISPLAY, MEDIA_SOURCE, MEDIA_TYPE, SCROLL_BEHAVIOR, SWIPE_DIRECTION } from './scripts/constants.js';
+import { debounce_timeout, GENERATION_TYPE_TRIGGERS, IGNORE_SYMBOL, inject_ids, MEDIA_DISPLAY, MEDIA_SOURCE, MEDIA_TYPE, SCROLL_BEHAVIOR, SWIPE_DIRECTION, SWIPE_STATE } from './scripts/constants.js';
 
 import { cancelDebouncedMetadataSave, doDailyExtensionUpdatesCheck, extension_settings, initExtensions, loadExtensionSettings, runGenerationInterceptors, saveMetadataDebounced } from './scripts/extensions.js';
 import { COMMENT_NAME_DEFAULT, CONNECT_API_MAP, executeSlashCommandsOnChatInput, initDefaultSlashCommands, isExecutingCommandsFromChatInput, pauseScriptExecution, stopScriptExecution, UNIQUE_APIS } from './scripts/slash-commands.js';
@@ -280,6 +281,8 @@ import { applyStreamFadeIn } from './scripts/util/stream-fadein.js';
 import { initDomHandlers } from './scripts/dom-handlers.js';
 import { SimpleMutex } from './scripts/util/SimpleMutex.js';
 import { AudioPlayer } from './scripts/audio-player.js';
+import { MacroEnvBuilder } from './scripts/macros/engine/MacroEnvBuilder.js';
+import { MacroEngine } from './scripts/macros/engine/MacroEngine.js';
 
 /**
  * @typedef {Object<string, any>} ChatMessage
@@ -403,6 +406,7 @@ export let name1 = default_user_name;
 export let name2 = systemUserName;
 /** @type {ChatMessage[]} */
 export let chat = [];
+export let swipeState = SWIPE_STATE.NONE;
 export let isSwipingAllowed = true; //false when a swipe is in progress, or swiping is blocked.
 const CHAT_PAGE_SIZE_DEFAULT = 20;
 const CHAT_PAGING_MAX_RENDER = isMobile() ? 200 : 400;
@@ -676,6 +680,7 @@ let chat_file_for_del = '';
 export let online_status = 'no_connection';
 
 export let is_send_press = false; //Send generation
+export const isGenerating = () => (is_send_press || is_group_generating);
 
 let this_del_mes = -1;
 
@@ -690,6 +695,9 @@ export let amount_gen = 80; //default max length of AI generated responses
 export let max_context = 2048;
 
 var swipes = true;
+export let swipesHidden = false;
+export let lastSwipeInfo = { now: performance.now(), direction: SWIPE_DIRECTION.RIGHT };
+export let recentSwipes = 0;
 export let extension_prompts = {};
 
 export let main_api;// = "kobold";
@@ -887,7 +895,7 @@ function initStandaloneMode() {
     }
 }
 
-function cancelStatusCheck(reason = 'Manually cancelled status check') {
+export function cancelStatusCheck(reason = 'Manually cancelled status check') {
     abortStatusCheck?.abort(new AbortReason(reason));
     abortStatusCheck = new AbortController();
     setOnlineStatus('no_connection');
@@ -1697,7 +1705,7 @@ export async function printMessages() {
     delay(debounce_timeout.short).then(() => scrollOnMediaLoad());
 }
 
-function scrollOnMediaLoad() {
+export function scrollOnMediaLoad() {
     const started = Date.now();
     const media = chatElement.find('.mes_block img, .mes_block video, .mes_block audio').toArray();
     let mediaLoaded = 0;
@@ -2037,7 +2045,7 @@ export function messageFormatting(mes, ch_name, isSystem, isUser, messageId, san
         mes = mes.replace(new RegExp(`(^|\n)${escapeRegex(ch_name)}:`, 'g'), '$1');
     }
 
-    /** @type {import('dompurify').Config & { RETURN_DOM_FRAGMENT: false; RETURN_DOM: false }} */
+    /** @type {{ RETURN_DOM_FRAGMENT: false; RETURN_DOM: false; [key: string]: any }} */
     const config = {
         RETURN_DOM: false,
         RETURN_DOM_FRAGMENT: false,
@@ -2919,14 +2927,13 @@ export function scrollChatToBottom({ waitForFrame } = {}) {
 }
 
 /**
+ * @deprecated Function is not needed anymore, as the new signature of substituteParams is more flexible.
+ *
  * Substitutes {{macro}} parameters in a string.
- * @param {string} content - The string to substitute parameters in.
- * @param {Record<string,any>} additionalMacro - Additional environment variables for substitution.
- * @param {(x: string) => string} [postProcessFn] - Post-processing function for each substituted macro.
  * @returns {string} The string with substituted parameters.
  */
 export function substituteParamsExtended(content, additionalMacro = {}, postProcessFn = (x) => x) {
-    return substituteParams(content, undefined, undefined, undefined, undefined, true, additionalMacro, postProcessFn);
+    return substituteParams(content, { dynamicMacros: additionalMacro, postProcessFn });
 }
 
 /**
@@ -2941,9 +2948,22 @@ export function substituteParamsExtended(content, additionalMacro = {}, postProc
  * @param {(x: string) => string} [postProcessFn] - Post-processing function for each substituted macro.
  * @returns {string} The string with substituted parameters.
  */
-export function substituteParams(content, _name1, _name2, _original, _group, _replaceCharacterCard = true, additionalMacro = {}, postProcessFn = (x) => x) {
+export function substituteParamsLegacy(content, _name1, _name2, _original, _group, _replaceCharacterCard = true, additionalMacro = {}, postProcessFn = (x) => x) {
     if (!content) {
         return '';
+    }
+
+    // If experimental macro engine is enabled, use it. This code will be cleaned up in the future.
+    if (power_user?.experimental_macro_engine) {
+        return substituteParams(content, {
+            name1Override: _name1,
+            name2Override: _name2,
+            original: _original,
+            groupOverride: _group,
+            replaceCharacterCard: _replaceCharacterCard ?? true,
+            dynamicMacros: additionalMacro ?? {},
+            postProcessFn: postProcessFn ?? ((x) => x),
+        });
     }
 
     const environment = {};
@@ -3043,6 +3063,55 @@ export function substituteParams(content, _name1, _name2, _original, _group, _re
     }
 
     return evaluateMacros(content, environment, postProcessFn);
+}
+
+/** @typedef {import('./scripts/macros/engine/MacroRegistry.js').MacroHandler} MacroHandler */
+
+/**
+ * Substitutes {{macros}} in a string using the new macro engine.
+ *
+ * This will replace all registered macros and dynamic additional macros as environment context.
+ *
+ * @param {string} content - The string to substitute parameters in.
+ * @param {Object} [options={}] - Options for the substitution.
+ * @param {string} [options.name1Override] - The name of the user. Uses global name1 if not provided.
+ * @param {string} [options.name2Override] - The name of the character. Uses global name2 if not provided.
+ * @param {string} [options.original] - The original message for {{original}} substitution.
+ * @param {string} [options.groupOverride] - The group members list for {{group}} substitution.
+ * @param {boolean} [options.replaceCharacterCard=true] - Whether to replace character card macros.
+ * @param {Record<string,string|MacroHandler>} [options.dynamicMacros={}] - Additional environment variables as dynamic macros for substitution. Registered as macro functions.
+ * @param {(x: string) => string} [options.postProcessFn=(x) => x] - Post-processing function for each substituted macro.
+ * @returns {string} The string with substituted parameters.
+ */
+export function substituteParams(content, options = {}) {
+    if (!content) return '';
+
+    // Handle legacy signature calls to substituteParams
+    // We'll simply re-route them to a temporary legacy function. In the future, we'll remove this and cleanly build the options object ourselves.
+    const isOptionsObject = options && typeof options === 'object' && !Array.isArray(options);
+    if (!isOptionsObject) {
+        return substituteParamsLegacy.call(this, ...arguments);
+    }
+
+    // Keep the new macro engine behind a feature switch for now
+    if (!power_user?.experimental_macro_engine) {
+        return substituteParamsLegacy(content, options.name1Override, options.name2Override, options.original, options.groupOverride, options.replaceCharacterCard, options.dynamicMacros, options.postProcessFn);
+    }
+
+    const ctx = /** @type {import('./scripts/macros/engine/MacroEnvBuilder.js').MacroEnvRawContext} */ ({
+        content,
+        name1Override: options.name1Override,
+        name2Override: options.name2Override,
+        original: options.original,
+        groupOverride: options.groupOverride,
+        replaceCharacterCard: options.replaceCharacterCard ?? true,
+        dynamicMacros: options.dynamicMacros ?? {},
+        postProcessFn: options.postProcessFn ?? ((x) => x),
+    });
+
+    const env = MacroEnvBuilder.buildFromRawEnv(ctx);
+    const result = MacroEngine.evaluate(content, env);
+    return result;
 }
 
 
@@ -3353,10 +3422,9 @@ export async function getExtensionPrompt(position = extension_prompt_types.IN_PR
     return values;
 }
 
-export function baseChatReplace(value, name1, name2) {
-    if (value !== undefined && value.length > 0) {
-        const _ = undefined;
-        value = substituteParams(value, name1, name2, _, _, false);
+export function baseChatReplace(value, name1Override = null, name2Override = null) {
+    if (typeof value === 'string' && value.length > 0) {
+        value = substituteParams(value, { name1Override, name2Override, replaceCharacterCard: false });
 
         if (power_user.collapse_newlines) {
             value = collapseNewlines(value);
@@ -3368,11 +3436,7 @@ export function baseChatReplace(value, name1, name2) {
 }
 
 /**
- * Returns the character card fields for the current character.
- * @param {object} [options]
- * @param {number} [options.chid] Optional character index
- *
- * @typedef {object} CharacterCardFields
+ * @typedef {Object} CharacterCardFields
  * @property {string} system System prompt
  * @property {string} mesExamples Message examples
  * @property {string} description Description
@@ -3383,6 +3447,101 @@ export function baseChatReplace(value, name1, name2) {
  * @property {string} version Character version
  * @property {string} charDepthPrompt Character depth note
  * @property {string} creatorNotes Character creator notes
+ */
+
+/**
+ * Helper to create an object with lazy, memoized getters from a map of field resolvers.
+ * @param {Record<string, () => string>} resolvers Map of field names to resolver functions
+ * @returns {CharacterCardFields} Object with lazy getters
+ */
+export function createLazyFields(resolvers) {
+    const result = /** @type {CharacterCardFields} */ ({});
+    for (const [key, resolver] of Object.entries(resolvers)) {
+        let cached;
+        let resolved = false;
+        Object.defineProperty(result, key, {
+            get() {
+                if (!resolved) {
+                    cached = resolver();
+                    resolved = true;
+                }
+                return cached;
+            },
+            enumerable: true,
+            configurable: true,
+        });
+    }
+    return result;
+}
+
+/**
+ * Returns the character card fields for the current character as lazy getters.
+ * Each field is only processed (baseChatReplace) when first accessed.
+ * @param {Object} [options={}]
+ * @param {number} [options.chid] Optional character index
+ * @returns {CharacterCardFields} Character card fields with lazy evaluation
+ */
+export function getCharacterCardFieldsLazy({ chid = undefined } = {}) {
+    const currentChid = chid ?? this_chid;
+    const character = characters[currentChid];
+
+    // For group chats, we need to check if group cards should be used
+    const useGroupCards = selected_group && character;
+    const groupCardsLazy = useGroupCards ? getGroupCharacterCardsLazy(selected_group, Number(currentChid)) : null;
+
+    /** @type {Record<string, () => string>} */
+    const resolvers = {
+        persona: () => baseChatReplace(power_user.persona_description?.trim()),
+        system: () => {
+            if (!character) return '';
+            const systemPrompt = chat_metadata['system_prompt'] || character.data?.system_prompt || '';
+            return power_user.prefer_character_prompt ? baseChatReplace(systemPrompt.trim()) : '';
+        },
+        jailbreak: () => {
+            if (!character) return '';
+            return power_user.prefer_character_jailbreak ? baseChatReplace(character.data?.post_history_instructions?.trim()) : '';
+        },
+        version: () => character?.data?.character_version ?? '',
+        charDepthPrompt: () => {
+            if (!character) return '';
+            return baseChatReplace(character.data?.extensions?.depth_prompt?.prompt?.trim());
+        },
+        creatorNotes: () => {
+            if (!character) return '';
+            return baseChatReplace(character.data?.creator_notes?.trim());
+        },
+        // These four fields may be overridden by group cards
+        description: () => {
+            if (groupCardsLazy) return groupCardsLazy.description;
+            if (!character) return '';
+            return baseChatReplace(character.description?.trim());
+        },
+        personality: () => {
+            if (groupCardsLazy) return groupCardsLazy.personality;
+            if (!character) return '';
+            return baseChatReplace(character.personality?.trim());
+        },
+        scenario: () => {
+            if (groupCardsLazy) return groupCardsLazy.scenario;
+            if (!character) return '';
+            const scenarioText = chat_metadata['scenario'] || character.scenario || '';
+            return baseChatReplace(scenarioText.trim());
+        },
+        mesExamples: () => {
+            if (groupCardsLazy) return groupCardsLazy.mesExamples;
+            if (!character) return '';
+            const exampleDialog = chat_metadata['mes_example'] || character.mes_example || '';
+            return baseChatReplace(exampleDialog.trim());
+        },
+    };
+
+    return createLazyFields(resolvers);
+}
+
+/**
+ * Returns the character card fields for the current character.
+ * @param {object} [options]
+ * @param {number} [options.chid] Optional character index
  * @returns {CharacterCardFields} Character card fields
  */
 export function getCharacterCardFields({ chid = null } = {}) {
@@ -3670,7 +3829,9 @@ class StreamingProcessor {
                 }
             }
 
-            const timePassed = formatGenerationTimer(this.timeStarted, currentTime, currentTokenCount, this.reasoningHandler.getDuration(), this.timeToFirstToken);
+            const timeStartedValue = this.timeStarted instanceof Date ? this.timeStarted.getTime() : this.timeStarted;
+            const currentTimeValue = currentTime instanceof Date ? currentTime.getTime() : currentTime;
+            const timePassed = formatGenerationTimer(timeStartedValue, currentTimeValue, currentTokenCount, this.reasoningHandler.getDuration(), this.timeToFirstToken);
             if (this.messageTimerDom instanceof HTMLElement) {
                 this.messageTimerDom.textContent = timePassed.timerValue;
                 this.messageTimerDom.title = timePassed.timerTitle;
@@ -4573,9 +4734,9 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
     if (main_api !== 'openai') {
         if (power_user.sysprompt.enabled) {
             system = power_user.prefer_character_prompt && system
-                ? substituteParams(system, name1, name2, (power_user.sysprompt.content ?? ''))
+                ? substituteParams(system, { name1Override: name1, name2Override: name2, original: power_user.sysprompt.content ?? '' })
                 : baseChatReplace(power_user.sysprompt.content, name1, name2);
-            system = isInstruct ? substituteParams(system, name1, name2, power_user.sysprompt.content) : system;
+            system = isInstruct ? substituteParams(system, { name1Override: name1, name2Override: name2, original: power_user.sysprompt.content }) : system;
         } else {
             // Nullify if it's not enabled
             system = '';
@@ -4633,7 +4794,7 @@ export async function Generate(type, { automatic_trigger, force_name2, quiet_pro
 
     if (main_api !== 'openai' && power_user.sysprompt.enabled) {
         jailbreak = power_user.prefer_character_jailbreak && jailbreak
-            ? substituteParams(jailbreak, name1, name2, (power_user.sysprompt.post_history ?? ''))
+            ? substituteParams(jailbreak, { name1Override: name1, name2Override: name2, original: power_user.sysprompt.post_history ?? '' })
             : baseChatReplace(power_user.sysprompt.post_history, name1, name2);
 
         // Only inject the jb if there is one
@@ -6792,7 +6953,7 @@ export function getGeneratingApi() {
     }
 }
 
-function getGeneratingModel(mes) {
+export function getGeneratingModel(mes) {
     let model = '';
     switch (main_api) {
         case 'kobold':
@@ -7008,7 +7169,7 @@ export async function renameCharacter(name = null, { silent = false, renameChats
                 }
 
                 // Also rename as a group member
-                await renameGroupMember(oldAvatar, newAvatar, newValue);
+                await renameGroupMember(oldAvatar, newAvatar, String(newValue));
                 const renamePastChatsConfirm = renameChats !== null
                     ? renameChats
                     : silent
@@ -7127,9 +7288,13 @@ export function saveChatDebounced() {
 }
 
 /**
- * @param {SaveChatTailOptions} [options]
+ * @param {Partial<SaveChatTailOptions>} [options]
  */
-async function saveChatTail({ fileName, header, messages, force = false } = {}) {
+async function saveChatTail(options = {}) {
+    const { fileName, header, messages, force = false } = options;
+    if (!fileName || !header || !Array.isArray(messages)) {
+        return;
+    }
     const result = await fetch('/api/chats/save-tail', {
         method: 'POST',
         cache: 'no-cache',
@@ -8103,6 +8268,7 @@ export async function messageEdit(editMessageId) {
     }
 
     this_edit_mes_id = editMessageId;
+    swipeState = SWIPE_STATE.EDITING;
     this_edit_mes_chname = editMessage.name || (editMessage.is_user ? name1 : name2);
 
     const hideCounters = editMessageId < chat.length - 1;
@@ -8189,6 +8355,7 @@ async function messageEditCancel(messageId = this_edit_mes_id) {
     await eventSource.emit(event_types.MESSAGE_UPDATED, messageId);
     if (messageId == this_edit_mes_id) {
         this_edit_mes_id = undefined;
+        swipeState = SWIPE_STATE.NONE;
     }
     else {
         console.warn(`The message editor was closed on message #${messageId} while #${this_edit_mes_id} is being edited.`);
@@ -8280,6 +8447,7 @@ async function messageEditDone(div) {
 
     await eventSource.emit(event_types.MESSAGE_UPDATED, this_edit_mes_id);
     this_edit_mes_id = undefined;
+    swipeState = SWIPE_STATE.NONE;
     await saveChatConditional();
     showSwipeButtons();
 }
@@ -9658,7 +9826,7 @@ function formatSwipeCounter(current, total) {
 /**
  * Handles the swipe event.
  * @param {JQuery.Event} _event Event.
- * @param {'left'|'right'} direction The direction to swipe.
+ * @param {string} direction The direction to swipe.
  * @param {object} params Additional parameters.
  * @param {string} [params.source] The source of the swipe event.
  * @param {boolean} [params.repeated] Is the swipe event repeated.
@@ -9685,6 +9853,7 @@ export async function swipe(_event, direction, { source, repeated, message = cha
         messageIndex = chat.indexOf(message);
         if (messageIndex === -1) {
             console.error(`The message must exist in chat. ${message};`);
+            isSwipingAllowed = true;
             return;
         }
     }
@@ -9697,8 +9866,10 @@ export async function swipe(_event, direction, { source, repeated, message = cha
     const thisMesTextHeight = thisMesText[0]?.scrollHeight;
     if (![thisMesDiv.length, thisMesText.length].every(num => num > 0)) {
         console.error(`Message #${mesId}'s DOM element is not valid.`);
+        isSwipingAllowed = true;
         return;
     }
+    swipeState = SWIPE_STATE.SWIPING;
     const originalSwipeId = Number(chat[mesId]?.['swipe_id'] ?? 0);
     let newSwipeId = Number(originalSwipeId);
 
@@ -9732,6 +9903,7 @@ export async function swipe(_event, direction, { source, repeated, message = cha
         if (mesId != chat.length - 1) {
             await updateSwipeCounter(chat.length - 1);
         }
+        swipeState = SWIPE_STATE.NONE;
     }
 
     async function standardSwipe() {
@@ -10755,7 +10927,7 @@ jQuery(async function () {
     });
     $('#rm_button_selected_ch').on('click', function () {
         if (selected_group) {
-            select_group_chats(selected_group);
+            select_group_chats(selected_group, false);
         } else {
             selected_button = 'character_edit';
             select_selected_character(this_chid);
@@ -11688,7 +11860,7 @@ jQuery(async function () {
 
     $('#rm_button_group_chats').on('click', function () {
         selected_button = 'group_chats';
-        select_group_chats();
+        select_group_chats(null, false);
     });
 
     $('#rm_button_back_from_group').on('click', function () {

@@ -285,6 +285,7 @@ function configureNormalLogin(userList) {
  * Configures the login page for discreet login.
  */
 function configureDiscreetLogin() {
+    console.log('Discreet login is enabled');
     $('#handleEntryBlock').show();
     $('#normalLoginPrompt').hide();
     $('#discreetLoginPrompt').show();

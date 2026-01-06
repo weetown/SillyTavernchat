@@ -47,6 +47,7 @@ import { router as speechRouter } from './endpoints/speech.js';
 import { router as azureRouter } from './endpoints/azure.js';
 import { router as minimaxRouter } from './endpoints/minimax.js';
 import { router as dataMaidRouter } from './endpoints/data-maid.js';
+import { router as backupsRouter } from './endpoints/backups.js';
 import { router as forumRouter } from './endpoints/forum.js';
 import { router as invitationCodesRouter } from './endpoints/invitation-codes.js';
 import { router as systemLoadRouter } from './endpoints/system-load.js';
@@ -187,6 +188,7 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/azure', azureRouter);
     app.use('/api/minimax', minimaxRouter);
     app.use('/api/data-maid', dataMaidRouter);
+    app.use('/api/backups', backupsRouter);
     // 根据配置控制论坛API路由
     const enableForum = getConfigValue('enableForum', true, 'boolean');
     if (enableForum) {

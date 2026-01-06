@@ -229,9 +229,7 @@ class WebTokenizer {
         try {
             const pathToModel = await getPathToTokenizer(this.#model, this.#fallbackModel);
             const fileBuffer = await fs.promises.readFile(pathToModel);
-            // Convert Buffer to ArrayBuffer
-            const arrayBuffer = new Uint8Array(fileBuffer).buffer;
-            this.#instance = await Tokenizer.fromJSON(arrayBuffer);
+            this.#instance = await Tokenizer.fromJSON(fileBuffer);
             console.info('Instantiated the tokenizer for', path.parse(pathToModel).name);
             return this.#instance;
         } catch (error) {
