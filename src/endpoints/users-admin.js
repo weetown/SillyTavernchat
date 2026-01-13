@@ -504,13 +504,19 @@ router.post('/clear-all-backups', requireAdminMiddleware, async (request, respon
 });
 
 /**
- * 一键删除2个月未登录用户的所有数据
+ * 一键删除长时间未登录且占用存储较少的用户数据
  */
 router.post('/delete-inactive-users', requireAdminMiddleware, async (request, response) => {
     try {
-        const { dryRun = false } = request.body;
-        const inactiveDays = 60; // 2个月（60天）
-        const inactiveThreshold = inactiveDays * 24 * 60 * 60 * 1000; // 60天的毫秒数
+        const { dryRun = false, inactiveDays: requestedInactiveDays, maxStorageMiB: requestedMaxStorageMiB } = request.body || {};
+        const allowedInactiveDays = new Set([7, 15, 30, 60]);
+        const parsedInactiveDays = Number.parseInt(requestedInactiveDays, 10);
+        const inactiveDays = allowedInactiveDays.has(parsedInactiveDays) ? parsedInactiveDays : 60;
+        const inactiveThreshold = inactiveDays * 24 * 60 * 60 * 1000;
+        const parsedMaxStorageMiB = Number(requestedMaxStorageMiB);
+        const maxStorageMiB = Number.isFinite(parsedMaxStorageMiB) && parsedMaxStorageMiB > 0 ? parsedMaxStorageMiB : null;
+        const maxStorageBytes = maxStorageMiB ? maxStorageMiB * 1024 * 1024 : null;
+        const storageFilterMessage = maxStorageMiB ? ` 且存储占用不超过 ${maxStorageMiB} MiB` : '';
         const now = Date.now();
 
         // 获取所有用户
@@ -556,10 +562,14 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
             const daysSinceLastActivity = Math.floor(timeSinceLastActivity / (24 * 60 * 60 * 1000));
             const hasBoundEmail = typeof user.email === 'string' && user.email.trim().length > 0;
 
-            // 如果超过60天未登录
+            // 如果超过指定天数未登录
             if (timeSinceLastActivity > inactiveThreshold) {
                 const directories = getUserDirectories(user.handle);
                 const storageSize = await calculateDirectorySize(directories.root);
+
+                if (maxStorageBytes && storageSize > maxStorageBytes) {
+                    continue;
+                }
 
                 inactiveUsers.push({
                     handle: user.handle,
@@ -636,16 +646,20 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
             return response.json({
                 success: true,
                 dryRun: true,
+                inactiveDays: inactiveDays,
+                maxStorageMiB: maxStorageMiB,
                 inactiveUsers: inactiveUsers,
                 totalUsers: inactiveUsers.length,
                 totalSize: inactiveUsers.reduce((sum, u) => sum + u.storageSize, 0),
-                message: `发现 ${inactiveUsers.length} 个用户超过 ${inactiveDays} 天未登录`,
+                message: `发现 ${inactiveUsers.length} 个用户超过 ${inactiveDays} 天未登录${storageFilterMessage}`,
             });
         } else {
             // 实际删除模式
             return response.json({
                 success: true,
                 dryRun: false,
+                inactiveDays: inactiveDays,
+                maxStorageMiB: maxStorageMiB,
                 deletedUsers: results.filter(r => r.success),
                 failedUsers: results.filter(r => !r.success),
                 totalDeleted: results.filter(r => r.success).length,

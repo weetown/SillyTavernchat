@@ -11,6 +11,13 @@ export let accountsEnabled = false;
 
 // Extend the session every 10 minutes
 const SESSION_EXTEND_INTERVAL = 10 * 60 * 1000;
+const DEFAULT_INACTIVE_DAYS = 60;
+const INACTIVE_USER_DAY_OPTIONS = [
+    { label: '1周 (7天)', value: 7 },
+    { label: '半个月 (15天)', value: 15 },
+    { label: '1个月 (30天)', value: 30 },
+    { label: '2个月 (60天)', value: 60 },
+];
 
 // Lightweight online presence indicator
 // Note: window.isUserOnline and window.userHeartbeat are defined in user-heartbeat.js
@@ -477,19 +484,80 @@ async function clearAllBackups(callback) {
     }
 }
 
+function formatMaxStorageMiB(maxStorageMiB) {
+    if (!Number.isFinite(maxStorageMiB)) {
+        return null;
+    }
+
+    const rounded = Math.round(maxStorageMiB * 100) / 100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+}
+
+function buildInactiveUserFilterText(inactiveDays, maxStorageMiB) {
+    const maxStorageLabel = formatMaxStorageMiB(maxStorageMiB);
+    if (maxStorageLabel) {
+        return `超过 ${inactiveDays} 天未登录且存储占用不超过 ${maxStorageLabel} MiB`;
+    }
+
+    return `超过 ${inactiveDays} 天未登录`;
+}
+
+async function promptInactiveUserCleanupOptions() {
+    const template = $(`
+        <div class="flex-container flexFlowColumn flexGap10">
+            <div class="flex-container flexFlowColumn flexGap5">
+                <label>未登录时长</label>
+                <select class="text_pole inactiveUsersDaysSelect"></select>
+            </div>
+            <div class="flex-container flexFlowColumn flexGap5">
+                <label>最大存储占用 (MiB)</label>
+                <input type="number" class="text_pole inactiveUsersMaxStorageInput" min="0" step="0.1" placeholder="例如: 10">
+                <small style="opacity: 0.8;">留空或 0 表示不限制</small>
+            </div>
+        </div>
+    `);
+
+    const select = template.find('.inactiveUsersDaysSelect');
+    for (const option of INACTIVE_USER_DAY_OPTIONS) {
+        select.append(`<option value="${option.value}">${option.label}</option>`);
+    }
+    select.val(String(DEFAULT_INACTIVE_DAYS));
+
+    const result = await callGenericPopup(
+        template,
+        POPUP_TYPE.CONFIRM,
+        '选择删除条件',
+        { okButton: '下一步', cancelButton: '取消', wide: false, large: false },
+    );
+
+    if (result !== POPUP_RESULT.AFFIRMATIVE) {
+        throw new Error('Delete inactive users cancelled');
+    }
+
+    const inactiveDays = Number.parseInt(String(select.val() ?? ''), 10) || DEFAULT_INACTIVE_DAYS;
+    const maxStorageRaw = String(template.find('.inactiveUsersMaxStorageInput').val()).trim();
+    const maxStorageMiBValue = Number.parseFloat(maxStorageRaw);
+    const maxStorageMiB = Number.isFinite(maxStorageMiBValue) && maxStorageMiBValue > 0 ? maxStorageMiBValue : null;
+
+    return { inactiveDays, maxStorageMiB };
+}
+
 /**
- * Delete inactive users who haven't logged in for 60 days (2 months).
+ * Delete inactive users who haven't logged in for a chosen time period.
  * @param {function} callback Success callback
  */
 async function deleteInactiveUsers(callback) {
     try {
+        const { inactiveDays, maxStorageMiB } = await promptInactiveUserCleanupOptions();
+        const filterLabel = buildInactiveUserFilterText(inactiveDays, maxStorageMiB);
+
         // 第一步：预览将要删除的用户
         toastr.info('正在扫描不活跃用户，请稍候...', '扫描中');
 
         const previewResponse = await fetch('/api/users/delete-inactive-users', {
             method: 'POST',
             headers: getRequestHeaders(),
-            body: JSON.stringify({ dryRun: true }),
+            body: JSON.stringify({ dryRun: true, inactiveDays, maxStorageMiB }),
         });
 
         if (!previewResponse.ok) {
@@ -501,27 +569,28 @@ async function deleteInactiveUsers(callback) {
         const previewData = await previewResponse.json();
 
         if (previewData.totalUsers === 0) {
-            toastr.info('没有发现超过2个月未登录的用户', '无需清理');
+            toastr.info(`没有发现${filterLabel}的用户`, '无需清理');
             return;
         }
 
         // 构建用户列表HTML
         let userListHtml = '<div class="flex-container flexFlowColumn flexGap5" style="max-height: 800px; overflow-y: auto;">';
         userListHtml += '<p style="margin: 10px 0;">以下用户将被删除（包括所有数据）：</p>';
+        userListHtml += `<p style="margin: 10px 0; font-size: 0.9em; opacity: 0.8;">筛选条件：${filterLabel}</p>`;
         userListHtml += '<ul style="text-align: left; margin: 10px 0;">';
 
         for (const user of previewData.inactiveUsers) {
-            const sizeMB = (user.storageSize / 1024 / 1024).toFixed(2);
+            const sizeLabel = humanFileSize(user.storageSize, false, 2);
             userListHtml += `<li style="margin: 5px 0; padding: 5px; background: rgba(255,0,0,0.1); border-radius: 3px;">`;
             userListHtml += `<strong>${user.name}</strong> (${user.handle})<br>`;
             userListHtml += `<small>最后登录: ${user.lastActivityFormatted} (${user.daysSinceLastActivity}天前)</small><br>`;
-            userListHtml += `<small>存储占用: ${sizeMB} MB</small>`;
+            userListHtml += `<small>存储占用: ${sizeLabel}</small>`;
             userListHtml += `</li>`;
         }
 
         userListHtml += '</ul>';
         userListHtml += `<p style="margin: 10px 0; font-weight: bold; color: red;">`;
-        userListHtml += `共 ${previewData.totalUsers} 个用户，总计 ${(previewData.totalSize / 1024 / 1024).toFixed(2)} MB`;
+        userListHtml += `共 ${previewData.totalUsers} 个用户，总计 ${humanFileSize(previewData.totalSize, false, 2)}`;
         userListHtml += `</p>`;
         userListHtml += '<p style="margin: 10px 0; color: orange;"><strong>⚠️ 警告：此操作不可恢复！</strong></p>';
         userListHtml += '</div>';
@@ -531,7 +600,7 @@ async function deleteInactiveUsers(callback) {
         const confirm = await callGenericPopup(
             confirmTemplate,
             POPUP_TYPE.CONFIRM,
-            '确认删除2个月未登录用户',
+            `确认删除${filterLabel}的用户`,
             { okButton: '确认删除', cancelButton: '取消', wide: true, large: false, allowVerticalScrolling: true },
         );
 
@@ -545,7 +614,7 @@ async function deleteInactiveUsers(callback) {
         const deleteResponse = await fetch('/api/users/delete-inactive-users', {
             method: 'POST',
             headers: getRequestHeaders(),
-            body: JSON.stringify({ dryRun: false }),
+            body: JSON.stringify({ dryRun: false, inactiveDays, maxStorageMiB }),
         });
 
         if (!deleteResponse.ok) {
@@ -1196,7 +1265,7 @@ async function openAdminPanel() {
 
         // 绑定搜索事件（使用防抖）
         controlsHtml.find('#userSearchInput').off('input').on('input', debounceSearch(function() {
-            userSearchTerm = $(this).val().trim();
+            userSearchTerm = String($(this).val() ?? '').trim();
             currentUserPage = 1; // 重置到第一页
             renderUsers();
         }, 300));
@@ -1507,7 +1576,7 @@ function initScheduledTasksHandlers(template) {
 
     // 验证Cron表达式
     testCronButton.on('click', async function() {
-        const cronExpression = cronInput.val().trim();
+        const cronExpression = String(cronInput.val() ?? '').trim();
         if (!cronExpression) {
             showScheduledTaskStatus(statusDiv, '请输入Cron表达式', 'error');
             return;
@@ -1530,7 +1599,7 @@ function initScheduledTasksHandlers(template) {
     // 保存配置
     saveButton.on('click', async function() {
         const enabled = enabledCheckbox.is(':checked');
-        const cronExpression = cronInput.val().trim();
+        const cronExpression = String(cronInput.val() ?? '').trim();
 
         if (enabled && !cronExpression) {
             showScheduledTaskStatus(statusDiv, '启用定时任务时必须提供Cron表达式', 'error');
