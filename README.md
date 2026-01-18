@@ -1,3 +1,5 @@
+# (Translated English UI from main fork, no other changes made)
+
 # SillyTavernchat v1.15.0
 
 An enhanced version based on official SillyTavern **1.15.0**, continuing to deliver enterprise-grade features such as user management, system monitoring, forums, and announcement management.
@@ -247,7 +249,7 @@ Public-facing templates have been translated to English. Remaining work is track
 ### Quick start
 ```bash
 # Clone the project
-git clone https://github.com/zhaiiker/SillyTavernchat.git
+git clone https://github.com/weetown/SillyTavernchat.git
 cd SillyTavernchat
 
 # Install dependencies
