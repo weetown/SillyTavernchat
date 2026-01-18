@@ -67,11 +67,11 @@ async function sendRecoveryPart1(handle) {
     const data = await response.json();
     showRecoveryBlock();
 
-    // 显示恢复码发送方式的提示信息
+    // Show how the recovery code is delivered.
     if (data.method === 'email') {
-        displayError(data.message || '密码恢复码已发送至您的邮箱，请查收', true);
+        displayError(data.message || 'A password recovery code has been sent to your email.', true);
     } else {
-        displayError(data.message || '密码恢复码已显示在服务器控制台，请联系管理员获取', true);
+        displayError(data.message || 'The recovery code has been printed to the server console. Contact an administrator to retrieve it.', true);
     }
 }
 
@@ -107,13 +107,13 @@ async function sendRecoveryPart2(handle, code, newPassword) {
     await performLogin(handle, newPassword);
 }
 
-// 存储当前登录尝试的用户信息（用于续费）
+// Store current login attempt details (used for renewal).
 let currentLoginAttempt = {
     handle: '',
     password: ''
 };
 
-// 登录中状态标志，防止重复登录
+// Logging-in flag to prevent duplicate submissions.
 let isLoggingIn = false;
 
 /**
@@ -123,12 +123,12 @@ let isLoggingIn = false;
  * @returns {Promise<void>}
  */
 async function performLogin(handle, password) {
-    // 验证输入
+    // Validate input.
     if (!handle || typeof handle !== 'string' || handle.trim() === '') {
-        return displayError('请输入用户名');
+        return displayError('Please enter a username.');
     }
 
-    // 防止重复登录
+    // Prevent duplicate login attempts.
     if (isLoggingIn) {
         return;
     }
@@ -140,7 +140,7 @@ async function performLogin(handle, password) {
         password: password || '',
     };
 
-    // 保存登录信息（用于续费）
+    // Save login details (for renewal).
     currentLoginAttempt.handle = handle;
     currentLoginAttempt.password = password || '';
 
@@ -157,7 +157,7 @@ async function performLogin(handle, password) {
         if (!response.ok) {
             const errorData = await response.json();
 
-            // 如果账户过期，显示续费窗口
+            // If the account is expired, show the renewal modal.
             if (errorData.expired) {
                 showRenewalBlock(errorData.purchaseLink);
                 isLoggingIn = false;
@@ -173,7 +173,7 @@ async function performLogin(handle, password) {
 
         if (data.handle) {
             console.log(`Successfully logged in as ${handle}!`);
-            // 登录成功，不重置标志，因为即将跳转
+            // Login succeeded; do not reset the flag because we redirect.
             redirectToHome();
         } else {
             isLoggingIn = false;
@@ -256,7 +256,7 @@ function onCancelRecoveryClick() {
 
 
 function onRegisterClick() {
-    // 跳转到注册页面
+    // Navigate to the registration page.
     window.location.href = '/register';
 }
 /**
@@ -296,15 +296,15 @@ function configureDiscreetLogin() {
         const rawHandle = String($('#userHandle').val() || '').trim();
 
         if (!rawHandle) {
-            displayError('请输入用户名');
+            displayError('Please enter a username.');
             return;
         }
 
-        // 规范化用户名：支持英文大小写、数字和横杠
+        // Normalize the handle: letters, numbers, and hyphens.
         const handle = normalizeHandleFrontend(rawHandle);
 
         if (!handle) {
-            displayError('用户名格式无效，仅支持英文、数字和横杠');
+            displayError('Invalid username format. Use only letters, numbers, and hyphens.');
             return;
         }
 
@@ -314,14 +314,14 @@ function configureDiscreetLogin() {
 
     $('#recoverPassword').off('click').on('click', async () => {
         const rawHandle = String($('#userHandle').val());
-        // 规范化用户名
+        // Normalize the handle.
         const handle = normalizeHandleFrontend(rawHandle);
         await sendRecoveryPart1(handle);
     });
 
     $('#sendRecovery').off('click').on('click', async () => {
         const rawHandle = String($('#userHandle').val());
-        // 规范化用户名
+        // Normalize the handle.
         const handle = normalizeHandleFrontend(rawHandle);
         const code = String($('#recoveryCode').val());
         const newPassword = String($('#newPassword').val());
@@ -333,11 +333,11 @@ function configureDiscreetLogin() {
     initAccessibility();
 
     try {
-        // 先获取CSRF token
+        // Fetch the CSRF token first.
         csrfToken = await getCsrfToken();
     } catch (error) {
-        console.error('获取CSRF Token失败:', error);
-        displayError('初始化失败，请刷新页面重试');
+        console.error('Failed to get CSRF token:', error);
+        displayError('Initialization failed. Please refresh and try again.');
         return;
     }
 
@@ -349,10 +349,10 @@ function configureDiscreetLogin() {
         configureNormalLogin(userList);
     }
 
-    // 加载OAuth配置并显示按钮
+    // Load OAuth config and show buttons.
     await loadOAuthConfig();
 
-    // 检查是否需要输入OAuth邀请码
+    // Check whether an OAuth invitation code is needed.
     await checkOAuthPendingInvitation();
 
     document.getElementById('shadow_popup').style.opacity = '';
@@ -361,25 +361,25 @@ function configureDiscreetLogin() {
     $('#cancelRenewal').on('click', onCancelRenewalClick);
     $('#submitRenewal').on('click', onSubmitRenewalClick);
 
-    // 检查是否有账户过期提示
+    // Check if there is an account expired notice.
     const accountExpired = sessionStorage.getItem('accountExpired');
     const expiredPurchaseLink = sessionStorage.getItem('expiredPurchaseLink');
     if (accountExpired === 'true') {
-        // 清除sessionStorage
+        // Clear sessionStorage.
         sessionStorage.removeItem('accountExpired');
         sessionStorage.removeItem('expiredMessage');
         sessionStorage.removeItem('expiredPurchaseLink');
 
-        // 直接显示续费窗口
+        // Show the renewal modal directly.
         showRenewalBlock(expiredPurchaseLink);
     }
 
-    // 加载并显示登录页面公告
+    // Load and show login announcements.
     await loadLoginAnnouncements();
 
     $(document).on('keydown', (evt) => {
         if (evt.key === 'Enter' && document.activeElement.tagName === 'INPUT') {
-            // 阻止默认行为，防止表单重复提交
+            // Prevent default behavior and duplicate submissions.
             evt.preventDefault();
 
             if ($('#passwordRecoveryBlock').is(':visible')) {
@@ -394,19 +394,19 @@ function configureDiscreetLogin() {
 })();
 
 /**
- * 显示续费窗口
- * @param {string} purchaseLink 购买链接
+ * Show the renewal modal.
+ * @param {string} purchaseLink Purchase link
  */
 function showRenewalBlock(purchaseLink) {
-    // 隐藏所有其他块
+    // Hide other blocks.
     $('#userListBlock').hide();
     $('#passwordRecoveryBlock').hide();
     $('#errorMessage').hide();
 
-    // 显示续费块
+    // Show the renewal block.
     $('#renewalBlock').show();
 
-    // 显示购买链接（如果有）
+    // Show the purchase link (if available).
     if (purchaseLink) {
         $('#renewalPurchaseLink').show();
         $('#renewalPurchaseLinkUrl').text(purchaseLink).attr('href', purchaseLink);
@@ -414,17 +414,17 @@ function showRenewalBlock(purchaseLink) {
         $('#renewalPurchaseLink').hide();
     }
 
-    // 清空输入框
+    // Clear inputs.
     $('#renewalCode').val('');
 
-    // 焦点到输入框
+    // Focus the input.
     setTimeout(() => {
         $('#renewalCode').focus();
     }, 200);
 }
 
 /**
- * 取消续费，返回登录界面
+ * Cancel renewal and return to the login screen.
  */
 function onCancelRenewalClick() {
     $('#renewalBlock').hide();
@@ -433,18 +433,18 @@ function onCancelRenewalClick() {
 }
 
 /**
- * 提交续费请求
+ * Submit the renewal request.
  */
 async function onSubmitRenewalClick() {
     const renewalCode = String($('#renewalCode').val() || '').trim();
 
     if (!renewalCode) {
-        displayError('请输入续费码');
+        displayError('Please enter a renewal code.');
         return;
     }
 
     if (!currentLoginAttempt.handle || !currentLoginAttempt.password) {
-        displayError('登录信息丢失，请重新登录');
+        displayError('Login details are missing. Please log in again.');
         onCancelRenewalClick();
         return;
     }
@@ -465,36 +465,36 @@ async function onSubmitRenewalClick() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            displayError(errorData.error || '续费失败');
+            displayError(errorData.error || 'Renewal failed.');
             return;
         }
 
         const data = await response.json();
 
         if (data.success) {
-            displayError('续费成功！正在登录...', true);
-            // 续费成功后自动登录
+            displayError('Renewal successful! Logging you in...', true);
+            // Auto-login after successful renewal.
             setTimeout(async () => {
                 await performLogin(currentLoginAttempt.handle, currentLoginAttempt.password);
             }, 1000);
         }
     } catch (error) {
         console.error('Error renewing account:', error);
-        displayError('续费失败：' + String(error));
+        displayError('Renewal failed: ' + String(error));
     }
 }
 
 /**
- * 显示错误或成功消息
- * @param {string} message 消息内容
- * @param {boolean} isSuccess 是否为成功消息
+ * Show an error or success message.
+ * @param {string} message Message text
+ * @param {boolean} isSuccess Whether the message is a success message
  */
 function displayError(message, isSuccess = false) {
     const errorBlock = $('#errorMessage');
     errorBlock.text(message);
     errorBlock.show();
 
-    // 如果是成功消息，改变样式
+    // Update styling for success messages.
     if (isSuccess) {
         errorBlock.css({
             'background': 'rgba(40, 167, 69, 0.2)',
@@ -511,7 +511,7 @@ function displayError(message, isSuccess = false) {
 }
 
 /**
- * 获取并显示登录页面公告
+ * Fetch and display login announcements.
  */
 async function loadLoginAnnouncements() {
     try {
@@ -539,8 +539,8 @@ async function loadLoginAnnouncements() {
 }
 
 /**
- * 显示登录页面公告
- * @param {Array} announcements 公告列表
+ * Render login announcements.
+ * @param {Array} announcements Announcement list
  */
 function showLoginAnnouncements(announcements) {
     const announcementArea = $('#loginAnnouncementArea');
@@ -554,14 +554,14 @@ function showLoginAnnouncements(announcements) {
     announcements.forEach(announcement => {
         const typeClass = announcement.type || 'info';
         const typeName = {
-            'info': '信息',
-            'warning': '警告',
-            'success': '成功',
-            'error': '错误'
-        }[typeClass] || '信息';
+            info: 'Info',
+            warning: 'Warning',
+            success: 'Success',
+            error: 'Error',
+        }[typeClass] || 'Info';
 
         const createdDate = announcement.createdAt
-            ? new Date(announcement.createdAt).toLocaleString('zh-CN', {
+            ? new Date(announcement.createdAt).toLocaleString('en-US', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -588,9 +588,9 @@ function showLoginAnnouncements(announcements) {
 }
 
 /**
- * 前端用户名规范化函数（与后端保持一致）
- * @param {string} handle 原始用户名
- * @returns {string} 规范化后的用户名
+ * Normalize handles on the frontend (keep in sync with backend).
+ * @param {string} handle Raw handle
+ * @returns {string} Normalized handle
  */
 function normalizeHandleFrontend(handle) {
     if (!handle || typeof handle !== 'string') {
@@ -598,17 +598,17 @@ function normalizeHandleFrontend(handle) {
     }
 
     return handle
-        .toLowerCase()                    // 转换为小写
-        .trim()                           // 去除首尾空格
-        .replace(/[^a-z0-9-]/g, '-')      // 将非字母数字字符替换为横杠
-        .replace(/-+/g, '-')              // 连续横杠合并为一个
-        .replace(/^-+|-+$/g, '');         // 去除首尾横杠
+        .toLowerCase()                    // Convert to lowercase.
+        .trim()                           // Trim whitespace.
+        .replace(/[^a-z0-9-]/g, '-')      // Replace non-alphanumerics with hyphens.
+        .replace(/-+/g, '-')              // Collapse repeated hyphens.
+        .replace(/^-+|-+$/g, '');         // Trim leading/trailing hyphens.
 }
 
 /**
- * HTML转义，防止XSS
- * @param {string} text 要转义的文本
- * @returns {string} 转义后的文本
+ * Escape HTML to prevent XSS.
+ * @param {string} text Text to escape
+ * @returns {string} Escaped text
  */
 function escapeHtml(text) {
     if (!text) return '';
@@ -618,7 +618,7 @@ function escapeHtml(text) {
 }
 
 /**
- * 加载OAuth配置并显示相应的登录按钮
+ * Load OAuth configuration and show login buttons.
  */
 async function loadOAuthConfig() {
     try {
@@ -639,7 +639,7 @@ async function loadOAuthConfig() {
 
         let hasOAuth = false;
 
-        // 显示GitHub登录按钮
+        // Show GitHub login button.
         if (config.github?.enabled) {
             $('#githubLoginButton').show();
             $('#githubLoginButton').on('click', () => {
@@ -648,7 +648,7 @@ async function loadOAuthConfig() {
             hasOAuth = true;
         }
 
-        // 显示Discord登录按钮
+        // Show Discord login button.
         if (config.discord?.enabled) {
             $('#discordLoginButton').show();
             $('#discordLoginButton').on('click', () => {
@@ -657,7 +657,7 @@ async function loadOAuthConfig() {
             hasOAuth = true;
         }
 
-        // 显示Linux.do登录按钮
+        // Show Linux.do login button.
         if (config.linuxdo?.enabled) {
             $('#linuxdoLoginButton').show();
             $('#linuxdoLoginButton').on('click', () => {
@@ -666,7 +666,7 @@ async function loadOAuthConfig() {
             hasOAuth = true;
         }
 
-        // 如果有OAuth选项，显示分隔线和按钮容器
+        // If any OAuth option is available, show the divider and buttons.
         if (hasOAuth) {
             $('#oauthDivider').show();
             $('#oauthButtons').show();
@@ -677,7 +677,7 @@ async function loadOAuthConfig() {
 }
 
 /**
- * 检查是否需要输入邀请码（OAuth待验证用户）
+ * Check whether an invitation code is required (pending OAuth user).
  */
 async function checkOAuthPendingInvitation() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -686,55 +686,55 @@ async function checkOAuthPendingInvitation() {
 
     if (error) {
         displayError(decodeURIComponent(error));
-        // 清除URL参数
+        // Clear URL parameters.
         window.history.replaceState({}, document.title, '/login');
         return;
     }
 
     if (oauthPending === 'true') {
-        // 显示邀请码输入界面
+        // Show invitation code input.
         showOAuthInvitationPrompt();
     }
 }
 
 /**
- * 显示OAuth邀请码输入提示
+ * Show the OAuth invitation code prompt.
  */
 function showOAuthInvitationPrompt() {
-    // 隐藏其他块
+    // Hide other blocks.
     $('#userListBlock').hide();
     $('#passwordRecoveryBlock').hide();
     $('#renewalBlock').hide();
 
-    // 创建邀请码输入界面
+    // Create invitation input UI.
     const invitationBlock = $(`
         <div id="oauthInvitationBlock" class="wide100p" style="display:block;">
             <div class="flex-container flexFlowColumn alignItemsCenter">
                 <h3 style="margin-bottom: 10px;">
-                    🎉 OAuth登录成功
+                    🎉 OAuth login successful
                 </h3>
                 <div style="text-align: center; margin-bottom: 20px; line-height: 1.6;">
-                    请输入邀请码完成注册
+                    Enter an invitation code to complete registration.
                 </div>
-                <input id="oauthInvitationCode" class="text_pole" type="text" placeholder="请输入邀请码" autocomplete="off" autofocus>
+                <input id="oauthInvitationCode" class="text_pole" type="text" placeholder="Enter invitation code" autocomplete="off" autofocus>
                 <div class="flex-container flexGap10" style="margin-top: 20px;">
-                    <div id="submitOAuthInvitation" class="menu_button">提交</div>
-                    <div id="cancelOAuthInvitation" class="menu_button">取消</div>
+                    <div id="submitOAuthInvitation" class="menu_button">Submit</div>
+                    <div id="cancelOAuthInvitation" class="menu_button">Cancel</div>
                 </div>
             </div>
         </div>
     `);
 
-    // 替换用户列表块
+    // Replace the user list block.
     $('#userListBlock').replaceWith(invitationBlock);
 
-    // 绑定事件
+    // Bind events.
     $('#submitOAuthInvitation').on('click', submitOAuthInvitation);
     $('#cancelOAuthInvitation').on('click', () => {
         window.location.href = '/login';
     });
 
-    // 回车提交
+    // Submit on Enter.
     $('#oauthInvitationCode').on('keydown', (evt) => {
         if (evt.key === 'Enter') {
             evt.preventDefault();
@@ -744,13 +744,13 @@ function showOAuthInvitationPrompt() {
 }
 
 /**
- * 提交OAuth邀请码验证
+ * Submit OAuth invitation code verification.
  */
 async function submitOAuthInvitation() {
     const invitationCode = String($('#oauthInvitationCode').val() || '').trim();
 
     if (!invitationCode) {
-        displayError('请输入邀请码');
+        displayError('Please enter an invitation code.');
         return;
     }
 
@@ -766,19 +766,19 @@ async function submitOAuthInvitation() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            displayError(errorData.error || '邀请码验证失败');
+            displayError(errorData.error || 'Invitation code verification failed.');
             return;
         }
 
         const data = await response.json();
         if (data.success) {
-            displayError('注册成功！正在登录...', true);
+            displayError('Registration complete! Logging you in...', true);
             setTimeout(() => {
                 redirectToHome();
             }, 1000);
         }
     } catch (error) {
         console.error('Error submitting OAuth invitation code:', error);
-        displayError('邀请码验证失败：' + String(error));
+        displayError('Invitation code verification failed: ' + String(error));
     }
 }

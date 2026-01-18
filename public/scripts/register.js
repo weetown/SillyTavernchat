@@ -1,4 +1,4 @@
-// 注册页面JavaScript
+// Registration page JavaScript.
 let regCsrfToken = '';
 
 async function getCsrfToken() {
@@ -33,43 +33,43 @@ document.addEventListener('DOMContentLoaded', async function() {
     let verificationCooldown = 0;
     let emailServiceEnabled = false;
 
-    // 先获取CSRF Token，再检查是否需要邀请码和邮件服务状态
+    // Fetch CSRF token, then check invitation codes and email service status.
     await getCsrfToken();
     await checkEmailServiceStatus();
     await checkInvitationCodeStatus();
 
-    // 返回登录按钮事件
+    // Back to login button.
     backToLoginButton.addEventListener('click', function() {
         window.location.href = '/login';
     });
 
-    // 发送验证码按钮事件
+    // Send verification code button.
     sendVerificationButton.addEventListener('click', async function() {
         const email = userEmailInput.value.trim();
         const userName = displayNameInput.value.trim() || userHandleInput.value.trim();
 
         if (!email) {
-            showError('请输入邮箱地址');
+            showError('Please enter an email address.');
             return;
         }
 
         if (!userName) {
-            showError('请先填写显示名称或用户名');
+            showError('Please enter a display name or username first.');
             return;
         }
 
-        // 验证邮箱格式
+        // Validate email format.
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            showError('邮箱格式不正确');
+            showError('Invalid email format.');
             return;
         }
 
-        // 发送验证码
+        // Send verification code.
         await sendVerificationCodeToEmail(email, userName);
     });
 
-    // 表单提交事件
+    // Form submit handler.
     registerForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -83,16 +83,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             invitationCode: invitationCodeInput.value.trim()
         };
 
-        // 基本验证
+        // Basic validation.
         if (!validateForm(formData)) {
             return;
         }
 
-        // 提交注册请求
+        // Submit registration request.
         submitRegistration(formData);
     });
 
-    // 实时验证
+    // Live validation.
     userHandleInput.addEventListener('input', validateHandle);
     userPasswordInput.addEventListener('input', validatePassword);
     confirmPasswordInput.addEventListener('input', validateConfirmPassword);
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const data = await response.json();
             emailServiceEnabled = data.enabled || false;
 
-            // 如果邮件服务未启用，隐藏整个邮箱验证区域
+            // Hide the email verification section if email service is disabled.
             const emailSection = document.getElementById('emailSection');
 
             if (!emailServiceEnabled) {
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } catch (error) {
             console.error('Error checking email service status:', error);
             emailServiceEnabled = false;
-            // 出错时隐藏整个邮箱验证区域
+            // Hide the email verification section on error.
             const emailSection = document.getElementById('emailSection');
             if (emailSection) emailSection.style.display = 'none';
             userEmailInput.required = false;
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 credentials: 'same-origin',
             });
             if (!response.ok) {
-                // 可能是被中间件拦截，直接退出不影响注册
+                // Possibly blocked by middleware; exit without blocking registration.
                 return;
             }
             const data = await response.json();
@@ -155,72 +155,72 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     function validateForm(formData) {
-        // 清除之前的错误消息
+        // Clear previous errors.
         hideError();
 
-        // 检查基本必填字段
+        // Check required fields.
         if (!formData.handle || !formData.name || !formData.password || !formData.confirmPassword) {
-            showError('请填写所有必填字段');
+            showError('Please fill in all required fields.');
             return false;
         }
 
-        // 如果邮件服务启用，验证邮箱和验证码
+        // If email service is enabled, validate email and verification code.
         if (emailServiceEnabled) {
             if (!formData.email || !formData.verificationCode) {
-                showError('请填写邮箱和验证码');
+                showError('Please enter both email and verification code.');
                 return false;
             }
 
-            // 验证邮箱格式
+            // Validate email format.
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(formData.email)) {
-                showError('邮箱格式不正确');
+                showError('Invalid email format.');
                 return false;
             }
 
-            // 验证验证码格式
+            // Validate code format.
             if (!/^\d{6}$/.test(formData.verificationCode)) {
-                showError('验证码格式不正确，应为6位数字');
+                showError('Invalid verification code format. It should be 6 digits.');
                 return false;
             }
         }
 
-        // 规范化用户名：支持英文大小写、数字和横杠
+        // Normalize the username: letters, numbers, and hyphens.
         const normalizedHandle = normalizeHandleFrontend(formData.handle);
 
         if (!normalizedHandle) {
-            showError('用户名无效，仅支持英文、数字和横杠');
+            showError('Invalid username. Use only letters, numbers, and hyphens.');
             return false;
         }
 
-        // 验证用户名格式：只允许字母、数字和横杠
+        // Validate username format.
         if (!/^[a-z0-9-]+$/.test(normalizedHandle)) {
-            showError('用户名只能包含字母、数字和横杠');
+            showError('Username can only contain letters, numbers, and hyphens.');
             return false;
         }
 
-        // 额外：限制过于随意/弱的用户名
+        // Extra check for overly trivial usernames.
         if (isTrivialHandle(normalizedHandle)) {
-            showError('用户名过于简单或在黑名单中，请使用更有辨识度的用户名');
+            showError('Username is too simple or blocked. Please choose a more distinctive username.');
             return false;
         }
 
-        // 验证密码长度
+        // Validate password length.
         if (formData.password.length < 6) {
-            showError('密码长度至少6位');
+            showError('Password must be at least 6 characters.');
             return false;
         }
 
-        // 验证密码确认
+        // Confirm passwords match.
         if (formData.password !== formData.confirmPassword) {
-            showError('两次输入的密码不一致');
+            showError('Passwords do not match.');
             return false;
         }
 
-        // 如果需要邀请码，检查是否填写
+        // If invitation is required, verify it is provided.
         const needsInvitation = invitationSection && invitationSection.style.display !== 'none';
         if (needsInvitation && !formData.invitationCode) {
-            showError('请输入邀请码');
+            showError('Please enter an invitation code.');
             return false;
         }
 
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
         }
 
-        // 规范化用户名：支持英文大小写、数字和横杠
+        // Normalize the username: letters, numbers, and hyphens.
         const normalizedHandle = normalizeHandleFrontend(handle);
 
         if (!normalizedHandle || !/^[a-z0-9-]+$/.test(normalizedHandle) || isTrivialHandle(normalizedHandle)) {
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     /**
-     * 前端用户名规范化函数（与后端保持一致）
+     * Normalize handles on the frontend (keep in sync with backend).
      */
     function normalizeHandleFrontend(handle) {
         if (!handle || typeof handle !== 'string') {
@@ -257,23 +257,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         return handle
-            .toLowerCase()                    // 转换为小写
-            .trim()                           // 去除首尾空格
-            .replace(/[^a-z0-9-]/g, '-')      // 将非字母数字字符替换为横杠
-            .replace(/-+/g, '-')              // 连续横杠合并为一个
-            .replace(/^-+|-+$/g, '');         // 去除首尾横杠
+            .toLowerCase()                    // Convert to lowercase.
+            .trim()                           // Trim whitespace.
+            .replace(/[^a-z0-9-]/g, '-')      // Replace non-alphanumerics with hyphens.
+            .replace(/-+/g, '-')              // Collapse repeated hyphens.
+            .replace(/^-+|-+$/g, '');         // Trim leading/trailing hyphens.
     }
 
-    // 与后端一致的随意/弱用户名判断
+    // Trivial/weak username check (kept in sync with backend).
     function isTrivialHandle(handle) {
         if (!handle) return true;
-        const h = String(handle).toLowerCase().replace(/-/g, ''); // 移除横杠后判断
+        const h = String(handle).toLowerCase().replace(/-/g, ''); // Check after removing hyphens.
 
-        // 长度太短
+        // Too short.
         if (h.length < 3) return true;
 
-        if (/^\d{3,}$/.test(h)) return true; // 纯数字且>=3
-        if (/^(.)\1{2,}$/.test(h)) return true; // 同字符重复>=3
+        if (/^\d{3,}$/.test(h)) return true; // All digits and length >= 3.
+        if (/^(.)\1{2,}$/.test(h)) return true; // Same character repeated >= 3.
         const banned = new Set([
             '123', '1234', '12345', '123456', '000', '0000', '111', '1111',
             'qwe', 'qwer', 'qwert', 'qwerty', 'asdf', 'zxc', 'zxcv', 'zxcvb', 'qaz', 'qazwsx',
@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             input.classList.add('valid');
         }
 
-        // 同时验证确认密码
+        // Validate confirmation at the same time.
         const confirmPassword = confirmPasswordInput;
         if (confirmPassword.value) {
             validateConfirmPassword.call(confirmPassword);
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     function submitRegistration(formData) {
-        // 显示加载状态
+        // Show loading state.
         setLoading(true);
 
         fetch('/api/users/register', {
@@ -339,21 +339,21 @@ document.addEventListener('DOMContentLoaded', async function() {
             body: JSON.stringify(formData)
         })
         .then(async (response) => {
-            // 先读取响应文本（只读取一次）
+            // Read response text once.
             const text = await response.text();
 
             if (!response.ok) {
-                // 尝试解析为 JSON 获取错误信息
+                // Try to parse JSON for error messages.
                 try {
                     const data = JSON.parse(text);
-                    throw new Error(data.error || '注册失败');
+                    throw new Error(data.error || 'Registration failed.');
                 } catch (e) {
-                    // 如果不是 JSON，直接使用文本内容
-                    throw new Error(text || '注册失败');
+                    // If not JSON, use raw text.
+                    throw new Error(text || 'Registration failed.');
                 }
             }
 
-            // 成功时也解析文本为 JSON
+            // Parse text as JSON on success too.
             try {
                 return JSON.parse(text);
             } catch {
@@ -361,22 +361,22 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         })
         .then(data => {
-            // 注册成功，显示消息并跳转到登录页面
-            const message = data.message || '注册成功！正在跳转到登录页面...';
+            // Registration success: show message and redirect to login.
+            const message = data.message || 'Registration successful! Redirecting to the login page...';
             showSuccess(message);
 
-            // 如果用户名被规范化，额外提示
-            if (data.message && data.message.includes('规范化')) {
-                console.info('用户名已规范化为:', data.handle);
+            // If the handle was normalized, log the normalized handle.
+            if (data.message && (data.message.includes('normalized') || data.message.includes('\u89c4\u8303\u5316'))) {
+                console.info('Username normalized to:', data.handle);
             }
 
             setTimeout(() => {
                 window.location.href = '/login';
-            }, 3000); // 延长到3秒，让用户看清提示
+            }, 3000); // Delay to let the user read the message.
         })
         .catch(error => {
             console.error('Registration error:', error);
-            showError(error.message || '注册失败，请稍后重试');
+            showError(error.message || 'Registration failed. Please try again.');
         })
         .finally(() => {
             setLoading(false);
@@ -407,23 +407,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (loading) {
             registerButton.classList.add('loading');
             registerButton.disabled = true;
-            registerButton.textContent = '注册中...';
+            registerButton.textContent = 'Registering...';
         } else {
             registerButton.classList.remove('loading');
             registerButton.disabled = false;
-            registerButton.textContent = '创建账户';
+            registerButton.textContent = 'Create account';
         }
     }
 
     async function sendVerificationCodeToEmail(email, userName) {
         if (verificationCooldown > 0) {
-            showError(`请等待 ${verificationCooldown} 秒后再次发送`);
+            showError(`Please wait ${verificationCooldown} seconds before resending.`);
             return;
         }
 
-        // 禁用按钮并显示加载状态
+        // Disable button and show loading state.
         sendVerificationButton.disabled = true;
-        sendVerificationButton.textContent = '发送中...';
+        sendVerificationButton.textContent = 'Sending...';
 
         try {
             const response = await fetch('/api/users/send-verification', {
@@ -438,13 +438,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || '发送验证码失败');
+                throw new Error(data.error || 'Failed to send verification code.');
             }
 
             verificationCodeSent = true;
-            showSuccess('验证码已发送至您的邮箱，请查收');
+            showSuccess('The verification code has been sent to your email.');
 
-            // 启动60秒冷却
+            // Start 60-second cooldown.
             verificationCooldown = 60;
             updateCooldownButton();
 
@@ -453,7 +453,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 if (verificationCooldown <= 0) {
                     clearInterval(interval);
                     sendVerificationButton.disabled = false;
-                    sendVerificationButton.textContent = '重新发送';
+                    sendVerificationButton.textContent = 'Resend';
                 } else {
                     updateCooldownButton();
                 }
@@ -461,13 +461,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         } catch (error) {
             console.error('Send verification code error:', error);
-            showError(error.message || '发送验证码失败，请稍后重试');
+            showError(error.message || 'Failed to send verification code. Please try again.');
             sendVerificationButton.disabled = false;
-            sendVerificationButton.textContent = '发送验证码';
+            sendVerificationButton.textContent = 'Send verification code';
         }
     }
 
     function updateCooldownButton() {
-        sendVerificationButton.textContent = `${verificationCooldown}秒后重试`;
+        sendVerificationButton.textContent = `Retry in ${verificationCooldown}s`;
     }
 });

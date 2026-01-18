@@ -1,28 +1,28 @@
 <div class="adminTabs wide100p">
     <nav class="adminNav flex-container alignItemsCenter justifyCenter">
         <button type="button" class="manageUsersButton menu_button menu_button_icon" data-target-tab="usersList">
-            <h4 data-i18n="Manager Users">管理用户</h4>
+            <h4 data-i18n="Manager Users">Manage Users</h4>
         </button>
         <button type="button" class="newUserButton menu_button menu_button_icon" data-target-tab="registerNewUserBlock">
-            <h4 data-i18n="New User">新用户</h4>
+            <h4 data-i18n="New User">New User</h4>
         </button>
         <button type="button" class="systemLoadButton menu_button menu_button_icon" data-target-tab="systemLoadBlock">
-            <h4 data-i18n="System Load">系统负载</h4>
+            <h4 data-i18n="System Load">System Load</h4>
         </button>
         <button type="button" class="invitationCodesButton menu_button menu_button_icon" data-target-tab="invitationCodesBlock">
-            <h4 data-i18n="Invitation Codes">邀请码管理</h4>
+            <h4 data-i18n="Invitation Codes">Invitation Codes</h4>
         </button>
         <button type="button" class="announcementsButton menu_button menu_button_icon" data-target-tab="announcementsBlock">
-            <h4 data-i18n="Announcements">公告管理</h4>
+            <h4 data-i18n="Announcements">Announcements</h4>
         </button>
         <button type="button" class="emailConfigButton menu_button menu_button_icon" data-target-tab="emailConfigBlock">
-            <h4 data-i18n="Email Config">邮件配置</h4>
+            <h4 data-i18n="Email Config">Email Config</h4>
         </button>
         <button type="button" class="oauthConfigButton menu_button menu_button_icon" data-target-tab="oauthConfigBlock">
-            <h4 data-i18n="OAuth Config">OAuth配置</h4>
+            <h4 data-i18n="OAuth Config">OAuth Config</h4>
         </button>
         <button type="button" class="defaultConfigButton menu_button menu_button_icon" data-target-tab="defaultConfigBlock">
-            <h4 data-i18n="Default Config">默认配置</h4>
+            <h4 data-i18n="Default Config">Default Config</h4>
         </button>
     </nav>
 
@@ -69,11 +69,11 @@
                         <span class="userCreated">&nbsp;</span>
                     </span>
                     <span>
-                        <span data-i18n="Expires:">到期时间:</span>
+                        <span data-i18n="Expires:">Expires:</span>
                         <span class="userExpiresAt">&nbsp;</span>
                     </span>
                     <span>
-                        <span data-i18n="Storage Size:">存储占用:</span>
+                        <span data-i18n="Storage Size:">Storage Size:</span>
                         <span class="userStorageSize">&nbsp;</span>
                     </span>
                 </div>
@@ -103,7 +103,7 @@
                     <div class="userChangePasswordButton menu_button" title="Change user password.">
                         <i class="fa-fw fa-solid fa-key"></i>
                     </div>
-                    <div class="userClearBackupsButton menu_button warning" title="清理该用户的备份文件">
+                    <div class="userClearBackupsButton menu_button warning" title="Clear this user's backups">
                         <i class="fa-fw fa-solid fa-broom"></i>
                     </div>
                     <div class="userDelete menu_button warning" title="Delete user account.">
@@ -117,77 +117,77 @@
         <div class="flex-container justifyCenter flexGap10" style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid var(--SmartThemeBorderColor);">
             <button type="button" class="menu_button menu_button_icon warning clearAllBackupsButton">
                 <i class="fa-fw fa-solid fa-trash-alt"></i>
-                <span>一键清理所有用户备份文件</span>
+                <span>Clear all user backups</span>
             </button>
             <button type="button" class="menu_button menu_button_icon warning deleteInactiveUsersButton">
                 <i class="fa-fw fa-solid fa-user-times"></i>
-                <span>删除长期未登录用户</span>
+                <span>Delete long inactive users</span>
             </button>
         </div>
 
-        <!-- 定时任务配置区域 -->
+        <!-- Scheduled task configuration area -->
         <div class="scheduledTasksSection" style="margin: 20px 0; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 10px; color: var(--SmartThemeBodyColor);">
             <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--SmartThemeBodyColor);">
                 <i class="fa-fw fa-solid fa-clock"></i>
-                定时任务配置
+                Scheduled task configuration
             </h3>
 
-            <!-- 定时清理所有用户备份文件 -->
+            <!-- Scheduled cleanup of all user backups -->
             <div class="scheduledTaskItem" style="margin-bottom: 20px; padding: 15px; background: var(--SmartThemeBlurTintColor); border-radius: 8px; border: 1px solid var(--SmartThemeBorderColor); color: var(--SmartThemeBodyColor);">
                 <div class="flex-container alignItemsCenter justifySpaceBetween" style="margin-bottom: 15px;">
                     <div>
                         <h4 style="margin: 0 0 5px 0; color: var(--SmartThemeBodyColor);">
                             <i class="fa-fw fa-solid fa-calendar-days"></i>
-                            定时清理所有用户备份文件
+                            Scheduled cleanup of all user backups
                         </h4>
                         <p style="margin: 0; font-size: 0.9em; opacity: 0.8; color: var(--SmartThemeEmColor);">
-                            自动定期清理所有用户的备份文件，释放存储空间
+                            Automatically clear all user backups on a schedule to free storage.
                         </p>
                     </div>
                     <label class="checkbox_label" style="margin: 0; color: var(--SmartThemeBodyColor);">
                         <input type="checkbox" id="scheduledClearBackupsEnabled" />
-                        <span>启用定时任务</span>
+                        <span>Enable scheduled task</span>
                     </label>
                 </div>
 
                 <div class="flex-container flexFlowColumn flexGap10" id="scheduledClearBackupsConfig" style="display: none; color: var(--SmartThemeBodyColor);">
                     <div class="flex-container flexGap10 alignItemsCenter">
-                        <label style="min-width: 120px; color: var(--SmartThemeBodyColor);">Cron表达式:</label>
+                        <label style="min-width: 120px; color: var(--SmartThemeBodyColor);">Cron expression:</label>
                         <input type="text" id="scheduledClearBackupsCron" class="text_pole flex1"
-                               placeholder="例如: 0 2 * * * (每天凌晨2点)"
+                               placeholder="Example: 0 2 * * * (daily at 2 AM)"
                                pattern="[0-9\*\-\,\/\s]+">
-                        <button type="button" class="menu_button menu_button_icon" id="testScheduledClearBackupsCron" title="验证Cron表达式">
+                        <button type="button" class="menu_button menu_button_icon" id="testScheduledClearBackupsCron" title="Validate Cron expression">
                             <i class="fa-fw fa-solid fa-check"></i>
-                            <span>验证</span>
+                            <span>Validate</span>
                         </button>
                     </div>
 
                     <div class="cronExamples" style="margin-top: 10px; padding: 10px; background: var(--SmartThemeChatTintColor); border-radius: 5px; font-size: 0.85em; color: var(--SmartThemeBodyColor); border: 1px solid var(--SmartThemeBorderColor);">
-                        <strong style="color: var(--SmartThemeBodyColor);">常用Cron表达式示例：</strong>
+                        <strong style="color: var(--SmartThemeBodyColor);">Common Cron examples:</strong>
                         <ul style="margin: 5px 0 0 0; padding-left: 20px; color: var(--SmartThemeEmColor);">
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 2 * * *</code> - 每天凌晨2点执行</li>
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 * * 0</code> - 每周日凌晨执行</li>
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 1 * *</code> - 每月1号凌晨执行</li>
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 */6 * * *</code> - 每6小时执行一次</li>
-                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 0 * * 0</code> - 每周日凌晨执行</li>
+                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 2 * * *</code> - Runs daily at 2 AM</li>
+                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 * * 0</code> - Runs Sunday at midnight</li>
+                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 1 * *</code> - Runs on the 1st of each month at midnight</li>
+                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 */6 * * *</code> - Runs every 6 hours</li>
+                            <li style="margin: 5px 0;"><code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">0 0 0 * * 0</code> - Runs Sunday at midnight</li>
                         </ul>
                         <p style="margin: 5px 0 0 0; opacity: 0.9; color: var(--SmartThemeEmColor);">
-                            Cron格式: <code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">分钟 小时 日 月 星期</code>
+                            Cron format: <code style="background: var(--SmartThemeBlurTintColor); padding: 2px 6px; border-radius: 3px; color: var(--SmartThemeQuoteColor); border: 1px solid var(--SmartThemeBorderColor);">minute hour day month weekday</code>
                         </p>
                     </div>
 
                     <div class="flex-container flexGap10" style="margin-top: 10px;">
                         <button type="button" class="menu_button menu_button_icon" id="saveScheduledClearBackups">
                             <i class="fa-fw fa-solid fa-save"></i>
-                            <span>保存配置</span>
+                            <span>Save configuration</span>
                         </button>
-                        <button type="button" class="menu_button menu_button_icon" id="testScheduledClearBackups" title="立即执行一次清理任务（用于测试）">
+                        <button type="button" class="menu_button menu_button_icon" id="testScheduledClearBackups" title="Run a cleanup task now (test)">
                             <i class="fa-fw fa-solid fa-play"></i>
-                            <span>立即执行</span>
+                            <span>Run now</span>
                         </button>
                         <button type="button" class="menu_button menu_button_icon" id="loadScheduledClearBackups">
                             <i class="fa-fw fa-solid fa-sync"></i>
-                            <span>刷新状态</span>
+                            <span>Refresh status</span>
                         </button>
                     </div>
 
@@ -229,15 +229,15 @@
 
     </div>
 
-    <!-- 系统负载管理选项卡 -->
+    <!-- System Load tab -->
     <div class="navTab systemLoadBlock" style="display: none;">
         <div class="flex-container flexFlowColumn flexGap10">
-            <h3 data-i18n="System Load Monitoring">系统负载监控</h3>
+            <h3 data-i18n="System Load Monitoring">System Load Monitoring</h3>
 
-            <!-- 系统概览 -->
+            <!-- System overview -->
             <div class="systemOverview flex-container flexGap20">
                 <div class="systemCard flex1">
-                    <h4>CPU 使用率</h4>
+                    <h4>CPU Usage</h4>
                     <div class="systemMetric">
                         <span class="metricValue" id="cpuUsage">--</span>
                         <span class="metricUnit">%</span>
@@ -248,7 +248,7 @@
                 </div>
 
                 <div class="systemCard flex1">
-                    <h4>内存使用</h4>
+                    <h4>Memory Usage</h4>
                     <div class="systemMetric">
                         <span class="metricValue" id="memoryUsage">--</span>
                         <span class="metricUnit">%</span>
@@ -259,27 +259,27 @@
                 </div>
 
                 <div class="systemCard flex1">
-                    <h4>活跃用户</h4>
+                    <h4>Active Users</h4>
                     <div class="systemMetric">
                         <span class="metricValue" id="activeUsers">--</span>
-                        <span class="metricUnit">人</span>
+                        <span class="metricUnit">users</span>
                     </div>
                     <div class="metricSubtext" id="activeUsersSummary">--</div>
                 </div>
 
                 <div class="systemCard flex1">
-                    <h4>运行时间</h4>
+                    <h4>Uptime</h4>
                     <div class="systemMetric">
                         <span class="metricValue" id="uptime">--</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 用户统计 -->
+            <!-- User stats -->
             <div class="userActivitySection">
-                <h4>用户统计</h4>
+                <h4>User stats</h4>
                 <div class="userActivityList" id="userActivityList">
-                    <!-- 用户统计数据将在这里动态加载 -->
+                    <!-- User stats will load here -->
                 </div>
             </div>
 
@@ -334,349 +334,349 @@
                 }
             </style>
 
-            <!-- 操作按钮 -->
+            <!-- Action buttons -->
             <div class="flex-container justifyCenter flexGap10">
                 <button type="button" class="menu_button menu_button_icon" id="refreshSystemLoad">
                     <i class="fa-fw fa-solid fa-refresh"></i>
-                    <span data-i18n="Refresh">刷新数据</span>
+                    <span data-i18n="Refresh">Refresh data</span>
                 </button>
                 <button type="button" class="menu_button menu_button_icon warning" id="clearSystemStats">
                     <i class="fa-fw fa-solid fa-trash"></i>
-                    <span data-i18n="Clear Stats">清除统计</span>
+                    <span data-i18n="Clear Stats">Clear stats</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 邀请码管理选项卡 -->
+    <!-- Invitation Codes tab -->
     <div class="navTab invitationCodesBlock" style="display: none;">
         <div class="flex-container flexFlowColumn flexGap10">
-            <h3 data-i18n="Invitation Code Management">邀请码管理</h3>
+            <h3 data-i18n="Invitation Code Management">Invitation Codes</h3>
 
-            <!-- 使用说明 -->
+            <!-- Instructions -->
             <div class="usage-notice" style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 10px; margin-bottom: 15px;">
                 <h4 style="margin-top: 0; color: #856404;">
                     <i class="fa-fw fa-solid fa-info-circle"></i>
-                    使用说明
+                    Instructions
                 </h4>
                 <p style="margin: 5px 0; color: #856404;">
-                    <strong>邀请码功能开关：</strong>邀请码功能默认是关闭的，需要手动编辑配置文件来启用。
+                    <strong>Invitation codes toggle:</strong> Invitation codes are disabled by default and must be enabled via the config file.
                 </p>
                 <p style="margin: 5px 0; color: #856404;">
-                    请在项目根目录下的 <code>.\config.yaml</code> 文件中添加以下配置：
+                    Add the following config to <code>.\config.yaml</code> in the project root:
                 </p>
                 <pre style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 3px; padding: 8px; margin: 5px 0; font-family: monospace; font-size: 12px;">enableInvitationCodes: true</pre>
                 <p style="margin: 5px 0; color: #856404;">
-                    保存配置文件后，重启服务器即可启用邀请码功能。
+                    Restart the server after saving the configuration to enable invitation codes.
                 </p>
             </div>
 
-            <!-- 购买链接设置 -->
+            <!-- Purchase link settings -->
             <div class="purchaseLinkSection">
-                <h4>续费码购买链接设置</h4>
+                <h4>Renewal code purchase link</h4>
                 <p style="opacity: 0.7; font-size: 0.9em; margin-bottom: 10px;">
-                    设置用户可以购买续费码的链接地址，用户在账户过期或续费时会看到此链接。
+                    Set the link where users can purchase renewal codes. Users see it when expired or renewing.
                 </p>
                 <form class="flex-container flexGap10 alignItemsCenter purchaseLinkForm" action="javascript:void(0);">
                     <div class="flex1">
-                        <input name="purchaseLink" class="text_pole wide100p" type="url" placeholder="例如：https://your-shop.com/buy-code" id="purchaseLinkInput">
+                        <input name="purchaseLink" class="text_pole wide100p" type="url" placeholder="Example: https://your-shop.com/buy-code" id="purchaseLinkInput">
                     </div>
                     <button type="submit" class="menu_button menu_button_icon">
                         <i class="fa-fw fa-solid fa-save"></i>
-                        <span>保存购买链接</span>
+                        <span>Save purchase link</span>
                     </button>
                 </form>
                 <div class="purchaseLinkStatus" style="margin-top: 5px; font-size: 0.9em; display: none;"></div>
             </div>
 
-            <!-- 创建邀请码 -->
+            <!-- Create invitation code -->
             <div class="createInvitationSection" style="margin-top: 20px;">
-                <h4>创建邀请码</h4>
+                <h4>Create invitation code</h4>
 
-                <!-- 单个创建 -->
+                <!-- Single create -->
                 <div class="creation-mode" id="singleCreationMode">
                     <form class="flex-container flexGap10 alignItemsCenter createInvitationForm" action="javascript:void(0);">
                         <div class="flex-container flexNoGap">
-                            <span>有效期类型:</span>
+                            <span>Validity period:</span>
                             <select name="durationType" class="text_pole">
-                                <option value="1day">1天</option>
-                                <option value="1week">1周</option>
-                                <option value="1month" selected>1个月</option>
-                                <option value="1quarter">1季度</option>
-                                <option value="6months">半年</option>
-                                <option value="1year">1年</option>
-                                <option value="permanent">永久</option>
+                                <option value="1day">1 day</option>
+                                <option value="1week">1 week</option>
+                                <option value="1month" selected>1 month</option>
+                                <option value="1quarter">1 quarter</option>
+                                <option value="6months">6 months</option>
+                                <option value="1year">1 year</option>
+                                <option value="permanent">Permanent</option>
                             </select>
                         </div>
                         <button type="submit" class="menu_button menu_button_icon">
                             <i class="fa-fw fa-solid fa-plus"></i>
-                            <span data-i18n="Create Code">创建邀请码</span>
+                            <span data-i18n="Create Code">Create invitation code</span>
                         </button>
                     </form>
                 </div>
 
-                <!-- 批量创建 -->
+                <!-- Batch create -->
                 <div class="creation-mode" id="batchCreationMode" style="display: none;">
                     <form class="flex-container flexGap10 alignItemsCenter createBatchInvitationForm" action="javascript:void(0);">
                         <div class="flex-container flexNoGap">
-                            <span>数量:</span>
-                            <input name="batchCount" class="text_pole" type="number" placeholder="批量创建数量" min="1" max="100" value="10">
+                            <span>Quantity:</span>
+                            <input name="batchCount" class="text_pole" type="number" placeholder="Batch quantity" min="1" max="100" value="10">
                         </div>
                         <div class="flex-container flexNoGap">
-                            <span>有效期类型:</span>
+                            <span>Validity period:</span>
                             <select name="batchDurationType" class="text_pole">
-                                <option value="1day">1天</option>
-                                <option value="1week">1周</option>
-                                <option value="1month" selected>1个月</option>
-                                <option value="1quarter">1季度</option>
-                                <option value="6months">半年</option>
-                                <option value="1year">1年</option>
-                                <option value="permanent">永久</option>
+                                <option value="1day">1 day</option>
+                                <option value="1week">1 week</option>
+                                <option value="1month" selected>1 month</option>
+                                <option value="1quarter">1 quarter</option>
+                                <option value="6months">6 months</option>
+                                <option value="1year">1 year</option>
+                                <option value="permanent">Permanent</option>
                             </select>
                         </div>
                         <button type="submit" class="menu_button menu_button_icon">
                             <i class="fa-fw fa-solid fa-layer-group"></i>
-                            <span data-i18n="Batch Create">批量创建</span>
+                            <span data-i18n="Batch Create">Batch create</span>
                         </button>
                     </form>
                 </div>
 
-                <!-- 切换按钮 -->
+                <!-- Toggle buttons -->
                 <div class="creation-toggle flex-container flexGap10">
                     <button type="button" class="menu_button menu_button_icon creation-toggle-btn active" data-mode="single">
                         <i class="fa-fw fa-solid fa-plus"></i>
-                        <span>单个创建</span>
+                        <span>Single create</span>
                     </button>
                     <button type="button" class="menu_button menu_button_icon creation-toggle-btn" data-mode="batch">
                         <i class="fa-fw fa-solid fa-layer-group"></i>
-                        <span>批量创建</span>
+                        <span>Batch create</span>
                     </button>
                 </div>
             </div>
 
-            <!-- 邀请码列表 -->
+            <!-- Invitation code list -->
             <div class="invitationCodesList">
                 <div class="flex-container alignItemsCenter flexGap10" style="justify-content: space-between; margin-bottom: 10px; flex-wrap: nowrap;">
-                    <h4 style="margin: 0; white-space: nowrap;">现有邀请码</h4>
+                    <h4 style="margin: 0; white-space: nowrap;">Existing invitation codes</h4>
                     <div class="flex-container alignItemsCenter" style="gap: 8px; flex-wrap: nowrap;">
-                        <span style="white-space: nowrap; font-size: 0.9em;">类型:</span>
+                        <span style="white-space: nowrap; font-size: 0.9em;">Type:</span>
                         <select id="invitationTypeFilter" class="text_pole" style="min-width: 90px;">
-                            <option value="all">全部</option>
-                            <option value="1day">1天</option>
-                            <option value="1week">1周</option>
-                            <option value="1month">1个月</option>
-                            <option value="1quarter">1季度</option>
-                            <option value="6months">半年</option>
-                            <option value="1year">1年</option>
-                            <option value="permanent">永久</option>
+                            <option value="all">All</option>
+                            <option value="1day">1 day</option>
+                            <option value="1week">1 week</option>
+                            <option value="1month">1 month</option>
+                            <option value="1quarter">1 quarter</option>
+                            <option value="6months">6 months</option>
+                            <option value="1year">1 year</option>
+                            <option value="permanent">Permanent</option>
                         </select>
-                        <span style="white-space: nowrap; font-size: 0.9em; margin-left: 8px;">状态:</span>
+                        <span style="white-space: nowrap; font-size: 0.9em; margin-left: 8px;">Status:</span>
                         <select id="invitationStatusFilter" class="text_pole" style="min-width: 90px;">
-                            <option value="all">全部</option>
-                            <option value="unused">未使用</option>
-                            <option value="used">已使用</option>
+                            <option value="all">All</option>
+                            <option value="unused">Unused</option>
+                            <option value="used">Used</option>
                         </select>
                     </div>
                 </div>
                 <div class="invitationCodesContainer" id="invitationCodesContainer">
-                    <!-- 邀请码列表将在这里动态加载 -->
+                    <!-- Invitation code list will load here -->
                 </div>
             </div>
 
-            <!-- 批量操作 -->
+            <!-- Batch actions -->
             <div class="batch-operations">
-                <h4>批量操作</h4>
+                <h4>Batch actions</h4>
                 <div class="flex-container justifyCenter flexGap10">
                     <button type="button" class="menu_button menu_button_icon" id="refreshInvitationCodes">
                         <i class="fa-fw fa-solid fa-refresh"></i>
-                        <span data-i18n="Refresh">刷新列表</span>
+                        <span data-i18n="Refresh">Refresh list</span>
                     </button>
                     <button type="button" class="menu_button menu_button_icon" id="selectAllCodes">
                         <i class="fa-fw fa-solid fa-check-square"></i>
-                        <span data-i18n="Select All">全选</span>
+                        <span data-i18n="Select All">Select all</span>
                     </button>
                     <button type="button" class="menu_button menu_button_icon" id="downloadSelectedCodes">
                         <i class="fa-fw fa-solid fa-download"></i>
-                        <span data-i18n="Download Selected">下载选中</span>
+                        <span data-i18n="Download Selected">Download selected</span>
                     </button>
                     <button type="button" class="menu_button menu_button_icon" id="downloadAllCodes">
                         <i class="fa-fw fa-solid fa-file-download"></i>
-                        <span data-i18n="Download All">下载全部</span>
+                        <span data-i18n="Download All">Download all</span>
                     </button>
                     <button type="button" class="menu_button menu_button_icon warning" id="cleanupExpiredCodes">
                         <i class="fa-fw fa-solid fa-broom"></i>
-                        <span data-i18n="Cleanup">清理过期码</span>
+                        <span data-i18n="Cleanup">Clear expired codes</span>
                     </button>
                     <button type="button" class="menu_button menu_button_icon warning" id="deleteSelectedCodes">
                         <i class="fa-fw fa-solid fa-trash-alt"></i>
-                        <span data-i18n="Delete Selected">删除选中</span>
+                        <span data-i18n="Delete Selected">Delete selected</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 公告管理选项卡 -->
+    <!-- Announcements tab -->
     <div class="navTab announcementsBlock" style="display: none;">
         <div class="flex-container flexFlowColumn flexGap10">
-            <h3 data-i18n="Announcement Management">公告管理</h3>
+            <h3 data-i18n="Announcement Management">Announcements</h3>
 
-            <!-- 公告类型切换 -->
+            <!-- Announcement type toggle -->
             <div class="flex-container justifyCenter flexGap10" style="margin-bottom: 15px;">
                 <button type="button" class="menu_button menu_button_icon announcement-type-tab active" data-type="main">
                     <i class="fa-fw fa-solid fa-home"></i>
-                    <span>主站公告</span>
+                    <span>Main site announcements</span>
                 </button>
                 <button type="button" class="menu_button menu_button_icon announcement-type-tab" data-type="login">
                     <i class="fa-fw fa-solid fa-sign-in-alt"></i>
-                    <span>登录页面公告</span>
+                    <span>Login page announcements</span>
                 </button>
             </div>
 
-            <!-- 主站公告管理 -->
+            <!-- Main site announcements -->
             <div class="announcement-section" id="mainAnnouncementSection">
-                <!-- 创建新公告 -->
+                <!-- Create new announcement -->
                 <div class="createAnnouncementSection">
-                    <h4>创建新公告</h4>
+                    <h4>Create new announcement</h4>
                     <form class="flex-container flexFlowColumn flexGap10 createAnnouncementForm" action="javascript:void(0);">
                         <div class="flex-container flexNoGap">
-                            <span>标题:</span>
-                            <input name="title" class="text_pole" type="text" placeholder="输入公告标题" required>
+                            <span>Title:</span>
+                            <input name="title" class="text_pole" type="text" placeholder="Enter announcement title" required>
                         </div>
                         <div class="flex-container flexNoGap">
-                            <span>内容:</span>
-                            <textarea name="content" class="text_pole" rows="5" placeholder="输入公告内容" required></textarea>
+                            <span>Content:</span>
+                            <textarea name="content" class="text_pole" rows="5" placeholder="Enter announcement content" required></textarea>
                         </div>
                         <div class="flex-container alignItemsCenter flexGap10">
                             <label class="flex-container alignItemsCenter flexGap5">
                                 <input name="enabled" type="checkbox" checked>
-                                <span>立即启用</span>
+                                <span>Enable now</span>
                             </label>
                             <button type="submit" class="menu_button menu_button_icon">
                                 <i class="fa-fw fa-solid fa-plus"></i>
-                                <span data-i18n="Create">创建公告</span>
+                                <span data-i18n="Create">Create announcement</span>
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- 公告列表 -->
+                <!-- Announcement list -->
                 <div class="announcementsList">
-                    <h4>现有公告</h4>
+                    <h4>Existing announcements</h4>
                     <div class="flex-container justifyCenter flexGap10" style="margin-bottom: 15px;">
                         <button type="button" class="menu_button menu_button_icon" id="refreshAnnouncements">
                             <i class="fa-fw fa-solid fa-refresh"></i>
-                            <span data-i18n="Refresh">刷新列表</span>
+                            <span data-i18n="Refresh">Refresh list</span>
                         </button>
                     </div>
                     <div class="announcementsContainer" id="announcementsContainer">
-                        <!-- 公告列表将在这里动态加载 -->
+                        <!-- Announcement list will load here -->
                     </div>
                 </div>
             </div>
 
-            <!-- 登录页面公告管理 -->
+            <!-- Login page announcements -->
             <div class="announcement-section" id="loginAnnouncementSection" style="display: none;">
-                <!-- 创建新登录页面公告 -->
+                <!-- Create new login page announcements -->
                 <div class="createAnnouncementSection">
-                    <h4>创建登录页面公告</h4>
+                    <h4>Create login page announcements</h4>
                     <form class="flex-container flexFlowColumn flexGap10 createLoginAnnouncementForm" action="javascript:void(0);">
                         <div class="flex-container flexNoGap">
-                            <span>标题:</span>
-                            <input name="title" class="text_pole" type="text" placeholder="输入公告标题" required>
+                            <span>Title:</span>
+                            <input name="title" class="text_pole" type="text" placeholder="Enter announcement title" required>
                         </div>
                         <div class="flex-container flexNoGap">
-                            <span>内容:</span>
-                            <textarea name="content" class="text_pole" rows="5" placeholder="输入公告内容" required></textarea>
+                            <span>Content:</span>
+                            <textarea name="content" class="text_pole" rows="5" placeholder="Enter announcement content" required></textarea>
                         </div>
                         <div class="flex-container alignItemsCenter flexGap10">
                             <label class="flex-container alignItemsCenter flexGap5">
-                                <span>类型:</span>
+                                <span>Type:</span>
                                 <select name="type" class="text_pole" style="width: auto; min-width: 120px;">
-                                    <option value="info">信息</option>
-                                    <option value="warning">警告</option>
-                                    <option value="success">成功</option>
-                                    <option value="error">错误</option>
+                                    <option value="info">Info</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="success">Success</option>
+                                    <option value="error">Error</option>
                                 </select>
                             </label>
                             <label class="flex-container alignItemsCenter flexGap5">
                                 <input name="enabled" type="checkbox" checked>
-                                <span>立即启用</span>
+                                <span>Enable now</span>
                             </label>
                             <button type="submit" class="menu_button menu_button_icon">
                                 <i class="fa-fw fa-solid fa-plus"></i>
-                                <span data-i18n="Create">创建公告</span>
+                                <span data-i18n="Create">Create announcement</span>
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <!-- 登录页面公告列表 -->
+                <!-- Login page announcement list -->
                 <div class="announcementsList">
-                    <h4>现有登录页面公告</h4>
+                    <h4>Existing login page announcements</h4>
                     <div class="flex-container justifyCenter flexGap10" style="margin-bottom: 15px;">
                         <button type="button" class="menu_button menu_button_icon" id="refreshLoginAnnouncements">
                             <i class="fa-fw fa-solid fa-refresh"></i>
-                            <span data-i18n="Refresh">刷新列表</span>
+                            <span data-i18n="Refresh">Refresh list</span>
                         </button>
                     </div>
                     <div class="announcementsContainer" id="loginAnnouncementsContainer">
-                        <!-- 登录页面公告列表将在这里动态加载 -->
+                        <!-- Login page announcements will load here -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 邮件配置选项卡 -->
+    <!-- Email Config tab -->
     <div class="navTab emailConfigBlock" style="display: none;">
         <div class="flex-container flexFlowColumn flexGap10">
-            <h3 data-i18n="Email Configuration">邮件服务配置</h3>
+            <h3 data-i18n="Email Configuration">Email service configuration</h3>
 
             <div class="emailConfigForm">
                 <div class="flex-container flexNoGap alignItemsBaseline">
                     <label class="checkbox_label" for="emailEnabled">
                         <input type="checkbox" id="emailEnabled" />
-                        <span data-i18n="Enable Email Service">启用邮件服务</span>
+                        <span data-i18n="Enable Email Service">Enable email service</span>
                     </label>
                 </div>
 
                 <div class="emailConfigFields" style="margin-top: 15px;">
                     <div class="flex-container flexFlowColumn flexGap10">
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="SMTP Host:" style="min-width: 120px; display: inline-block;">SMTP 服务器:</span>
-                            <input id="emailSmtpHost" class="text_pole flex1" type="text" placeholder="例如: smtp.gmail.com">
+                            <span data-i18n="SMTP Host:" style="min-width: 120px; display: inline-block;">SMTP Host:</span>
+                            <input id="emailSmtpHost" class="text_pole flex1" type="text" placeholder="Example: smtp.gmail.com">
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="SMTP Port:" style="min-width: 120px; display: inline-block;">SMTP 端口:</span>
+                            <span data-i18n="SMTP Port:" style="min-width: 120px; display: inline-block;">SMTP Port:</span>
                             <input id="emailSmtpPort" class="text_pole flex1" type="number" placeholder="587">
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsBaseline">
                             <label class="checkbox_label" for="emailSmtpSecure">
                                 <input type="checkbox" id="emailSmtpSecure" />
-                                <span data-i18n="Use SSL/TLS">使用 SSL/TLS (通常端口465需要启用)</span>
+                                <span data-i18n="Use SSL/TLS">Use SSL/TLS (usually required for port 465)</span>
                             </label>
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="SMTP User:" style="min-width: 120px; display: inline-block;">SMTP 用户名:</span>
+                            <span data-i18n="SMTP User:" style="min-width: 120px; display: inline-block;">SMTP User:</span>
                             <input id="emailSmtpUser" class="text_pole flex1" type="text" placeholder="your-email@example.com">
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="SMTP Password:" style="min-width: 120px; display: inline-block;">SMTP 密码:</span>
-                            <input id="emailSmtpPassword" class="text_pole flex1" type="password" placeholder="密码或授权码" autocomplete="new-password">
+                            <span data-i18n="SMTP Password:" style="min-width: 120px; display: inline-block;">SMTP Password:</span>
+                            <input id="emailSmtpPassword" class="text_pole flex1" type="password" placeholder="Password or app password" autocomplete="new-password">
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="From Email:" style="min-width: 120px; display: inline-block;">发件人邮箱:</span>
+                            <span data-i18n="From Email:" style="min-width: 120px; display: inline-block;">Sender email:</span>
                             <input id="emailFrom" class="text_pole flex1" type="email" placeholder="noreply@example.com">
                         </div>
 
                         <div class="flex-container flexNoGap alignItemsCenter">
-                            <span data-i18n="From Name:" style="min-width: 120px; display: inline-block;">发件人名称:</span>
+                            <span data-i18n="From Name:" style="min-width: 120px; display: inline-block;">Sender name:</span>
                             <input id="emailFromName" class="text_pole flex1" type="text" placeholder="SillyTavern">
                         </div>
                     </div>
@@ -685,38 +685,38 @@
                 <div class="flex-container justifyCenter flexGap10" style="margin-top: 20px;">
                     <button type="button" class="menu_button menu_button_icon" id="testEmailConfig">
                         <i class="fa-fw fa-solid fa-paper-plane"></i>
-                        <span data-i18n="Test Email">发送测试邮件</span>
+                        <span data-i18n="Test Email">Send test email</span>
                     </button>
                     <button type="button" class="menu_button menu_button_icon" id="saveEmailConfig">
                         <i class="fa-fw fa-solid fa-save"></i>
-                        <span data-i18n="Save">保存配置</span>
+                        <span data-i18n="Save">Save configuration</span>
                     </button>
                 </div>
 
                 <div class="emailConfigTips" style="margin-top: 20px; padding: 15px; background: var(--SmartThemeBlurTintColor); border-radius: 5px;">
-                    <h4>配置说明：</h4>
+                    <h4>Configuration notes:</h4>
                     <ul style="padding-left: 20px;">
-                        <li><strong>Gmail:</strong> 使用 smtp.gmail.com:587，需要在 Google 账号中开启"应用专用密码"</li>
-                        <li><strong>QQ邮箱:</strong> 使用 smtp.qq.com:587 或 465（启用SSL），需要获取授权码</li>
-                        <li><strong>腾讯企业邮箱:</strong> 使用 smtp.exmail.qq.com:465（必须启用SSL），使用邮箱密码</li>
-                        <li><strong>163邮箱:</strong> 使用 smtp.163.com:465（启用SSL）或 smtp.163.com:25，需要获取授权码</li>
-                        <li><strong>Outlook:</strong> 使用 smtp-mail.outlook.com:587</li>
-                        <li><strong>⚠️ 端口465必须勾选"使用 SSL/TLS"选项</strong></li>
-                        <li>配置将保存在 config.yaml 文件中，修改后需要重启服务才能生效</li>
+                        <li><strong>Gmail:</strong> Use smtp.gmail.com:587; enable an app password in your Google account.</li>
+                        <li><strong>QQ Mail:</strong> Use smtp.qq.com:587 or 465 (enable SSL); requires an authorization code.</li>
+                        <li><strong>Tencent Exmail:</strong> Use smtp.exmail.qq.com:465 (SSL required); use your mailbox password.</li>
+                        <li><strong>163 Mail:</strong> Use smtp.163.com:465 (SSL) or smtp.163.com:25; requires an authorization code.</li>
+                        <li><strong>Outlook:</strong> Use smtp-mail.outlook.com:587</li>
+                        <li><strong>⚠️ Port 465 requires the "Use SSL/TLS" option.</strong></li>
+                        <li>Configuration is saved to config.yaml. Restart the service to apply changes.</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- OAuth配置选项卡 -->
+    <!-- OAuth Config tab -->
     <div class="navTab oauthConfigBlock" style="display: none;">
         <div class="flex-container flexFlowColumn flexGap10">
-            <h3 data-i18n="OAuth Configuration">OAuth 第三方登录配置</h3>
+            <h3 data-i18n="OAuth Configuration">OAuth configuration</h3>
 
             <div class="oauthConfigContainer" style="max-width: 800px; margin: 0 auto;">
 
-                <!-- GitHub OAuth配置 -->
+                <!-- GitHub OAuth Config -->
                 <div class="oauthProvider" style="margin-bottom: 30px; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 8px;">
                     <div class="flex-container alignItemsCenter" style="margin-bottom: 15px;">
                         <i class="fa-brands fa-github" style="font-size: 24px; margin-right: 10px;"></i>
@@ -726,7 +726,7 @@
                     <div class="flex-container flexFlowColumn flexGap5">
                         <label class="checkbox_label">
                             <input type="checkbox" id="oauthGithubEnabled" />
-                            <span data-i18n="Enable GitHub OAuth">启用 GitHub 登录</span>
+                            <span data-i18n="Enable GitHub OAuth">Enable GitHub sign-in</span>
                         </label>
 
                         <div class="flex-container flexFlowColumn">
@@ -740,18 +740,18 @@
                         </div>
 
                         <div class="flex-container flexFlowColumn">
-                            <small>Callback URL <span style="color: #9b87f5;">(留空则自动使用当前服务器地址和端口)</span>:</small>
-                            <input type="text" class="text_pole" id="oauthGithubCallback" placeholder="留空则自动使用动态URL">
+                            <small>Callback URL <span style="color: #9b87f5;">(Leave blank to use the current server host and port.)</span>:</small>
+                            <input type="text" class="text_pole" id="oauthGithubCallback" placeholder="Leave blank to use a dynamic URL">
                         </div>
 
                         <small style="color: var(--SmartThemeQuoteColor); margin-top: 5px;">
-                            在 <a href="https://github.com/settings/developers" target="_blank">GitHub Developer Settings</a> 创建 OAuth App 获取凭据<br>
-                            <strong>💡 提示：</strong>如果留空Callback URL，系统会自动根据当前服务器地址和端口生成回调URL，无需手动配置
+                            In <a href="https://github.com/settings/developers" target="_blank">GitHub Developer Settings</a> create an OAuth app to obtain credentials<br>
+                            <strong>💡 Tip:</strong>If the callback URL is blank, the system will generate one from the current host and port.
                         </small>
                     </div>
                 </div>
 
-                <!-- Discord OAuth配置 -->
+                <!-- Discord OAuth Config -->
                 <div class="oauthProvider" style="margin-bottom: 30px; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 8px;">
                     <div class="flex-container alignItemsCenter" style="margin-bottom: 15px;">
                         <i class="fa-brands fa-discord" style="font-size: 24px; margin-right: 10px; color: #5865F2;"></i>
@@ -761,7 +761,7 @@
                     <div class="flex-container flexFlowColumn flexGap5">
                         <label class="checkbox_label">
                             <input type="checkbox" id="oauthDiscordEnabled" />
-                            <span data-i18n="Enable Discord OAuth">启用 Discord 登录</span>
+                            <span data-i18n="Enable Discord OAuth">Enable Discord sign-in</span>
                         </label>
 
                         <div class="flex-container flexFlowColumn">
@@ -775,18 +775,18 @@
                         </div>
 
                         <div class="flex-container flexFlowColumn">
-                            <small>Callback URL <span style="color: #9b87f5;">(留空则自动使用当前服务器地址和端口)</span>:</small>
-                            <input type="text" class="text_pole" id="oauthDiscordCallback" placeholder="留空则自动使用动态URL">
+                            <small>Callback URL <span style="color: #9b87f5;">(Leave blank to use the current server host and port.)</span>:</small>
+                            <input type="text" class="text_pole" id="oauthDiscordCallback" placeholder="Leave blank to use a dynamic URL">
                         </div>
 
                         <small style="color: var(--SmartThemeQuoteColor); margin-top: 5px;">
-                            在 <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a> 创建应用获取凭据<br>
-                            <strong>💡 提示：</strong>如果留空Callback URL，系统会自动根据当前服务器地址和端口生成回调URL，无需手动配置
+                            In <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a> create an app to obtain credentials<br>
+                            <strong>💡 Tip:</strong>If the callback URL is blank, the system will generate one from the current host and port.
                         </small>
                     </div>
                 </div>
 
-                <!-- Linux.do OAuth配置 -->
+                <!-- Linux.do OAuth Config -->
                 <div class="oauthProvider" style="margin-bottom: 30px; padding: 20px; background: var(--SmartThemeBlurTintColor); border-radius: 8px;">
                     <div class="flex-container alignItemsCenter" style="margin-bottom: 15px;">
                         <i class="fa-brands fa-linux" style="font-size: 24px; margin-right: 10px; color: #FFA500;"></i>
@@ -796,7 +796,7 @@
                     <div class="flex-container flexFlowColumn flexGap5">
                         <label class="checkbox_label">
                             <input type="checkbox" id="oauthLinuxdoEnabled" />
-                            <span data-i18n="Enable Linux.do OAuth">启用 Linux.do 登录</span>
+                            <span data-i18n="Enable Linux.do OAuth">Enable Linux.do sign-in</span>
                         </label>
 
                         <div class="flex-container flexFlowColumn">
@@ -810,8 +810,8 @@
                         </div>
 
                         <div class="flex-container flexFlowColumn">
-                            <small>Callback URL <span style="color: #9b87f5;">(留空则自动使用当前服务器地址和端口)</span>:</small>
-                            <input type="text" class="text_pole" id="oauthLinuxdoCallback" placeholder="留空则自动使用动态URL">
+                            <small>Callback URL <span style="color: #9b87f5;">(Leave blank to use the current server host and port.)</span>:</small>
+                            <input type="text" class="text_pole" id="oauthLinuxdoCallback" placeholder="Leave blank to use a dynamic URL">
                         </div>
 
                         <div class="flex-container flexFlowColumn">
@@ -830,170 +830,170 @@
                         </div>
 
                         <small style="color: var(--SmartThemeQuoteColor); margin-top: 5px;">
-                            在 <a href="https://connect.linux.do" target="_blank">Linux.do Connect</a> 创建应用获取凭据<br>
-                            <strong>💡 提示：</strong>如果留空Callback URL，系统会自动根据当前服务器地址和端口生成回调URL，无需手动配置
+                            In <a href="https://connect.linux.do" target="_blank">Linux.do Connect</a> create an app to obtain credentials<br>
+                            <strong>💡 Tip:</strong>If the callback URL is blank, the system will generate one from the current host and port.
                         </small>
                     </div>
                 </div>
 
-                <!-- 保存按钮 -->
+                <!-- Save buttons -->
                 <div class="flex-container justifyCenter flexGap10" style="margin-top: 20px;">
                     <button type="button" class="menu_button menu_button_icon" id="loadOAuthConfig">
                         <i class="fa-fw fa-solid fa-sync"></i>
-                        <span data-i18n="Load Configuration">加载配置</span>
+                        <span data-i18n="Load Configuration">Load configuration</span>
                     </button>
                     <button type="button" class="menu_button menu_button_icon" id="saveOAuthConfig">
                         <i class="fa-fw fa-solid fa-save"></i>
-                        <span data-i18n="Save">保存配置</span>
+                        <span data-i18n="Save">Save configuration</span>
                     </button>
                 </div>
 
                 <div class="oauthConfigTips" style="margin-top: 20px; padding: 15px; background: var(--SmartThemeBlurTintColor); border-radius: 5px;">
-                    <h4>⚠️ 重要说明：</h4>
+                    <h4>⚠️ Important notes:</h4>
                     <ul style="padding-left: 20px;">
-                        <li>配置将保存在 <code>config.yaml</code> 文件中</li>
-                        <li>修改配置后需要<strong>重启服务</strong>才能生效</li>
-                        <li>Callback URL 必须与 OAuth 应用中配置的回调地址完全一致</li>
-                        <li>如果开启了邀请码注册，OAuth 登录的新用户也需要输入邀请码</li>
-                        <li>建议在生产环境使用 HTTPS 以确保安全性</li>
+                        <li>Configuration is saved in <code>config.yaml</code>.</li>
+                        <li>Restart the service after changes.</li>
+                        <li>Callback URL must match the OAuth app configuration exactly.</li>
+                        <li>If invitation codes are required, OAuth sign-ups must also provide a code.</li>
+                        <li>Use HTTPS in production for security.</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 默认配置选项卡 -->
+    <!-- Default Config tab -->
     <div class="navTab defaultConfigBlock" style="display: none;">
         <div class="flex-container flexFlowColumn flexGap10">
-            <h3 data-i18n="Default User Template">默认用户配置模板</h3>
+            <h3 data-i18n="Default User Template">Default user template</h3>
 
             <div class="defaultConfigStatusBox" id="defaultConfigStatus">
-                正在加载默认配置状态...
+                Loading default config status...
             </div>
 
             <div class="flex-container flexGap10">
                 <button type="button" class="menu_button menu_button_icon" id="refreshDefaultConfigStatus">
                     <i class="fa-fw fa-solid fa-sync"></i>
-                    <span data-i18n="Refresh">刷新状态</span>
+                    <span data-i18n="Refresh">Refresh status</span>
                 </button>
                 <button type="button" class="menu_button menu_button_icon warning" id="clearDefaultConfig">
                     <i class="fa-fw fa-solid fa-trash"></i>
-                    <span data-i18n="Clear">清空模板</span>
+                    <span data-i18n="Clear">Clear template</span>
                 </button>
             </div>
 
             <div class="defaultConfigSection">
-                <h4>从现有用户生成模板</h4>
+                <h4>Build template from existing user</h4>
                 <div class="flex-container flexGap10 alignItemsCenter">
-                    <span style="min-width: 90px;">来源用户:</span>
+                    <span style="min-width: 90px;">Source user:</span>
                     <select id="defaultConfigSourceUser" class="text_pole flex1"></select>
                     <button type="button" class="menu_button menu_button_icon" id="reloadDefaultConfigUsers">
                         <i class="fa-fw fa-solid fa-rotate"></i>
-                        <span>刷新</span>
+                        <span>Refresh</span>
                     </button>
                 </div>
 
                 <div class="defaultConfigCategories">
                     <div class="defaultConfigCategoryGroup">
-                        <h5>核心</h5>
+                        <h5>Core</h5>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="settings" checked>
-                            <span>设置 (settings.json)</span>
+                            <span>Settings (settings.json)</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="secrets">
-                            <span>API 密钥 (secrets.json)</span>
+                            <span>API keys (secrets.json)</span>
                         </label>
                     </div>
 
                     <div class="defaultConfigCategoryGroup">
-                        <h5>预设</h5>
+                        <h5>Presets</h5>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="context" checked>
-                            <span>上下文模板</span>
+                            <span>Context templates</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="instruct" checked>
-                            <span>指令模板</span>
+                            <span>Instruction templates</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="sysprompt" checked>
-                            <span>系统提示词</span>
+                            <span>System prompts</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="reasoning">
-                            <span>推理模板</span>
+                            <span>Reasoning templates</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="quickreplies">
-                            <span>快捷回复</span>
+                            <span>Quick replies</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="openai_settings" checked>
-                            <span>OpenAI 预设</span>
+                            <span>OpenAI Presets</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="kobold_settings">
-                            <span>KoboldAI 预设</span>
+                            <span>KoboldAI Presets</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="novel_settings">
-                            <span>NovelAI 预设</span>
+                            <span>NovelAI Presets</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="textgen_settings">
-                            <span>TextGen 预设</span>
+                            <span>TextGen Presets</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="moving_ui">
-                            <span>布局位置 (MovingUI)</span>
+                            <span>Layout positions (MovingUI)</span>
                         </label>
                     </div>
 
                     <div class="defaultConfigCategoryGroup">
-                        <h5>内容</h5>
+                        <h5>Content</h5>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="characters" checked>
-                            <span>默认角色卡</span>
+                            <span>Default character cards</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="worlds">
-                            <span>世界书 / Lorebook</span>
+                            <span>World info / Lorebook</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="backgrounds">
-                            <span>背景图</span>
+                            <span>Backgrounds</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="themes">
-                            <span>主题</span>
+                            <span>Themes</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="avatars">
-                            <span>用户头像</span>
+                            <span>User avatars</span>
                         </label>
                         <label class="checkbox_label">
                             <input type="checkbox" class="defaultConfigCategory" value="assets">
-                            <span>资源文件 (assets)</span>
+                            <span>Asset files (assets)</span>
                         </label>
                     </div>
                 </div>
 
                 <div class="defaultConfigWarning">
                     <i class="fa-fw fa-solid fa-triangle-exclamation"></i>
-                    <span>包含 API 密钥会写入默认模板，新用户注册后会自动继承这些密钥。</span>
+                    <span>API keys included here will be written to the default template and inherited by new users.</span>
                 </div>
-                <small style="opacity: 0.75;">未勾选的内容会从模板中移除。</small>
+                <small style="opacity: 0.75;">Unchecked content will be removed from the template.</small>
 
                 <div class="flex-container justifyCenter flexGap10" style="margin-top: 10px;">
                     <button type="button" class="menu_button menu_button_icon" id="saveDefaultConfig">
                         <i class="fa-fw fa-solid fa-floppy-disk"></i>
-                        <span>保存为默认配置</span>
+                        <span>Save as default config</span>
                     </button>
                 </div>
 
                 <small style="opacity: 0.8;">
-                    默认模板保存在 <code>data/default-template</code>，新用户注册时会自动应用。
+                    The default template is saved in <code>data/default-template</code> and applied for new user registrations.
                 </small>
             </div>
         </div>

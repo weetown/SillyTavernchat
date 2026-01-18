@@ -1,6 +1,6 @@
 /**
- * 公共页面配置管理
- * 根据服务器配置动态控制页面链接的显示
+ * Public page configuration.
+ * Dynamically control page links based on server config.
  */
 
 let publicPagesConfig = {
@@ -9,7 +9,7 @@ let publicPagesConfig = {
 };
 
 /**
- * 获取公共页面配置
+ * Fetch public page configuration.
  */
 async function fetchPublicPagesConfig() {
     try {
@@ -33,10 +33,10 @@ async function fetchPublicPagesConfig() {
 }
 
 /**
- * 根据配置隐藏或显示页面链接
+ * Show or hide page links based on configuration.
  */
 function updatePageLinks() {
-    // 更新角色卡分享链接
+    // Update public character links.
     const publicCharactersLinks = document.querySelectorAll('a[href="/public-characters"], #publicCharactersLink');
     publicCharactersLinks.forEach(link => {
         if (!publicPagesConfig.enablePublicCharacters) {
@@ -46,7 +46,7 @@ function updatePageLinks() {
         }
     });
 
-    // 更新论坛链接
+    // Update forum links.
     const forumLinks = document.querySelectorAll('a[href="/forum"], #forumLink');
     forumLinks.forEach(link => {
         if (!publicPagesConfig.enableForum) {
@@ -58,21 +58,21 @@ function updatePageLinks() {
 }
 
 /**
- * 初始化公共页面配置
+ * Initialize public page configuration.
  */
 async function initPublicPagesConfig() {
     await fetchPublicPagesConfig();
     updatePageLinks();
 }
 
-// 当DOM加载完成后初始化
+// Initialize after DOM is ready.
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPublicPagesConfig);
 } else {
     initPublicPagesConfig();
 }
 
-// 导出函数供其他脚本使用
+// Export helpers for other scripts.
 window.publicPagesConfig = {
     fetch: fetchPublicPagesConfig,
     update: updatePageLinks,

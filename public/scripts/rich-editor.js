@@ -1,18 +1,18 @@
-// 富文本编辑器功能
+// Rich text editor helpers.
 let richEditor = null;
 
-// 初始化富文本编辑器
+// Initialize rich editor.
 function initRichEditor() {
     const editorElement = document.getElementById('articleContent');
     if (!editorElement) return;
 
-    // 设置编辑器为可编辑
+    // Make editor editable.
     editorElement.contentEditable = true;
 
-    // 绑定工具栏按钮事件
+    // Bind toolbar button events.
     bindToolbarEvents();
 
-    // 绑定图片上传事件
+    // Bind image upload events.
     bindImageUpload();
 
     richEditor = {
@@ -22,7 +22,7 @@ function initRichEditor() {
     };
 }
 
-// 绑定工具栏按钮事件
+// Bind toolbar button events.
 function bindToolbarEvents() {
     const toolbarButtons = document.querySelectorAll('.toolbar-btn');
 
@@ -40,7 +40,7 @@ function bindToolbarEvents() {
     });
 }
 
-// 绑定图片上传事件
+// Bind image upload events.
 function bindImageUpload() {
     const insertImageBtn = document.getElementById('insertImageBtn');
     const imageUpload = document.getElementById('imageUpload');
@@ -59,7 +59,7 @@ function bindImageUpload() {
     }
 }
 
-// 上传图片
+// Upload image.
 async function uploadImage(file) {
     try {
         const formData = new FormData();
@@ -73,18 +73,18 @@ async function uploadImage(file) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || '图片上传失败');
+            throw new Error(errorData.error || 'Image upload failed.');
         }
 
         const result = await response.json();
 
-        // 插入图片到编辑器
+        // Insert image into editor.
         const img = document.createElement('img');
         img.src = result.url;
         img.style.maxWidth = '100%';
         img.style.height = 'auto';
 
-        // 在光标位置插入图片
+        // Insert image at cursor.
         const selection = window.getSelection();
         if (selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
@@ -95,28 +95,28 @@ async function uploadImage(file) {
             selection.removeAllRanges();
             selection.addRange(range);
         } else {
-            // 如果没有选择，插入到编辑器末尾
+            // If there is no selection, append to the end.
             const editorElement = document.getElementById('articleContent');
             editorElement.appendChild(img);
         }
 
-        // 清空文件输入
+        // Clear file input.
         document.getElementById('imageUpload').value = '';
 
     } catch (error) {
         console.error('Error uploading image:', error);
-        alert('图片上传失败: ' + error.message);
+        alert('Image upload failed: ' + error.message);
     }
 }
 
-// 修改原有的文章表单提交处理，使用富文本编辑器内容
+// Update article submit handling to use rich editor content.
 const originalHandleArticleSubmit = window.handleArticleSubmit;
 if (originalHandleArticleSubmit) {
     window.handleArticleSubmit = async function(event) {
         event.preventDefault();
 
         if (!window.currentUser && !currentUser) {
-            alert('请先登录后再发布文章');
+            alert('Please log in to publish posts.');
             return;
         }
 
@@ -133,7 +133,7 @@ if (originalHandleArticleSubmit) {
         };
 
         try {
-            // 获取CSRF token
+            // Get CSRF token.
             const csrfToken = await getCsrfToken();
 
             const headers = {
@@ -153,21 +153,21 @@ if (originalHandleArticleSubmit) {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || '发布失败');
+                throw new Error(errorData.error || 'Publish failed.');
             }
 
             const result = await response.json();
-            alert('文章发布成功！');
+            alert('Post published successfully!');
             window.closeArticleModal();
             window.loadArticles();
         } catch (error) {
             console.error('Failed to create article:', error);
-            alert(`发布失败: ${error.message}`);
+            alert(`Publish failed: ${error.message}`);
         }
     };
 }
 
-// 获取CSRF token
+// Get CSRF token.
 async function getCsrfToken() {
     try {
         const response = await fetch('/csrf-token', {
@@ -183,7 +183,7 @@ async function getCsrfToken() {
     return null;
 }
 
-// 页面加载完成后初始化编辑器
+// Initialize editor after page load.
 document.addEventListener('DOMContentLoaded', () => {
     initRichEditor();
 });

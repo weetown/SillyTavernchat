@@ -1,4 +1,4 @@
-// 论坛页面JavaScript
+// Forum page JavaScript.
 let currentUser = null;
 let articles = [];
 let currentPage = 1;
@@ -11,13 +11,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function initializeForum() {
     try {
-        // 检查用户登录状态 - 带重试机制
+        // Check user login status with retries.
         await checkUserStatus();
 
-        // 加载文章
+        // Load posts.
         await loadArticles();
 
-        // 绑定事件
+        // Bind events.
         bindEvents();
 
     } catch (error) {
@@ -27,7 +27,7 @@ async function initializeForum() {
 
 async function checkUserStatus(retryCount = 0) {
     const maxRetries = 3;
-    const retryDelay = 500; // 毫秒
+    const retryDelay = 500; // Milliseconds.
 
     try {
         const response = await fetch('/api/users/me', {
@@ -41,7 +41,7 @@ async function checkUserStatus(retryCount = 0) {
             updateUserInterface(user);
             console.log('User logged in:', user.handle);
         } else {
-            // 如果是 401 且还有重试次数，则重试
+            // Retry on 401 if we still have attempts left.
             if (response.status === 401 && retryCount < maxRetries) {
                 console.log(`User status check failed (attempt ${retryCount + 1}/${maxRetries + 1}), retrying...`);
                 await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -52,7 +52,7 @@ async function checkUserStatus(retryCount = 0) {
         }
     } catch (error) {
         console.error('Error checking user status:', error);
-        // 如果是网络错误且还有重试次数，则重试
+        // Retry on network error if we still have attempts left.
         if (retryCount < maxRetries) {
             console.log(`Network error (attempt ${retryCount + 1}/${maxRetries + 1}), retrying...`);
             await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -69,13 +69,13 @@ function updateUserInterface(user) {
     const userName = document.getElementById('userName');
 
     if (user) {
-        // currentUser 已经在 checkUserStatus 中设置，这里只更新 UI
+        // currentUser is set in checkUserStatus; only update UI here.
         userInfo.style.display = 'flex';
         loginPrompt.style.display = 'none';
         userName.textContent = user.name || user.handle;
         console.log('UI updated for logged-in user:', user.handle);
     } else {
-        // currentUser 已经在 checkUserStatus 中设置为 null，这里只更新 UI
+        // currentUser is set to null in checkUserStatus; only update UI here.
         userInfo.style.display = 'none';
         loginPrompt.style.display = 'block';
         console.log('UI updated for logged-out state');
@@ -96,9 +96,9 @@ async function loadArticles() {
         });
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
-                // 未登录或未授权：显示登录提示，不抛错
+                // Not logged in or unauthorized: show login prompt without throwing.
                 updateUserInterface(null);
-                articlesGrid.innerHTML = '<div class="error-message">请先登录后再访问论坛</div>';
+                articlesGrid.innerHTML = '<div class="error-message">Please log in to access the forum.</div>';
                 return;
             }
             throw new Error('Failed to load articles');
@@ -110,9 +110,9 @@ async function loadArticles() {
     } catch (error) {
         console.error('Error loading articles:', error);
         if (String(error && error.message || '').includes('401') || String(error && error.message || '').includes('403')) {
-            articlesGrid.innerHTML = '<div class="error-message">请先登录后再访问论坛</div>';
+            articlesGrid.innerHTML = '<div class="error-message">Please log in to access the forum.</div>';
         } else {
-            articlesGrid.innerHTML = '<div class="error-message">加载文章失败，请刷新页面重试</div>';
+            articlesGrid.innerHTML = '<div class="error-message">Failed to load posts. Please refresh and try again.</div>';
         }
     } finally {
         loadingIndicator.style.display = 'none';
@@ -171,24 +171,24 @@ function createArticleCard(article) {
 }
 
 function bindEvents() {
-    // 搜索功能
+    // Search.
     const searchInput = /** @type {HTMLInputElement} */ (document.getElementById('searchInput'));
     searchInput.addEventListener('input', debounce(handleSearch, 300));
 
-    // 筛选功能
+    // Filters.
     const categoryFilter = /** @type {HTMLSelectElement} */ (document.getElementById('categoryFilter'));
     const sortFilter = /** @type {HTMLSelectElement} */ (document.getElementById('sortFilter'));
     categoryFilter.addEventListener('change', handleFilter);
     sortFilter.addEventListener('change', handleFilter);
 
-    // 发布文章按钮 - 移除onclick属性并绑定事件
+    // Publish button: remove inline onclick and bind event.
     const publishButton = /** @type {HTMLButtonElement|null} */ (document.querySelector('button[onclick="createArticle()"]'));
     if (publishButton) {
         publishButton.removeAttribute('onclick');
         publishButton.addEventListener('click', createArticle);
     }
 
-    // 文章表单提交
+    // Post form submission.
     const articleForm = /** @type {HTMLFormElement} */ (document.getElementById('articleForm'));
     articleForm.addEventListener('submit', handleArticleSubmit);
 }
@@ -216,12 +216,12 @@ function handleFilter() {
 
     let filteredArticles = [...articles];
 
-    // 分类筛选
+    // Filter by category.
     if (category) {
         filteredArticles = filteredArticles.filter(article => article.category === category);
     }
 
-    // 排序
+    // Sort.
     switch (sort) {
         case 'popular':
             filteredArticles.sort((a, b) => (b.likes || 0) - (a.likes || 0));
@@ -252,13 +252,13 @@ function renderFilteredArticles(filteredArticles) {
 
 function createArticle() {
     if (!currentUser) {
-        alert('请先登录');
+        alert('Please log in first.');
         return;
     }
 
     (/** @type {HTMLElement} */ (document.getElementById('articleModal'))).style.display = 'flex';
     (/** @type {HTMLFormElement} */ (document.getElementById('articleForm'))).reset();
-    document.getElementById('articleModalTitle').textContent = '发布新文章';
+    document.getElementById('articleModalTitle').textContent = 'Publish new post';
 }
 
 function closeArticleModal() {
@@ -269,7 +269,7 @@ async function handleArticleSubmit(e) {
     e.preventDefault();
 
     if (!currentUser) {
-        alert('请先登录');
+        alert('Please log in first.');
         return;
     }
 
@@ -286,12 +286,12 @@ async function handleArticleSubmit(e) {
     };
 
     if (!formData.title || !formData.content) {
-        alert('请填写标题和内容');
+        alert('Please enter both a title and content.');
         return;
     }
 
     try {
-        // 获取CSRF token
+        // Get CSRF token.
         const csrfToken = await getCsrfToken();
 
         const headers = /** @type {HeadersInit} */ ({
@@ -311,7 +311,7 @@ async function handleArticleSubmit(e) {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '发布失败');
+            throw new Error(error.error || 'Failed to publish post.');
         }
 
         const newArticle = await response.json();
@@ -319,15 +319,15 @@ async function handleArticleSubmit(e) {
         renderArticles();
         closeArticleModal();
 
-        alert('文章发布成功！');
+        alert('Post published successfully!');
 
     } catch (error) {
         console.error('Error creating article:', error);
-        alert(error.message || '发布失败，请稍后重试');
+        alert(error.message || 'Failed to publish post. Please try again.');
     }
 }
 
-// 获取CSRF token
+// Get CSRF token.
 async function getCsrfToken() {
     try {
         const response = await fetch('/csrf-token', {
@@ -356,7 +356,7 @@ async function openArticleDetail(articleId) {
 
     } catch (error) {
         console.error('Error loading article detail:', error);
-        alert('加载文章详情失败');
+        alert('Failed to load post details.');
     }
 }
 
@@ -372,7 +372,7 @@ function renderArticleDetail() {
     document.getElementById('articleLikes').textContent = currentArticle.likes || 0;
     document.getElementById('commentsCount').textContent = currentArticle.comments_count || 0;
 
-    // 渲染标签
+    // Render tags.
     const tagsContainer = document.getElementById('articleDetailTags');
     if (currentArticle.tags && currentArticle.tags.length > 0) {
         tagsContainer.innerHTML = currentArticle.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('');
@@ -380,20 +380,20 @@ function renderArticleDetail() {
         tagsContainer.innerHTML = '';
     }
 
-    // 渲染评论
+    // Render comments.
     renderComments();
 
-    // 显示/隐藏删除按钮
+    // Show/hide delete button.
     const deleteBtn = /** @type {HTMLButtonElement} */ (document.getElementById('deleteArticleBtn'));
     if (currentUser && (currentUser.handle === currentArticle.author.handle || currentUser.admin)) {
         deleteBtn.style.display = 'inline-flex';
-        // 绑定删除事件
+        // Bind delete event.
         deleteBtn.onclick = () => deleteArticle(currentArticle.id);
     } else {
         deleteBtn.style.display = 'none';
     }
 
-    // 更新点赞按钮状态
+    // Update like button state.
     updateLikeButtonState();
 }
 
@@ -408,17 +408,17 @@ function renderComments() {
     }
 
     if (!currentArticle.comments || currentArticle.comments.length === 0) {
-        commentsList.innerHTML = '<p style="text-align: center; color: #666;">暂无评论</p>';
+        commentsList.innerHTML = '<p style="text-align: center; color: #666;">No comments yet.</p>';
         return;
     }
 
-    // 构建嵌套评论结构
+    // Build nested comments.
     const commentsHtml = buildNestedComments(currentArticle.comments);
     commentsList.innerHTML = commentsHtml;
 }
 
 function buildNestedComments(comments, parentId = null, level = 0) {
-    // 过滤出当前层级的评论
+    // Filter comments at the current level.
     const currentLevelComments = comments.filter(comment => comment.parent_id === parentId);
 
     if (currentLevelComments.length === 0) {
@@ -430,7 +430,7 @@ function buildNestedComments(comments, parentId = null, level = 0) {
     for (const comment of currentLevelComments) {
         html += createCommentHtml(comment, level);
 
-        // 递归添加子评论
+        // Recursively append child comments.
         const childComments = buildNestedComments(comments, comment.id, level + 1);
         if (childComments) {
             html += childComments;
@@ -453,10 +453,10 @@ function createCommentHtml(comment, level = 0) {
 
     const replyButton = currentUser ?
         `<button class="comment-reply-btn" onclick="showReplyForm('${comment.id}')">
-            <i class="fa-solid fa-reply"></i> 回复
+            <i class="fa-solid fa-reply"></i> Reply
         </button>` : '';
 
-    const marginLeft = level * 30; // 每层缩进30px
+    const marginLeft = level * 30; // Indent 30px per level.
 
     return `
         <div class="comment" style="margin-left: ${marginLeft}px;" data-comment-id="${comment.id}">
@@ -470,15 +470,15 @@ function createCommentHtml(comment, level = 0) {
             </div>
             <div class="comment-content">${escapeHtml(comment.content)}</div>
 
-            <!-- 回复表单 -->
+            <!-- Reply form -->
             <div class="reply-form" id="replyForm_${comment.id}" style="display: none;">
-                <textarea placeholder="写下你的回复..." rows="2"></textarea>
+                <textarea placeholder="Write your reply..." rows="2"></textarea>
                 <div class="reply-actions">
                     <button class="btn btn-primary btn-sm" onclick="submitReply('${comment.id}')">
-                        <i class="fa-solid fa-paper-plane"></i> 回复
+                        <i class="fa-solid fa-paper-plane"></i> Reply
                     </button>
                     <button class="btn btn-secondary btn-sm" onclick="hideReplyForm('${comment.id}')">
-                        取消
+                        Cancel
                     </button>
                 </div>
             </div>
@@ -492,33 +492,33 @@ function closeArticleDetailModal() {
 }
 
 async function submitComment() {
-    // 重新检查用户登录状态
+    // Re-check user login status.
     if (!currentUser) {
         console.warn('submitComment: currentUser is null, checking user status...');
         await checkUserStatus();
 
-        // 再次检查
+        // Check again.
         if (!currentUser) {
-            alert('请先登录后再发表评论');
+            alert('Please log in to post a comment.');
             window.location.href = '/login';
             return;
         }
     }
 
     if (!currentArticle) {
-        alert('文章信息获取失败，请刷新页面');
+        alert('Failed to load post details. Please refresh.');
         return;
     }
 
     const contentTextarea = /** @type {HTMLTextAreaElement} */ (document.getElementById('commentContent'));
     const content = contentTextarea.value.trim();
     if (!content) {
-        alert('请输入评论内容');
+        alert('Please enter a comment.');
         return;
     }
 
     try {
-        // 获取CSRF token
+        // Get CSRF token.
         const csrfToken = await getCsrfToken();
 
         const headers = /** @type {HeadersInit} */ ({
@@ -538,12 +538,12 @@ async function submitComment() {
 
         if (!response.ok) {
             if (response.status === 401) {
-                alert('登录状态已过期，请重新登录');
+                alert('Your login has expired. Please log in again.');
                 window.location.href = '/login';
                 return;
             }
             const error = await response.json();
-            throw new Error(error.error || '评论失败');
+            throw new Error(error.error || 'Failed to post comment.');
         }
 
         const newComment = await response.json();
@@ -555,28 +555,28 @@ async function submitComment() {
         contentTextarea.value = '';
         document.getElementById('commentsCount').textContent = currentArticle.comments_count;
 
-        // 显示成功提示
+        // Show success indicator.
         console.log('Comment submitted successfully');
 
     } catch (error) {
         console.error('Error submitting comment:', error);
-        alert(error.message || '评论失败，请稍后重试');
+        alert(error.message || 'Failed to post comment. Please try again.');
     }
 }
 
-// 删除文章
+// Delete post.
 async function deleteArticle(articleId) {
     if (!currentUser) {
-        alert('请先登录');
+        alert('Please log in first.');
         return;
     }
 
-    if (!confirm('确定要删除这篇文章吗？此操作不可撤销。')) {
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
         return;
     }
 
     try {
-        // 获取CSRF token
+        // Get CSRF token.
         const csrfToken = await getCsrfToken();
 
         /** @type {HeadersInit} */
@@ -590,28 +590,28 @@ async function deleteArticle(articleId) {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '删除失败');
+            throw new Error(error.error || 'Delete failed.');
         }
 
-        // 删除成功，关闭模态框并刷新文章列表
+        // On success, close modal and reload list.
         closeArticleDetailModal();
         await loadArticles();
-        alert('文章删除成功！');
+        alert('Post deleted successfully!');
 
     } catch (error) {
         console.error('Error deleting article:', error);
-        alert(error.message || '删除失败，请稍后重试');
+        alert(error.message || 'Delete failed. Please try again.');
     }
 }
 
-// 显示回复表单
+// Show reply form.
 function showReplyForm(commentId) {
-    // 隐藏所有其他回复表单
+    // Hide other reply forms.
     document.querySelectorAll('.reply-form').forEach(form => {
         (/** @type {HTMLElement} */ (form)).style.display = 'none';
     });
 
-    // 显示当前评论的回复表单
+    // Show reply form for current comment.
     const replyForm = /** @type {HTMLElement} */ (document.getElementById(`replyForm_${commentId}`));
     if (replyForm) {
         replyForm.style.display = 'block';
@@ -620,7 +620,7 @@ function showReplyForm(commentId) {
     }
 }
 
-// 隐藏回复表单
+// Hide reply form.
 function hideReplyForm(commentId) {
     const replyForm = /** @type {HTMLElement} */ (document.getElementById(`replyForm_${commentId}`));
     if (replyForm) {
@@ -630,23 +630,23 @@ function hideReplyForm(commentId) {
     }
 }
 
-// 提交回复
+// Submit reply.
 async function submitReply(parentCommentId) {
-    // 重新检查用户登录状态
+    // Re-check user login status.
     if (!currentUser) {
         console.warn('submitReply: currentUser is null, checking user status...');
         await checkUserStatus();
 
-        // 再次检查
+        // Check again.
         if (!currentUser) {
-            alert('请先登录后再回复');
+            alert('Please log in to reply.');
             window.location.href = '/login';
             return;
         }
     }
 
     if (!currentArticle) {
-        alert('文章信息获取失败，请刷新页面');
+        alert('Failed to load post details. Please refresh.');
         return;
     }
 
@@ -655,12 +655,12 @@ async function submitReply(parentCommentId) {
     const content = textarea.value.trim();
 
     if (!content) {
-        alert('请输入回复内容');
+        alert('Please enter a reply.');
         return;
     }
 
     try {
-        // 获取CSRF token
+        // Get CSRF token.
         const csrfToken = await getCsrfToken();
 
         const headers = {
@@ -683,12 +683,12 @@ async function submitReply(parentCommentId) {
 
         if (!response.ok) {
             if (response.status === 401) {
-                alert('登录状态已过期，请重新登录');
+                alert('Your login has expired. Please log in again.');
                 window.location.href = '/login';
                 return;
             }
             const error = await response.json();
-            throw new Error(error.error || '回复失败');
+            throw new Error(error.error || 'Reply failed.');
         }
 
         const newReply = await response.json();
@@ -700,20 +700,20 @@ async function submitReply(parentCommentId) {
         hideReplyForm(parentCommentId);
         document.getElementById('commentsCount').textContent = currentArticle.comments_count;
 
-        // 显示成功提示
+        // Show success indicator.
         console.log('Reply submitted successfully');
 
     } catch (error) {
         console.error('Error submitting reply:', error);
-        alert(error.message || '回复失败，请稍后重试');
+        alert(error.message || 'Reply failed. Please try again.');
     }
 }
 
 /**
- * 递归获取评论及其所有子评论的ID列表
- * @param {string} commentId 评论ID
- * @param {Array} comments 所有评论列表
- * @returns {Array<string>} 评论ID列表
+ * Recursively collect comment IDs, including replies.
+ * @param {string} commentId Comment ID
+ * @param {Array} comments Full comment list
+ * @returns {Array<string>} Comment IDs
  */
 function getCommentAndChildrenIds(commentId, comments) {
     const ids = [commentId];
@@ -726,19 +726,19 @@ function getCommentAndChildrenIds(commentId, comments) {
     return ids;
 }
 
-// 删除评论
+// Delete comment.
 async function deleteComment(commentId) {
     if (!currentUser) {
-        alert('请先登录');
+        alert('Please log in first.');
         return;
     }
 
-    if (!confirm('确定要删除这条评论吗？此操作不可撤销。\n注意：删除评论会同时删除所有回复。')) {
+    if (!confirm('Are you sure you want to delete this comment? This action cannot be undone.\nNote: This will also remove all replies.')) {
         return;
     }
 
     try {
-        // 获取CSRF token
+        // Get CSRF token.
         const csrfToken = await getCsrfToken();
 
         /** @type {HeadersInit} */
@@ -752,16 +752,16 @@ async function deleteComment(commentId) {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '删除失败');
+            throw new Error(error.error || 'Delete failed.');
         }
 
         const result = await response.json();
         const deletedCount = result.deletedCount || 1;
 
-        // 获取所有要删除的评论ID（包括子评论）
+        // Collect all IDs to remove (including replies).
         const idsToDelete = getCommentAndChildrenIds(commentId, currentArticle.comments);
 
-        // 从评论列表中移除所有被删除的评论
+        // Remove deleted comments from the list.
         currentArticle.comments = currentArticle.comments.filter(comment => !idsToDelete.includes(comment.id));
         currentArticle.comments_count = Math.max(0, (currentArticle.comments_count || 0) - deletedCount);
 
@@ -769,31 +769,31 @@ async function deleteComment(commentId) {
         document.getElementById('commentsCount').textContent = currentArticle.comments_count;
 
         if (deletedCount > 1) {
-            alert(`成功删除 ${deletedCount} 条评论（包括回复）！`);
+            alert(`Deleted ${deletedCount} comments (including replies).`);
         } else {
-            alert('评论删除成功！');
+            alert('Comment deleted successfully.');
         }
 
     } catch (error) {
         console.error('Error deleting comment:', error);
-        alert(error.message || '删除失败，请稍后重试');
+        alert(error.message || 'Delete failed. Please try again.');
     }
 }
 
-// 点赞文章
+// Like post.
 async function likeArticle() {
     if (!currentUser) {
-        alert('请先登录后再点赞');
+        alert('Please log in to like this post.');
         return;
     }
 
     if (!currentArticle) {
-        alert('文章信息获取失败');
+        alert('Failed to load post details.');
         return;
     }
 
     try {
-        // 获取CSRF token
+        // Get CSRF token.
         const csrfToken = await getCsrfToken();
 
         const headers = {
@@ -812,23 +812,23 @@ async function likeArticle() {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '点赞失败');
+            throw new Error(error.error || 'Like failed.');
         }
 
         const result = await response.json();
 
-        // 更新文章数据
+        // Update article data.
         currentArticle.likes = result.likes;
         currentArticle.user_liked = result.liked;
 
-        // 更新点赞数显示
+        // Update like count display.
         const likesElement = document.getElementById('articleLikes');
         likesElement.textContent = result.likes;
 
-        // 更新点赞按钮状态
+        // Update like button state.
         updateLikeButtonState();
 
-        // 给点赞数添加动画效果
+        // Add a small animation to the like count.
         if (likesElement) {
             likesElement.style.color = result.liked ? '#ff6b6b' : '#4CAF50';
             likesElement.style.transform = 'scale(1.2)';
@@ -843,11 +843,11 @@ async function likeArticle() {
 
     } catch (error) {
         console.error('Error liking article:', error);
-        alert(error.message || '点赞失败，请稍后重试');
+        alert(error.message || 'Like failed. Please try again.');
     }
 }
 
-// 更新点赞按钮状态
+// Update like button state.
 function updateLikeButtonState() {
     const likeButton = /** @type {HTMLButtonElement|null} */ (document.querySelector('button[onclick="likeArticle()"]'));
     if (!likeButton || !currentArticle) return;
@@ -855,33 +855,33 @@ function updateLikeButtonState() {
     const heartIcon = /** @type {HTMLElement|null} */ (likeButton.querySelector('i'));
 
     if (currentArticle.user_liked) {
-        // 已点赞状态
+        // Liked state.
         likeButton.classList.add('liked');
         if (heartIcon) {
-            heartIcon.className = 'fa-solid fa-heart'; // 实心红心
+            heartIcon.className = 'fa-solid fa-heart'; // Solid heart.
         }
-        likeButton.title = '取消点赞';
+        likeButton.title = 'Unlike';
     } else {
-        // 未点赞状态
+        // Not liked state.
         likeButton.classList.remove('liked');
         if (heartIcon) {
-            heartIcon.className = 'fa-regular fa-heart'; // 空心红心
+            heartIcon.className = 'fa-regular fa-heart'; // Outline heart.
         }
-        likeButton.title = '点赞';
+        likeButton.title = 'Like';
     }
 }
 
-// 分享文章
+// Share post.
 async function shareArticle() {
     if (!currentArticle) {
-        alert('文章信息获取失败');
+        alert('Failed to load post details.');
         return;
     }
 
     const shareUrl = `${window.location.origin}/forum#article-${currentArticle.id}`;
     const shareText = `${currentArticle.title} - ${currentArticle.author.name}`;
 
-    // 检查是否支持Web Share API
+    // Check Web Share API support.
     if (navigator.share) {
         try {
             await navigator.share({
@@ -900,12 +900,12 @@ async function shareArticle() {
     }
 }
 
-// 备用分享方法
+// Fallback share.
 function fallbackShare(url, text) {
-    // 尝试复制到剪贴板
+    // Attempt to copy to clipboard.
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
-            alert('文章链接已复制到剪贴板！\n\n' + text + '\n' + url);
+            alert('Post link copied to clipboard!\n\n' + text + '\n' + url);
         }).catch(() => {
             showShareDialog(url, text);
         });
@@ -914,11 +914,11 @@ function fallbackShare(url, text) {
     }
 }
 
-// 显示分享对话框
+// Show share dialog.
 function showShareDialog(url, text) {
     const shareContent = `${text}\n\n${url}`;
 
-    // 创建一个临时的文本域来选择和复制
+    // Create a temporary textarea for copy.
     const textArea = document.createElement('textarea');
     textArea.value = shareContent;
     textArea.style.position = 'fixed';
@@ -930,10 +930,10 @@ function showShareDialog(url, text) {
 
     try {
         document.execCommand('copy');
-        alert('文章信息已复制到剪贴板！');
+        alert('Post info copied to clipboard!');
     } catch (err) {
-        // 如果复制失败，显示分享信息供手动复制
-        alert('请手动复制以下信息：\n\n' + shareContent);
+        // If copy fails, show the content for manual copy.
+        alert('Please copy the following info manually:\n\n' + shareContent);
     }
 
     document.body.removeChild(textArea);
@@ -952,7 +952,7 @@ function updatePagination() {
     }
 
     pagination.style.display = 'flex';
-    pageInfo.textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
 
     prevPage.disabled = currentPage <= 1;
     nextPage.disabled = currentPage >= totalPages;
@@ -975,7 +975,7 @@ function nextPage() {
     }
 }
 
-// 工具函数
+// Utility helpers.
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -1005,17 +1005,17 @@ function formatDate(dateString) {
 
     let date;
 
-    // 处理后端返回的特殊格式: "2024-1-15 @14h 30m 45s 123ms"
+    // Handle custom backend format: "2024-1-15 @14h 30m 45s 123ms"
     if (dateString.includes('@') && dateString.includes('h ') && dateString.includes('m ')) {
         try {
-            // 解析自定义格式
+            // Parse custom format.
             const parts = dateString.split(' @');
             const datePart = parts[0]; // "2024-1-15"
             const timePart = parts[1]; // "14h 30m 45s 123ms"
 
             const dateComponents = datePart.split('-');
             const year = parseInt(dateComponents[0]);
-            const month = parseInt(dateComponents[1]) - 1; // JavaScript月份从0开始
+            const month = parseInt(dateComponents[1]) - 1; // JS months are 0-based.
             const day = parseInt(dateComponents[2]);
 
             const timeComponents = timePart.match(/(\d+)h (\d+)m (\d+)s (\d+)ms/);
@@ -1027,7 +1027,7 @@ function formatDate(dateString) {
 
                 date = new Date(year, month, day, hour, minute, second, millisecond);
             } else {
-                // 如果时间部分解析失败，只使用日期部分
+                // If time parsing fails, use date only.
                 date = new Date(year, month, day);
             }
         } catch (error) {
@@ -1035,17 +1035,17 @@ function formatDate(dateString) {
             date = new Date(dateString);
         }
     } else {
-        // 尝试标准日期格式
+        // Try standard date format.
         date = new Date(dateString);
     }
 
-    // 检查日期是否有效
+    // Ensure date is valid.
     if (isNaN(date.getTime())) {
         console.error('Invalid date:', dateString);
         return 'Invalid Date';
     }
 
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -1057,11 +1057,11 @@ function formatDate(dateString) {
 
 function getCategoryName(category) {
     const categoryMap = {
-        'tutorial': '教程',
-        'discussion': '讨论',
-        'announcement': '公告',
-        'question': '问答',
-        'showcase': '展示'
+        'tutorial': 'Tutorial',
+        'discussion': 'Discussion',
+        'announcement': 'Announcement',
+        'question': 'Q&A',
+        'showcase': 'Showcase'
     };
-    return categoryMap[category] || '其他';
+    return categoryMap[category] || 'Other';
 }

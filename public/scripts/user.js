@@ -13,10 +13,10 @@ export let accountsEnabled = false;
 const SESSION_EXTEND_INTERVAL = 10 * 60 * 1000;
 const DEFAULT_INACTIVE_DAYS = 60;
 const INACTIVE_USER_DAY_OPTIONS = [
-    { label: '1周 (7天)', value: 7 },
-    { label: '半个月 (15天)', value: 15 },
-    { label: '1个月 (30天)', value: 30 },
-    { label: '2个月 (60天)', value: 60 },
+    { label: '1 week (7 days)', value: 7 },
+    { label: 'Half month (15 days)', value: 15 },
+    { label: '1 month (30 days)', value: 30 },
+    { label: '2 months (60 days)', value: 60 },
 ];
 
 // Lightweight online presence indicator
@@ -82,17 +82,17 @@ async function getCurrentUser() {
         currentUser = await response.json();
         $('#admin_button').toggle(accountsEnabled && isAdmin());
 
-        // 启动用户心跳
+        // Start user heartbeat.
         if (typeof window.userHeartbeat !== 'undefined' && window.userHeartbeat.forceStart) {
             setTimeout(() => {
-                // 检查CSRF token是否可用
+                // Check whether a CSRF token is available.
                 const hasToken = window.token || window.csrfToken;
                 if (hasToken) {
                     window.userHeartbeat.forceStart();
                     console.log('User heartbeat force started after getCurrentUser with token');
                 } else {
                     console.warn('CSRF token not available, delaying heartbeat start');
-                    // 再延迟一次
+                    // Delay once more.
                     setTimeout(() => {
                         window.userHeartbeat.forceStart();
                         console.log('User heartbeat force started after token delay');
@@ -109,7 +109,7 @@ async function getCurrentUser() {
 
 /**
  * Get a list of all users.
- * @param {boolean} includeStorageSize - 是否包含存储大小信息（默认false以提高性能）
+ * @param {boolean} includeStorageSize - Whether to include storage size info (default false for performance)
  * @returns {Promise<import('../../src/users.js').UserViewModel[]>} Users
  */
 async function getUsers(includeStorageSize = false) {
@@ -131,9 +131,9 @@ async function getUsers(includeStorageSize = false) {
 }
 
 /**
- * 批量获取用户的存储占用大小
- * @param {string[]} handles - 用户句柄数组
- * @returns {Promise<Object.<string, {storageSize?: number, error?: string}>>} 用户存储大小映射
+ * Fetch storage usage for multiple users.
+ * @param {string[]} handles - User handles
+ * @returns {Promise<Object.<string, {storageSize?: number, error?: string}>>} Storage size map
  */
 async function getUsersStorageSize(handles) {
     try {
@@ -350,15 +350,15 @@ async function changePassword(handle, callback) {
         await getCurrentUser();
         const template = $(await renderTemplateAsync('changePassword'));
 
-        // 如果是管理员，或者用户没有密码（OAuth 用户首次设置），隐藏当前密码输入框
+        // If admin or user has no password (first-time OAuth password set), hide current password input.
         const hasPassword = currentUser && currentUser.password;
         const needOldPassword = !isAdmin() && hasPassword;
         template.find('.currentPasswordBlock').toggle(needOldPassword);
 
-        // 如果是 OAuth 用户首次设置密码，显示提示信息
+        // Show a hint when an OAuth user sets a password for the first time.
         if (!hasPassword && currentUser.oauthProvider) {
             const hint = $('<div class="oauth-password-hint" style="margin-bottom: 10px; padding: 10px; background: #e8f4f8; border-radius: 5px; font-size: 0.9em;">');
-            hint.html(`<i class="fa-solid fa-info-circle"></i> 您通过 <strong>${currentUser.oauthProvider}</strong> 注册，当前没有密码。设置密码后，您可以使用用户名密码登录或继续使用 ${currentUser.oauthProvider} 登录。`);
+            hint.html(`<i class="fa-solid fa-info-circle"></i> You registered with <strong>${currentUser.oauthProvider}</strong> and currently have no password. After setting one, you can sign in with a username/password or continue using ${currentUser.oauthProvider}.`);
             template.prepend(hint);
         }
 
@@ -397,7 +397,7 @@ async function changePassword(handle, callback) {
         }
 
         if (!hasPassword) {
-            toastr.success('密码设置成功！现在您可以使用用户名密码登录了', 'Password Set');
+            toastr.success('Password set successfully. You can now sign in with a username and password.', 'Password Set');
         } else {
             toastr.success('Password changed successfully', 'Password Changed');
         }
@@ -418,13 +418,13 @@ async function clearUserBackups(handle, callback) {
         const template = $(await renderTemplateAsync('clearUserBackups'));
         template.find('#clearUserName').text(handle);
 
-        const result = await callGenericPopup(template, POPUP_TYPE.CONFIRM, '', { okButton: '清理', cancelButton: '取消', wide: false, large: false });
+        const result = await callGenericPopup(template, POPUP_TYPE.CONFIRM, '', { okButton: 'Clear', cancelButton: 'Cancel', wide: false, large: false });
 
         if (result !== POPUP_RESULT.AFFIRMATIVE) {
             throw new Error('Clear backups cancelled');
         }
 
-        toastr.info('正在清理备份文件，请稍候...', '清理中');
+        toastr.info('Clearing backup files, please wait...', 'Clearing');
 
         const response = await fetch('/api/users/clear-backups', {
             method: 'POST',
@@ -434,12 +434,12 @@ async function clearUserBackups(handle, callback) {
 
         if (!response.ok) {
             const data = await response.json();
-            toastr.error(data.error || 'Unknown error', '清理失败');
+            toastr.error(data.error || 'Unknown error', 'Clear failed');
             throw new Error('Failed to clear backups');
         }
 
         const data = await response.json();
-        toastr.success(data.message, '清理成功');
+        toastr.success(data.message, 'Cleared');
         callback();
     } catch (error) {
         console.error('Error clearing backups:', error);
@@ -453,17 +453,17 @@ async function clearUserBackups(handle, callback) {
 async function clearAllBackups(callback) {
     try {
         const confirm = await callGenericPopup(
-            '确定要清理所有用户的备份文件吗？此操作不可恢复！',
+            'Are you sure you want to clear backups for all users? This action cannot be undone.',
             POPUP_TYPE.CONFIRM,
             '',
-            { okButton: '确认清理', cancelButton: '取消', wide: false, large: false },
+            { okButton: 'Confirm clear', cancelButton: 'Cancel', wide: false, large: false },
         );
 
         if (confirm !== POPUP_RESULT.AFFIRMATIVE) {
             throw new Error('Clear all backups cancelled');
         }
 
-        toastr.info('正在清理所有用户的备份文件，请稍候...', '清理中');
+        toastr.info('Clearing all user backups, please wait...', 'Clearing');
 
         const response = await fetch('/api/users/clear-all-backups', {
             method: 'POST',
@@ -472,12 +472,12 @@ async function clearAllBackups(callback) {
 
         if (!response.ok) {
             const data = await response.json();
-            toastr.error(data.error || 'Unknown error', '清理失败');
+            toastr.error(data.error || 'Unknown error', 'Clear failed');
             throw new Error('Failed to clear all backups');
         }
 
         const data = await response.json();
-        toastr.success(data.message, '清理成功');
+        toastr.success(data.message, 'Cleared');
         callback();
     } catch (error) {
         console.error('Error clearing all backups:', error);
@@ -496,23 +496,23 @@ function formatMaxStorageMiB(maxStorageMiB) {
 function buildInactiveUserFilterText(inactiveDays, maxStorageMiB) {
     const maxStorageLabel = formatMaxStorageMiB(maxStorageMiB);
     if (maxStorageLabel) {
-        return `超过 ${inactiveDays} 天未登录且存储占用不超过 ${maxStorageLabel} MiB`;
+        return `Inactive for over ${inactiveDays} days and storage usage under ${maxStorageLabel} MiB`;
     }
 
-    return `超过 ${inactiveDays} 天未登录`;
+    return `Inactive for over ${inactiveDays} days`;
 }
 
 async function promptInactiveUserCleanupOptions() {
     const template = $(`
         <div class="flex-container flexFlowColumn flexGap10">
             <div class="flex-container flexFlowColumn flexGap5">
-                <label>未登录时长</label>
+                <label>Inactive duration</label>
                 <select class="text_pole inactiveUsersDaysSelect"></select>
             </div>
             <div class="flex-container flexFlowColumn flexGap5">
-                <label>最大存储占用 (MiB)</label>
-                <input type="number" class="text_pole inactiveUsersMaxStorageInput" min="0" step="0.1" placeholder="例如: 10">
-                <small style="opacity: 0.8;">留空或 0 表示不限制</small>
+                <label>Max storage usage (MiB)</label>
+                <input type="number" class="text_pole inactiveUsersMaxStorageInput" min="0" step="0.1" placeholder="e.g. 10">
+                <small style="opacity: 0.8;">Leave blank or 0 for no limit</small>
             </div>
         </div>
     `);
@@ -526,8 +526,8 @@ async function promptInactiveUserCleanupOptions() {
     const result = await callGenericPopup(
         template,
         POPUP_TYPE.CONFIRM,
-        '选择删除条件',
-        { okButton: '下一步', cancelButton: '取消', wide: false, large: false },
+        'Choose deletion criteria',
+        { okButton: 'Next', cancelButton: 'Cancel', wide: false, large: false },
     );
 
     if (result !== POPUP_RESULT.AFFIRMATIVE) {
@@ -551,8 +551,8 @@ async function deleteInactiveUsers(callback) {
         const { inactiveDays, maxStorageMiB } = await promptInactiveUserCleanupOptions();
         const filterLabel = buildInactiveUserFilterText(inactiveDays, maxStorageMiB);
 
-        // 第一步：预览将要删除的用户
-        toastr.info('正在扫描不活跃用户，请稍候...', '扫描中');
+        // Step 1: preview users to delete.
+        toastr.info('Scanning inactive users, please wait...', 'Scanning');
 
         const previewResponse = await fetch('/api/users/delete-inactive-users', {
             method: 'POST',
@@ -562,37 +562,37 @@ async function deleteInactiveUsers(callback) {
 
         if (!previewResponse.ok) {
             const data = await previewResponse.json();
-            toastr.error(data.error || 'Unknown error', '扫描失败');
+            toastr.error(data.error || 'Unknown error', 'Scan failed');
             throw new Error('Failed to preview inactive users');
         }
 
         const previewData = await previewResponse.json();
 
         if (previewData.totalUsers === 0) {
-            toastr.info(`没有发现${filterLabel}的用户`, '无需清理');
+            toastr.info(`No users found for ${filterLabel}`, 'No cleanup needed');
             return;
         }
 
-        // 构建用户列表HTML
+        // Build user list HTML.
         let userListHtml = '<div class="flex-container flexFlowColumn flexGap5" style="max-height: 800px; overflow-y: auto;">';
-        userListHtml += '<p style="margin: 10px 0;">以下用户将被删除（包括所有数据）：</p>';
-        userListHtml += `<p style="margin: 10px 0; font-size: 0.9em; opacity: 0.8;">筛选条件：${filterLabel}</p>`;
+        userListHtml += '<p style="margin: 10px 0;">The following users will be deleted (including all data):</p>';
+        userListHtml += `<p style="margin: 10px 0; font-size: 0.9em; opacity: 0.8;">Filter: ${filterLabel}</p>`;
         userListHtml += '<ul style="text-align: left; margin: 10px 0;">';
 
         for (const user of previewData.inactiveUsers) {
             const sizeLabel = humanFileSize(user.storageSize, false, 2);
             userListHtml += `<li style="margin: 5px 0; padding: 5px; background: rgba(255,0,0,0.1); border-radius: 3px;">`;
             userListHtml += `<strong>${user.name}</strong> (${user.handle})<br>`;
-            userListHtml += `<small>最后登录: ${user.lastActivityFormatted} (${user.daysSinceLastActivity}天前)</small><br>`;
-            userListHtml += `<small>存储占用: ${sizeLabel}</small>`;
+            userListHtml += `<small>Last login: ${user.lastActivityFormatted} (${user.daysSinceLastActivity} days ago)</small><br>`;
+            userListHtml += `<small>Storage usage: ${sizeLabel}</small>`;
             userListHtml += `</li>`;
         }
 
         userListHtml += '</ul>';
         userListHtml += `<p style="margin: 10px 0; font-weight: bold; color: red;">`;
-        userListHtml += `共 ${previewData.totalUsers} 个用户，总计 ${humanFileSize(previewData.totalSize, false, 2)}`;
+        userListHtml += `${previewData.totalUsers} users, total ${humanFileSize(previewData.totalSize, false, 2)}`;
         userListHtml += `</p>`;
-        userListHtml += '<p style="margin: 10px 0; color: orange;"><strong>⚠️ 警告：此操作不可恢复！</strong></p>';
+        userListHtml += '<p style="margin: 10px 0; color: orange;"><strong>⚠️ Warning: this action cannot be undone.</strong></p>';
         userListHtml += '</div>';
 
         const confirmTemplate = $(userListHtml);
@@ -600,16 +600,16 @@ async function deleteInactiveUsers(callback) {
         const confirm = await callGenericPopup(
             confirmTemplate,
             POPUP_TYPE.CONFIRM,
-            `确认删除${filterLabel}的用户`,
-            { okButton: '确认删除', cancelButton: '取消', wide: true, large: false, allowVerticalScrolling: true },
+            `Confirm deletion for users matching: ${filterLabel}`,
+            { okButton: 'Confirm delete', cancelButton: 'Cancel', wide: true, large: false, allowVerticalScrolling: true },
         );
 
         if (confirm !== POPUP_RESULT.AFFIRMATIVE) {
             throw new Error('Delete inactive users cancelled');
         }
 
-        // 第二步：确认后执行删除
-        toastr.info('正在删除不活跃用户，请稍候...', '删除中');
+        // Step 2: delete after confirmation.
+        toastr.info('Deleting inactive users, please wait...', 'Deleting');
 
         const deleteResponse = await fetch('/api/users/delete-inactive-users', {
             method: 'POST',
@@ -619,19 +619,19 @@ async function deleteInactiveUsers(callback) {
 
         if (!deleteResponse.ok) {
             const data = await deleteResponse.json();
-            toastr.error(data.error || 'Unknown error', '删除失败');
+            toastr.error(data.error || 'Unknown error', 'Delete failed');
             throw new Error('Failed to delete inactive users');
         }
 
         const deleteData = await deleteResponse.json();
 
-        // 显示详细结果
+        // Show detailed results.
         let resultMessage = deleteData.message;
         if (deleteData.failedUsers && deleteData.failedUsers.length > 0) {
-            resultMessage += `\n失败 ${deleteData.failedUsers.length} 个用户`;
+            resultMessage += `\nFailed to delete ${deleteData.failedUsers.length} users`;
         }
 
-        toastr.success(resultMessage, '删除完成');
+        toastr.success(resultMessage, 'Deletion complete');
         callback();
     } catch (error) {
         if (error.message !== 'Delete inactive users cancelled') {
@@ -989,7 +989,7 @@ async function openUserProfile() {
     template.find('.hasPassword').toggle(currentUser.password);
     template.find('.noPassword').toggle(!currentUser.password);
 
-    // 显示 OAuth 提供商信息
+    // Show OAuth provider info.
     if (currentUser.oauthProvider) {
         const providerNames = {
             'github': 'GitHub',
@@ -1003,20 +1003,20 @@ async function openUserProfile() {
         template.find('.oauthProviderBlock').hide();
     }
 
-    // 显示邮箱信息（如果没有绑定则显示为空）
+    // Show email (empty if not set).
     const userEmail = currentUser.email || '';
     template.find('.userEmail').text(userEmail);
 
-    // 显示到期时间
+    // Show expiration date.
     if (currentUser.expiresAt) {
         const expiresDate = new Date(currentUser.expiresAt);
         const now = new Date();
         const daysLeft = Math.ceil((expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         let expiresText = expiresDate.toLocaleString();
         if (daysLeft > 0) {
-            expiresText += ` (剩余${daysLeft}天)`;
+            expiresText += ` (${daysLeft} days remaining)`;
         } else {
-            expiresText += ' (已过期)';
+            expiresText += ' (expired)';
         }
         template.find('.userExpiresAt').text(expiresText);
         if (daysLeft <= 7 && daysLeft > 0) {
@@ -1025,7 +1025,7 @@ async function openUserProfile() {
             template.find('.userExpiresAt').css('color', 'red');
         }
     } else {
-        template.find('.userExpiresAt').text('永久');
+        template.find('.userExpiresAt').text('Permanent');
         template.find('.userExpiresAt').css('color', 'green');
     }
 
@@ -1040,9 +1040,9 @@ async function openUserProfile() {
         template.find('.noPassword').toggle(!currentUser.password);
     }));
 
-    // 续费按钮事件
+    // Renewal button.
     template.find('.userRenewButton').on('click', async () => {
-        // 获取购买链接
+        // Fetch purchase link.
         let purchaseLink = '';
         try {
             const linkResponse = await fetch('/api/invitation-codes/purchase-link', {
@@ -1054,16 +1054,16 @@ async function openUserProfile() {
                 purchaseLink = linkData.purchaseLink || '';
             }
         } catch (error) {
-            console.error('获取购买链接失败:', error);
+            console.error('Failed to fetch purchase link:', error);
         }
 
-        // 构建提示信息
-        let promptMessage = '请输入续费码';
+        // Build prompt message.
+        let promptMessage = 'Enter a renewal code.';
         if (purchaseLink) {
-            promptMessage = `请输入续费码\n\n如需购买续费码，请访问：\n${purchaseLink}`;
+            promptMessage = `Enter a renewal code.\n\nTo purchase a renewal code, visit:\n${purchaseLink}`;
         }
 
-        const code = await callGenericPopup(promptMessage, POPUP_TYPE.INPUT, '', { okButton: '确认', cancelButton: '取消' });
+        const code = await callGenericPopup(promptMessage, POPUP_TYPE.INPUT, '', { okButton: 'Confirm', cancelButton: 'Cancel' });
 
         if (!code) {
             return;
@@ -1079,13 +1079,13 @@ async function openUserProfile() {
             const data = await response.json();
 
             if (!response.ok) {
-                toastr.error(data.error || '续费失败', '错误');
+                toastr.error(data.error || 'Renewal failed', 'Error');
                 return;
             }
 
-            toastr.success(data.message || '续费成功', '成功');
+            toastr.success(data.message || 'Renewal successful', 'Success');
 
-            // 刷新用户信息
+            // Refresh user info.
             await getCurrentUser();
             if (currentUser.expiresAt) {
                 const expiresDate = new Date(currentUser.expiresAt);
@@ -1093,17 +1093,17 @@ async function openUserProfile() {
                 const daysLeft = Math.ceil((expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
                 let expiresText = expiresDate.toLocaleString();
                 if (daysLeft > 0) {
-                    expiresText += ` (剩余${daysLeft}天)`;
+                    expiresText += ` (${daysLeft} days remaining)`;
                 }
                 template.find('.userExpiresAt').text(expiresText);
                 template.find('.userExpiresAt').css('color', daysLeft <= 7 ? 'orange' : '');
             } else {
-                template.find('.userExpiresAt').text('永久');
+                template.find('.userExpiresAt').text('Permanent');
                 template.find('.userExpiresAt').css('color', 'green');
             }
         } catch (error) {
-            console.error('续费错误:', error);
-            toastr.error('续费失败，请稍后重试', '错误');
+            console.error('Renewal error:', error);
+            toastr.error('Renewal failed. Please try again.', 'Error');
         }
     });
 
@@ -1194,18 +1194,18 @@ async function changeAvatar(handle, avatar) {
 }
 
 async function openAdminPanel() {
-    // 用户列表分页相关变量
+    // User list pagination variables.
     let currentUserPage = 1;
-    const usersPerPage = 20; // 每页显示20个用户
+    const usersPerPage = 20; // 20 users per page.
     let userSearchTerm = '';
-    let allUsers = []; // 存储所有用户数据
+    let allUsers = []; // Store all user data.
 
     async function renderUsers() {
-        // 先快速加载用户列表（不包含存储大小）
+        // Quickly load user list (without storage sizes).
         const users = await getUsers(false);
-        allUsers = users; // 保存所有用户数据
+        allUsers = users; // Save user data.
 
-        // 应用搜索过滤
+        // Apply search filtering.
         let filteredUsers = users;
         if (userSearchTerm) {
             filteredUsers = users.filter(user =>
@@ -1214,10 +1214,10 @@ async function openAdminPanel() {
             );
         }
 
-        // 计算分页
+        // Compute pagination.
         const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
-        // 如果当前页超出范围，自动调整到最后一页
+        // If current page is out of range, adjust to the last page.
         if (currentUserPage > totalPages && totalPages > 0) {
             currentUserPage = totalPages;
         } else if (totalPages === 0) {
@@ -1228,29 +1228,29 @@ async function openAdminPanel() {
         const endIndex = startIndex + usersPerPage;
         const pageUsers = filteredUsers.slice(startIndex, endIndex);
 
-        // 清除旧的用户卡片
+        // Clear old user cards.
         template.find('.navTab.usersList .userAccount').remove();
 
-        // 确保有用户列表容器
+        // Ensure user list container exists.
         let usersListContainer = template.find('.navTab.usersList .usersListContainer');
         if (usersListContainer.length === 0) {
             usersListContainer = $('<div class="usersListContainer"></div>');
             template.find('.navTab.usersList').append(usersListContainer);
         }
 
-        // 存储用户块的引用，用于后续更新存储大小
+        // Store user blocks for later storage size updates.
         const userBlocks = new Map();
 
-        // 添加搜索框和统计信息（确保在 navTab 内部）
+        // Add search box and stats (ensure inside navTab).
         let controlsHtml = template.find('.navTab.usersList .usersListControls');
         if (controlsHtml.length === 0) {
             controlsHtml = $(`
                 <div class="usersListControls" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px; background: var(--SmartThemeBlurTintColor); border-radius: 10px;">
-                    <input type="text" id="userSearchInput" placeholder="搜索用户名或句柄..." value="" class="text_pole" style="flex: 1;">
+                    <input type="text" id="userSearchInput" placeholder="Search username or handle..." value="" class="text_pole" style="flex: 1;">
                     <span class="userCount" style="white-space: nowrap; opacity: 0.7; font-size: 0.9em; padding: 5px 10px; background: var(--black30a); border-radius: 5px;"></span>
                 </div>
             `);
-            // 插入到 navTab.usersList 的开头（在已有按钮之后）
+            // Insert at the start of navTab.usersList (after existing buttons).
             const navTab = template.find('.navTab.usersList');
             const existingButtons = navTab.find('.flex-container.justifyCenter').first();
             if (existingButtons.length > 0) {
@@ -1261,20 +1261,20 @@ async function openAdminPanel() {
         }
 
         controlsHtml.find('#userSearchInput').val(userSearchTerm);
-        controlsHtml.find('.userCount').text(`显示 ${startIndex + 1}-${Math.min(endIndex, filteredUsers.length)} / ${filteredUsers.length} 个用户`);
+        controlsHtml.find('.userCount').text(`Showing ${startIndex + 1}-${Math.min(endIndex, filteredUsers.length)} / ${filteredUsers.length} users`);
 
-        // 绑定搜索事件（使用防抖）
+        // Bind search with debounce.
         controlsHtml.find('#userSearchInput').off('input').on('input', debounceSearch(function() {
             userSearchTerm = String($(this).val() ?? '').trim();
-            currentUserPage = 1; // 重置到第一页
+            currentUserPage = 1; // Reset to first page.
             renderUsers();
         }, 300));
 
-        // 如果没有用户，显示提示
+        // Show empty state when no users.
         if (filteredUsers.length === 0) {
             const emptyMessage = userSearchTerm
-                ? `<div style="text-align: center; padding: 40px; opacity: 0.7;">没有找到匹配的用户</div>`
-                : `<div style="text-align: center; padding: 40px; opacity: 0.7;">暂无用户</div>`;
+                ? `<div style="text-align: center; padding: 40px; opacity: 0.7;">No matching users found</div>`
+                : `<div style="text-align: center; padding: 40px; opacity: 0.7;">No users available</div>`;
             usersListContainer.append(emptyMessage);
             return;
         }
@@ -1292,22 +1292,22 @@ async function openAdminPanel() {
             userBlock.find('.noPassword').toggle(!user.password);
             userBlock.find('.userCreated').text(new Date(user.created).toLocaleString());
 
-            // 初始显示"加载中..."
-            userBlock.find('.userStorageSize').text('加载中...');
+            // Show initial "Loading..."
+            userBlock.find('.userStorageSize').text('Loading...');
 
-            // 保存userBlock引用
+            // Store userBlock reference.
             userBlocks.set(user.handle, userBlock);
 
-            // 显示到期时间
+            // Show expiration date.
             if (user.expiresAt) {
                 const expiresDate = new Date(user.expiresAt);
                 const now = new Date();
                 const daysLeft = Math.ceil((expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
                 let expiresText = expiresDate.toLocaleString();
                 if (daysLeft > 0) {
-                    expiresText += ` (剩余${daysLeft}天)`;
+                    expiresText += ` (${daysLeft} days remaining)`;
                 } else {
-                    expiresText += ' (已过期)';
+                    expiresText += ' (expired)';
                 }
                 userBlock.find('.userExpiresAt').text(expiresText);
                 if (daysLeft <= 7 && daysLeft > 0) {
@@ -1316,7 +1316,7 @@ async function openAdminPanel() {
                     userBlock.find('.userExpiresAt').css('color', 'red');
                 }
             } else {
-                userBlock.find('.userExpiresAt').text('永久');
+                userBlock.find('.userExpiresAt').text('Permanent');
                 userBlock.find('.userExpiresAt').css('color', 'green');
             }
 
@@ -1353,7 +1353,7 @@ async function openAdminPanel() {
             usersListContainer.append(userBlock);
         }
 
-        // 添加底部分页控件（添加到 .navTab.usersList 内部，而不是外部）
+        // Add bottom pagination controls inside .navTab.usersList.
         let paginationBottom = template.find('.navTab.usersList .usersPaginationBottom');
         if (paginationBottom.length === 0) {
             paginationBottom = $('<div class="usersPaginationBottom"></div>');
@@ -1361,20 +1361,19 @@ async function openAdminPanel() {
         }
         paginationBottom.html(createUserPaginationControls(currentUserPage, totalPages, filteredUsers.length));
 
-        // 绑定分页按钮事件
+        // Bind pagination button events.
         bindUserPaginationEvents();
 
-        // 异步批量加载当前页用户的存储大小
+        // Load storage sizes for the current page in batches.
         if (pageUsers.length > 0) {
             const userHandles = pageUsers.map(u => u.handle);
 
-            // 分批加载，避免一次性加载太多用户导致请求超时
-            // 每批最多处理20个用户
+            // Batch requests to avoid timeouts (max 20 users per batch).
             const batchSize = 20;
             for (let i = 0; i < userHandles.length; i += batchSize) {
                 const batch = userHandles.slice(i, i + batchSize);
 
-                // 延迟一点时间，让UI先渲染出来
+                // Delay briefly to allow UI to render.
                 if (i === 0) {
                     await new Promise(resolve => setTimeout(resolve, 100));
                 }
@@ -1382,25 +1381,25 @@ async function openAdminPanel() {
                 try {
                     const storageSizes = await getUsersStorageSize(batch);
 
-                    // 更新UI显示
+                    // Update UI.
                     for (const handle of batch) {
                         const userBlock = userBlocks.get(handle);
                         if (userBlock && storageSizes[handle]) {
                             if (storageSizes[handle].storageSize !== undefined) {
                                 userBlock.find('.userStorageSize').text(humanFileSize(storageSizes[handle].storageSize));
                             } else if (storageSizes[handle].error) {
-                                userBlock.find('.userStorageSize').text('计算失败');
+                                userBlock.find('.userStorageSize').text('Calculation failed');
                                 userBlock.find('.userStorageSize').attr('title', storageSizes[handle].error);
                             }
                         }
                     }
                 } catch (error) {
                     console.error(`Error loading storage size for batch ${i / batchSize + 1}:`, error);
-                    // 如果某批次失败，标记为错误
+                    // Mark as failed if batch fails.
                     for (const handle of batch) {
                         const userBlock = userBlocks.get(handle);
                         if (userBlock) {
-                            userBlock.find('.userStorageSize').text('加载失败');
+                            userBlock.find('.userStorageSize').text('Load failed');
                         }
                     }
                 }
@@ -1408,34 +1407,34 @@ async function openAdminPanel() {
         }
     }
 
-    // 创建用户分页控件
+    // Create pagination controls.
     function createUserPaginationControls(currentPage, totalPages, totalUsers) {
         if (totalPages <= 1) return '';
 
         let html = '<div class="userPaginationControls" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0; flex-wrap: wrap;">';
 
-        // 上一页按钮
+        // Previous button.
         if (currentPage > 1) {
             html += `<button class="menu_button user-pagination-btn" data-page="${currentPage - 1}">
-                <i class="fa-solid fa-chevron-left"></i> 上一页
+                <i class="fa-solid fa-chevron-left"></i> Previous
             </button>`;
         } else {
             html += `<button class="menu_button" disabled style="opacity: 0.5;">
-                <i class="fa-solid fa-chevron-left"></i> 上一页
+                <i class="fa-solid fa-chevron-left"></i> Previous
             </button>`;
         }
 
-        // 页码按钮
+        // Page buttons.
         const maxButtons = 7;
         let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
         let endPage = Math.min(totalPages, startPage + maxButtons - 1);
 
-        // 调整起始页
+        // Adjust start page.
         if (endPage - startPage < maxButtons - 1) {
             startPage = Math.max(1, endPage - maxButtons + 1);
         }
 
-        // 第一页
+        // First page.
         if (startPage > 1) {
             html += `<button class="menu_button user-pagination-btn" data-page="1">1</button>`;
             if (startPage > 2) {
@@ -1443,7 +1442,7 @@ async function openAdminPanel() {
             }
         }
 
-        // 中间页码
+        // Middle pages.
         for (let i = startPage; i <= endPage; i++) {
             if (i === currentPage) {
                 html += `<button class="menu_button" disabled style="background: var(--SmartThemeBlurTintColor);">${i}</button>`;
@@ -1452,7 +1451,7 @@ async function openAdminPanel() {
             }
         }
 
-        // 最后一页
+        // Last page.
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
                 html += `<span style="opacity: 0.5;">...</span>`;
@@ -1460,14 +1459,14 @@ async function openAdminPanel() {
             html += `<button class="menu_button user-pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
         }
 
-        // 下一页按钮
+        // Next button.
         if (currentPage < totalPages) {
             html += `<button class="menu_button user-pagination-btn" data-page="${currentPage + 1}">
-                下一页 <i class="fa-solid fa-chevron-right"></i>
+                Next <i class="fa-solid fa-chevron-right"></i>
             </button>`;
         } else {
             html += `<button class="menu_button" disabled style="opacity: 0.5;">
-                下一页 <i class="fa-solid fa-chevron-right"></i>
+                Next <i class="fa-solid fa-chevron-right"></i>
             </button>`;
         }
 
@@ -1475,13 +1474,13 @@ async function openAdminPanel() {
         return html;
     }
 
-    // 绑定用户分页按钮事件
+    // Bind pagination events.
     function bindUserPaginationEvents() {
         template.find('.user-pagination-btn').off('click').on('click', function() {
             currentUserPage = parseInt($(this).data('page'));
             renderUsers();
 
-            // 滚动到顶部
+            // Scroll to top.
             const usersListControls = template.find('.usersListControls');
             if (usersListControls.length > 0) {
                 usersListControls[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1489,7 +1488,7 @@ async function openAdminPanel() {
         });
     }
 
-    // 防抖函数
+    // Debounce helper.
     function debounceSearch(func, wait) {
         let timeout;
         return function(...args) {
@@ -1505,14 +1504,14 @@ async function openAdminPanel() {
         template.find('.navTab').each(function () {
             $(this).toggle(this.classList.contains(target));
         });
-        // 初始化管理员扩展功能
+        // Initialize admin extensions.
         if (typeof window.initializeAdminExtensions === 'function') {
             setTimeout(() => {
                 window.initializeAdminExtensions();
             }, 100);
         }
     });
-// 管理员面板打开时立即初始化扩展功能
+// Initialize admin extensions when panel opens.
 if (typeof window.initializeAdminExtensions === 'function') {
     setTimeout(() => {
         window.initializeAdminExtensions();
@@ -1531,19 +1530,19 @@ if (typeof window.initializeAdminExtensions === 'function') {
         event.preventDefault();
         createUser(event.target, () => {
             template.find('.manageUsersButton').trigger('click');
-            currentUserPage = 1; // 重置到第一页以显示新创建的用户
-            userSearchTerm = ''; // 清空搜索词
+            currentUserPage = 1; // Reset to first page to show new user.
+            userSearchTerm = ''; // Clear search term.
             renderUsers();
         });
     });
 
-    // 绑定一键清理所有用户备份文件按钮
+    // Bind clear-all-backups button.
     template.find('.clearAllBackupsButton').on('click', () => clearAllBackups(renderUsers));
 
-    // 绑定一键删除30天未登录用户按钮
+    // Bind delete-inactive-users button.
     template.find('.deleteInactiveUsersButton').on('click', () => deleteInactiveUsers(renderUsers));
 
-    // 绑定定时任务相关按钮
+    // Bind scheduled task buttons.
     initScheduledTasksHandlers(template);
 
     callGenericPopup(template, POPUP_TYPE.TEXT, '', { okButton: 'Close', wide: true, large: true, allowVerticalScrolling: true, allowHorizontalScrolling: true });
@@ -1552,8 +1551,8 @@ if (typeof window.initializeAdminExtensions === 'function') {
 }
 
 /**
- * 初始化定时任务处理器
- * @param {JQuery<HTMLElement>} template - 模板jQuery对象
+ * Initialize scheduled task handlers.
+ * @param {JQuery<HTMLElement>} template - Template jQuery object
  */
 function initScheduledTasksHandlers(template) {
     const enabledCheckbox = template.find('#scheduledClearBackupsEnabled');
@@ -1565,7 +1564,7 @@ function initScheduledTasksHandlers(template) {
     const testCronButton = template.find('#testScheduledClearBackupsCron');
     const statusDiv = template.find('#scheduledClearBackupsStatus');
 
-    // 切换启用/禁用状态
+    // Toggle enabled/disabled state.
     enabledCheckbox.on('change', function() {
         if ($(this).is(':checked')) {
             configDiv.slideDown();
@@ -1574,42 +1573,42 @@ function initScheduledTasksHandlers(template) {
         }
     });
 
-    // 验证Cron表达式
+    // Validate Cron expression.
     testCronButton.on('click', async function() {
         const cronExpression = String(cronInput.val() ?? '').trim();
         if (!cronExpression) {
-            showScheduledTaskStatus(statusDiv, '请输入Cron表达式', 'error');
+            showScheduledTaskStatus(statusDiv, 'Please enter a Cron expression.', 'error');
             return;
         }
 
         try {
-            // 使用简单的正则验证（实际验证在服务端）
+            // Basic regex validation (full validation happens server-side).
             const cronPattern = /^(\*|([0-9]|[1-5][0-9])|\*\/([0-9]|[1-5][0-9]))\s+(\*|([0-9]|1[0-9]|2[0-3])|\*\/([0-9]|1[0-9]|2[0-3]))\s+(\*|([1-9]|[12][0-9]|3[01])|\*\/([1-9]|[12][0-9]|3[01]))\s+(\*|([1-9]|1[0-2])|\*\/([1-9]|1[0-2]))\s+(\*|([0-6])|\*\/([0-6]))$/;
             if (cronPattern.test(cronExpression)) {
-                showScheduledTaskStatus(statusDiv, 'Cron表达式格式正确', 'success');
+                showScheduledTaskStatus(statusDiv, 'Cron expression looks valid.', 'success');
             } else {
-                showScheduledTaskStatus(statusDiv, 'Cron表达式格式可能不正确，请检查', 'warning');
+                showScheduledTaskStatus(statusDiv, 'Cron expression may be invalid. Please double-check.', 'warning');
             }
         } catch (error) {
             console.error('Error validating cron:', error);
-            showScheduledTaskStatus(statusDiv, '验证失败: ' + error.message, 'error');
+            showScheduledTaskStatus(statusDiv, 'Validation failed: ' + error.message, 'error');
         }
     });
 
-    // 保存配置
+    // Save configuration.
     saveButton.on('click', async function() {
         const enabled = enabledCheckbox.is(':checked');
         const cronExpression = String(cronInput.val() ?? '').trim();
 
         if (enabled && !cronExpression) {
-            showScheduledTaskStatus(statusDiv, '启用定时任务时必须提供Cron表达式', 'error');
+            showScheduledTaskStatus(statusDiv, 'Cron expression is required when enabling the schedule.', 'error');
             return;
         }
 
         const button = $(this);
         const originalText = button.html();
         button.prop('disabled', true);
-        button.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>保存中...</span>');
+        button.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>Saving...</span>');
 
         try {
             const response = await fetch('/api/scheduled-tasks/config', {
@@ -1623,32 +1622,32 @@ function initScheduledTasksHandlers(template) {
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.error || '保存配置失败');
+                throw new Error(data.error || 'Failed to save configuration.');
             }
 
             const data = await response.json();
-            showScheduledTaskStatus(statusDiv, data.message || '配置已保存', 'success');
-            toastr.success(data.message || '定时任务配置已保存', '成功');
+            showScheduledTaskStatus(statusDiv, data.message || 'Configuration saved.', 'success');
+            toastr.success(data.message || 'Scheduled task configuration saved.', 'Success');
         } catch (error) {
             console.error('Error saving scheduled task config:', error);
-            showScheduledTaskStatus(statusDiv, '保存失败: ' + error.message, 'error');
-            toastr.error('保存定时任务配置失败: ' + error.message, '错误');
+            showScheduledTaskStatus(statusDiv, 'Save failed: ' + error.message, 'error');
+            toastr.error('Failed to save scheduled task configuration: ' + error.message, 'Error');
         } finally {
             button.prop('disabled', false);
             button.html(originalText);
         }
     });
 
-    // 立即执行
+    // Run immediately.
     testButton.on('click', async function() {
-        if (!confirm('确定要立即执行清理所有用户备份文件的任务吗？')) {
+        if (!confirm('Run the clear-all-backups task now?')) {
             return;
         }
 
         const button = $(this);
         const originalText = button.html();
         button.prop('disabled', true);
-        button.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>执行中...</span>');
+        button.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>Running...</span>');
 
         try {
             const response = await fetch('/api/scheduled-tasks/execute/clear-all-backups', {
@@ -1658,30 +1657,30 @@ function initScheduledTasksHandlers(template) {
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.error || '执行失败');
+                throw new Error(data.error || 'Execution failed.');
             }
 
             const data = await response.json();
-            showScheduledTaskStatus(statusDiv, data.message || '任务已开始执行，请查看服务器日志', 'success');
-            toastr.info(data.message || '清理任务已开始执行，请查看服务器日志了解详情', '执行中');
+            showScheduledTaskStatus(statusDiv, data.message || 'Task started. Check server logs.', 'success');
+            toastr.info(data.message || 'Cleanup task started. Check server logs for details.', 'Running');
         } catch (error) {
             console.error('Error executing scheduled task:', error);
-            showScheduledTaskStatus(statusDiv, '执行失败: ' + error.message, 'error');
-            toastr.error('执行清理任务失败: ' + error.message, '错误');
+            showScheduledTaskStatus(statusDiv, 'Execution failed: ' + error.message, 'error');
+            toastr.error('Failed to run cleanup task: ' + error.message, 'Error');
         } finally {
             button.prop('disabled', false);
             button.html(originalText);
         }
     });
 
-    // 加载配置
+    // Load config.
     loadButton.on('click', loadScheduledTaskConfig);
 
-    // 初始加载配置
+    // Initial config load.
     loadScheduledTaskConfig();
 
     /**
-     * 加载定时任务配置
+     * Load scheduled task configuration.
      */
     async function loadScheduledTaskConfig() {
         try {
@@ -1691,14 +1690,14 @@ function initScheduledTasksHandlers(template) {
             });
 
             if (!response.ok) {
-                throw new Error('加载配置失败');
+                throw new Error('Failed to load configuration.');
             }
 
             const data = await response.json();
             const config = data.config || {};
             const status = data.status || {};
 
-            // 更新UI
+            // Update UI.
             enabledCheckbox.prop('checked', config.enabled || false);
             cronInput.val(config.cronExpression || '');
 
@@ -1708,22 +1707,22 @@ function initScheduledTasksHandlers(template) {
                 configDiv.hide();
             }
 
-            // 显示状态
+            // Show status.
             if (status.enabled && status.running) {
-                showScheduledTaskStatus(statusDiv, `定时任务已启用并运行中 (Cron: ${config.cronExpression})`, 'success');
+                showScheduledTaskStatus(statusDiv, `Scheduled task enabled and running (Cron: ${config.cronExpression})`, 'success');
             } else if (config.enabled) {
-                showScheduledTaskStatus(statusDiv, '定时任务已配置但未运行', 'warning');
+                showScheduledTaskStatus(statusDiv, 'Scheduled task configured but not running.', 'warning');
             } else {
-                showScheduledTaskStatus(statusDiv, '定时任务未启用', 'info');
+                showScheduledTaskStatus(statusDiv, 'Scheduled task is disabled.', 'info');
             }
         } catch (error) {
             console.error('Error loading scheduled task config:', error);
-            showScheduledTaskStatus(statusDiv, '加载配置失败: ' + error.message, 'error');
+            showScheduledTaskStatus(statusDiv, 'Failed to load configuration: ' + error.message, 'error');
         }
     }
 
     /**
-     * 显示定时任务状态
+     * Show scheduled task status.
      */
     function showScheduledTaskStatus(container, message, type) {
         const colors = {
@@ -1748,7 +1747,7 @@ function initScheduledTasksHandlers(template) {
             'margin-top': '10px',
         }).text(message).show();
 
-        // 3秒后自动隐藏（除了错误信息）
+        // Auto-hide after 3 seconds (except errors).
         if (type !== 'error') {
             setTimeout(() => {
                 container.fadeOut();
@@ -1763,19 +1762,19 @@ function initScheduledTasksHandlers(template) {
  */
 async function logout() {
     try {
-        // 先停止用户心跳，防止在登出过程中发送心跳请求
+        // Stop heartbeat first to avoid sending during logout.
         if (typeof window.userHeartbeat !== 'undefined' && window.userHeartbeat.stop) {
             window.userHeartbeat.stop();
         }
 
-        // 发送登出请求
+        // Send logout request.
     await fetch('/api/users/logout', {
         method: 'POST',
         headers: getRequestHeaders(),
     });
 } catch (error) {
     console.warn('Logout request failed:', error);
-    // 即使登出请求失败，也继续执行页面跳转
+    // Redirect even if logout request fails.
 }
     // On an explicit logout stop auto login
     // to allow user to change username even
