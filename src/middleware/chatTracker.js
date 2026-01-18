@@ -1,12 +1,8 @@
 import systemMonitor from '../system-monitor.js';
 
-/**
- * 聊天消息跟踪中间件
- * 用于监听和记录用户的聊天活动
- */
+
 export default function chatTrackerMiddleware() {
     return (request, response, next) => {
-        // 监听聊天相关的API请求
         const chatEndpoints = [
             '/api/chats/save',
             '/api/chats/group/save',
@@ -26,33 +22,28 @@ export default function chatTrackerMiddleware() {
             return next();
         }
 
-        // 获取用户信息
         const userHandle = request.user?.profile?.handle || 'anonymous';
 
-        // 重写响应方法来捕获聊天数据
         const originalSend = response.send;
         const originalJson = response.json;
 
         function trackChatActivity() {
-            if (response.chatTracked) return; // 防止重复记录
+            if (response.chatTracked) return;
             response.chatTracked = true;
 
             try {
-                // 根据不同的端点类型处理
                 if (request.path === '/api/chats/save' && request.method === 'POST') {
-                    // 单人聊天保存
                     const chatData = request.body.chat;
                     if (chatData && Array.isArray(chatData)) {
-                        // 调试日志
                         if (process.env.NODE_ENV === 'development') {
-                            console.log(`追踪到聊天保存: ${chatData.length} 条消息`);
+                            console.log(`Tracked chat save: ${chatData.length} messages`);
                         }
                         chatData.forEach(message => {
                             if (message.mes && message.send_date) {
                                 const messageType = message.is_user ? 'user' : 'character';
                                 const messageData = {
                                     content: message.mes,
-                                    characterName: message.name || '未知角色',
+                                    characterName: message.name || 'Unknown character',
                                     timestamp: new Date(message.send_date).getTime()
                                 };
 
@@ -61,19 +52,17 @@ export default function chatTrackerMiddleware() {
                         });
                     }
                 } else if (request.path === '/api/chats/group/save' && request.method === 'POST') {
-                    // 群聊保存
                     const chatData = request.body.chat;
                     if (chatData && Array.isArray(chatData)) {
-                        // 调试日志
                         if (process.env.NODE_ENV === 'development') {
-                            console.log(`追踪到群聊保存: ${chatData.length} 条消息`);
+                            console.log(`Tracked group chat save: ${chatData.length} messages`);
                         }
                         chatData.forEach(message => {
                             if (message.mes && message.send_date) {
                                 const messageType = message.is_user ? 'user' : 'character';
                                 const messageData = {
                                     content: message.mes,
-                                    characterName: message.name || '群聊',
+                                    characterName: message.name || 'Group chat',
                                     timestamp: new Date(message.send_date).getTime()
                                 };
 
@@ -82,12 +71,10 @@ export default function chatTrackerMiddleware() {
                         });
                     }
                 } else if (request.path.includes('/generate') && request.method === 'POST') {
-                    // AI生成响应 - 记录生成请求
                     if (response.statusCode === 200) {
                         let userMessage = '';
-                        let characterName = '未知角色';
+                        let characterName = 'Unknown character';
 
-                        // 尝试从不同的请求格式中提取消息内容
                         if (request.body.messages && Array.isArray(request.body.messages)) {
                             const lastMessage = request.body.messages[request.body.messages.length - 1];
                             userMessage = lastMessage?.content || lastMessage?.text || '';
@@ -116,23 +103,20 @@ export default function chatTrackerMiddleware() {
                     }
                 }
             } catch (error) {
-                console.error('聊天跟踪错误:', error);
+                console.error('Chat tracking error:', error);
             }
         }
 
-        // 重写response.send方法
         response.send = function(body) {
             trackChatActivity();
             return originalSend.call(this, body);
         };
 
-        // 重写response.json方法
         response.json = function(obj) {
             trackChatActivity();
             return originalJson.call(this, obj);
         };
 
-        // 监听响应完成事件
         response.on('finish', trackChatActivity);
         response.on('close', trackChatActivity);
 
@@ -140,27 +124,16 @@ export default function chatTrackerMiddleware() {
     };
 }
 
-/**
- * 手动记录聊天消息
- * 可以在其他地方调用来记录聊天活动
- * @param {string} userHandle 用户句柄
- * @param {string} messageType 消息类型
- * @param {Object} messageData 消息数据
- */
+
 export function recordChatMessage(userHandle, messageType, messageData) {
     try {
         systemMonitor.recordUserChatActivity(userHandle, messageType, messageData);
     } catch (error) {
-        console.error('记录聊天消息失败:', error);
+        console.error('Failed to record chat message:', error);
     }
 }
 
-/**
- * 批量记录聊天历史
- * 用于导入现有的聊天记录
- * @param {string} userHandle 用户句柄
- * @param {Array} chatHistory 聊天历史数组
- */
+
 export function recordChatHistory(userHandle, chatHistory) {
     try {
         if (!Array.isArray(chatHistory)) return;
@@ -179,8 +152,8 @@ export function recordChatHistory(userHandle, chatHistory) {
             }
         });
 
-        console.log(`为用户 ${userHandle} 导入了 ${chatHistory.length} 条聊天记录`);
+        console.log(`Imported ${chatHistory.length} chat messages for user ${userHandle}`);
     } catch (error) {
-        console.error('导入聊天历史失败:', error);
+        console.error('Failed to import chat history:', error);
     }
 }

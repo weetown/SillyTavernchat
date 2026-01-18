@@ -4,19 +4,15 @@ import path from 'node:path';
 import yaml from 'yaml';
 import { getAllUserHandles, getUserDirectories } from './users.js';
 
-/**
- * 定时任务管理器
- */
+
 class ScheduledTasksManager {
     constructor() {
-        this.tasks = new Map(); // 存储所有定时任务
+        this.tasks = new Map();
         this.configPath = path.join(process.cwd(), 'config.yaml');
         this.loadTasks();
     }
 
-    /**
-     * 从配置文件加载定时任务
-     */
+    
     loadTasks() {
         try {
             if (!fs.existsSync(this.configPath)) {
@@ -31,38 +27,31 @@ class ScheduledTasksManager {
                 const taskConfig = config.scheduledTasks.clearAllBackups;
                 if (taskConfig.enabled && taskConfig.cronExpression) {
                     this.startClearAllBackupsTask(taskConfig.cronExpression);
-                    console.log(`已加载定时清理备份任务: ${taskConfig.cronExpression}`);
+                    console.log(`Loaded scheduled backup cleanup task: ${taskConfig.cronExpression}`);
                 }
             }
         } catch (error) {
-            console.error('加载定时任务配置失败:', error);
+            console.error('Failed to load scheduled task configuration:', error);
         }
     }
 
-    /**
-     * 启动清理所有用户备份文件的定时任务
-     * @param {string} cronExpression - Cron表达式
-     * @returns {boolean} 是否成功启动
-     */
+    
     startClearAllBackupsTask(cronExpression) {
         try {
-            // 验证cron表达式
             if (!cron.validate(cronExpression)) {
-                console.error('无效的cron表达式:', cronExpression);
+                console.error('Invalid cron expression:', cronExpression);
                 return false;
             }
 
-            // 如果任务已存在，先停止
             if (this.tasks.has('clearAllBackups')) {
                 this.stopTask('clearAllBackups');
             }
 
-            // 创建新任务
             const task = cron.schedule(cronExpression, async () => {
-                console.log(`[定时任务] 开始清理所有用户备份文件 - ${new Date().toLocaleString()}`);
+                console.log(`[Scheduled task] Starting cleanup of all user backups - ${new Date().toLocaleString()}`);
                 await this.executeClearAllBackups();
             }, {
-                timezone: 'Asia/Shanghai', // 可以根据需要调整时区
+                timezone: 'Asia/Shanghai',
             });
 
             this.tasks.set('clearAllBackups', {
@@ -72,17 +61,15 @@ class ScheduledTasksManager {
                 enabled: true,
             });
 
-            console.log(`定时清理备份任务已启动: ${cronExpression}`);
+            console.log(`Scheduled backup cleanup task started: ${cronExpression}`);
             return true;
         } catch (error) {
-            console.error('启动定时清理备份任务失败:', error);
+            console.error('Failed to start scheduled backup cleanup task:', error);
             return false;
         }
     }
 
-    /**
-     * 执行清理所有用户备份文件
-     */
+    
     async executeClearAllBackups() {
         try {
             const userHandles = await getAllUserHandles();
@@ -95,7 +82,6 @@ class ScheduledTasksManager {
                     let userDeletedSize = 0;
                     let userDeletedFiles = 0;
 
-                    // 只清理备份目录
                     if (fs.existsSync(directories.backups)) {
                         const backupsSize = await this.calculateDirectorySize(directories.backups);
                         userDeletedSize += backupsSize;
@@ -108,23 +94,19 @@ class ScheduledTasksManager {
                     totalDeletedSize += userDeletedSize;
                     totalDeletedFiles += userDeletedFiles;
 
-                    console.info(`[定时任务] 已清理用户 ${handle} 的备份: ${userDeletedFiles} 个文件, ${(userDeletedSize / 1024 / 1024).toFixed(2)} MB`);
+                    console.info(`[Scheduled task] Cleared backups for user ${handle}: ${userDeletedFiles} files, ${(userDeletedSize / 1024 / 1024).toFixed(2)} MB`);
                 } catch (error) {
-                    console.error(`[定时任务] 清理用户 ${handle} 的备份失败:`, error);
+                    console.error(`[Scheduled task] Failed to clear backups for user ${handle}:`, error);
                 }
             }
 
-            console.log(`[定时任务] 清理完成: 共清理 ${userHandles.length} 个用户的备份文件，共 ${totalDeletedFiles} 个文件，释放 ${(totalDeletedSize / 1024 / 1024).toFixed(2)} MB 空间`);
+            console.log(`[Scheduled task] Cleanup complete: cleared backups for ${userHandles.length} users, ${totalDeletedFiles} files, freed ${(totalDeletedSize / 1024 / 1024).toFixed(2)} MB`);
         } catch (error) {
-            console.error('[定时任务] 执行清理所有备份文件失败:', error);
+            console.error('[Scheduled task] Failed to clean all backup files:', error);
         }
     }
 
-    /**
-     * 递归计算目录大小（字节）
-     * @param {string} dirPath - 目录路径
-     * @returns {Promise<number>} - 目录大小（字节）
-     */
+    
     async calculateDirectorySize(dirPath) {
         let totalSize = 0;
 
@@ -146,39 +128,30 @@ class ScheduledTasksManager {
                 }
             }
         } catch (error) {
-            console.error(`计算目录大小失败 ${dirPath}:`, error);
+            console.error(`Failed to calculate directory size ${dirPath}:`, error);
         }
 
         return totalSize;
     }
 
-    /**
-     * 停止指定任务
-     * @param {string} taskName - 任务名称
-     */
+    
     stopTask(taskName) {
         const taskInfo = this.tasks.get(taskName);
         if (taskInfo && taskInfo.task) {
             taskInfo.task.stop();
             this.tasks.delete(taskName);
-            console.log(`定时任务已停止: ${taskName}`);
+            console.log(`Scheduled task stopped: ${taskName}`);
         }
     }
 
-    /**
-     * 停止所有任务
-     */
+    
     stopAllTasks() {
         for (const [taskName] of this.tasks) {
             this.stopTask(taskName);
         }
     }
 
-    /**
-     * 获取任务状态
-     * @param {string} taskName - 任务名称
-     * @returns {Object|null} 任务信息
-     */
+    
     getTaskStatus(taskName) {
         const taskInfo = this.tasks.get(taskName);
         if (!taskInfo) {
@@ -193,10 +166,7 @@ class ScheduledTasksManager {
         };
     }
 
-    /**
-     * 获取所有任务状态
-     * @returns {Object} 所有任务状态
-     */
+    
     getAllTasksStatus() {
         const status = {};
         for (const [taskName] of this.tasks) {
@@ -205,11 +175,7 @@ class ScheduledTasksManager {
         return status;
     }
 
-    /**
-     * 保存定时任务配置到 config.yaml
-     * @param {Object} taskConfig - 任务配置
-     * @returns {boolean} 是否成功保存
-     */
+    
     saveTaskConfig(taskConfig) {
         try {
             let config = {};
@@ -231,18 +197,15 @@ class ScheduledTasksManager {
             const newConfigContent = yaml.stringify(config);
             fs.writeFileSync(this.configPath, newConfigContent, 'utf8');
 
-            console.log('定时任务配置已保存到 config.yaml');
+            console.log('Scheduled task configuration saved to config.yaml');
             return true;
         } catch (error) {
-            console.error('保存定时任务配置失败:', error);
+            console.error('Failed to save scheduled task configuration:', error);
             return false;
         }
     }
 
-    /**
-     * 从配置文件读取定时任务配置
-     * @returns {Object|null} 任务配置
-     */
+    
     getTaskConfig() {
         try {
             if (!fs.existsSync(this.configPath)) {
@@ -258,28 +221,25 @@ class ScheduledTasksManager {
 
             return null;
         } catch (error) {
-            console.error('读取定时任务配置失败:', error);
+            console.error('Failed to read scheduled task configuration:', error);
             return null;
         }
     }
 }
 
-// 创建全局定时任务管理器实例
 const scheduledTasksManager = new ScheduledTasksManager();
 
-// 进程退出时停止所有任务
 process.on('SIGINT', () => {
-    console.log('\n正在停止所有定时任务...');
+    console.log('\nStopping all scheduled tasks...');
     scheduledTasksManager.stopAllTasks();
     process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-    console.log('\n正在停止所有定时任务...');
+    console.log('\nStopping all scheduled tasks...');
     scheduledTasksManager.stopAllTasks();
     process.exit(0);
 });
 
 export default scheduledTasksManager;
 export { ScheduledTasksManager };
-

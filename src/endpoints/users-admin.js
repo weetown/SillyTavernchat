@@ -37,11 +37,7 @@ export const router = express.Router();
  * }} AdminUserViewModel
  */
 
-/**
- * 递归计算目录大小（字节）
- * @param {string} dirPath - 目录路径
- * @returns {Promise<number>} - 目录大小（字节）
- */
+
 async function calculateDirectorySize(dirPath) {
     let totalSize = 0;
 
@@ -74,17 +70,14 @@ router.post('/get', requireAdminMiddleware, async (request, response) => {
         /** @type {import('../users.js').User[]} */
         const users = await storage.values(x => x.key.startsWith(KEY_PREFIX));
 
-        // 是否计算存储大小（默认为false以提高性能）
         const includeStorageSize = request.body?.includeStorageSize === true;
 
         /** @type {Promise<AdminUserViewModel>[]} */
         const viewModelPromises = users
             .map(user => new Promise(async (resolve) => {
                 const avatar = await getUserAvatar(user.handle);
-                // 获取用户负载统计（如果可用）
                 const loadStats = systemMonitor.getUserLoadStats(user.handle);
 
-                // 只有在明确请求时才计算用户目录大小
                 let storageSize = undefined;
                 if (includeStorageSize) {
                     const directories = getUserDirectories(user.handle);
@@ -119,10 +112,7 @@ router.post('/get', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-/**
- * 获取指定用户的存储占用大小
- * 支持单个用户或批量查询
- */
+
 router.post('/storage-size', requireAdminMiddleware, async (request, response) => {
     try {
         const { handles } = request.body;
@@ -134,7 +124,6 @@ router.post('/storage-size', requireAdminMiddleware, async (request, response) =
 
         const results = {};
 
-        // 并行计算所有用户的存储大小
         await Promise.all(handles.map(async (handle) => {
             try {
                 const normalizedHandle = normalizeHandle(handle);
@@ -166,7 +155,6 @@ router.post('/disable', requireAdminMiddleware, async (request, response) => {
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
-        // 规范化用户名
         const normalizedHandle = normalizeHandle(request.body.handle);
 
         if (!normalizedHandle) {
@@ -203,7 +191,6 @@ router.post('/enable', requireAdminMiddleware, async (request, response) => {
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
-        // 规范化用户名
         const normalizedHandle = normalizeHandle(request.body.handle);
 
         if (!normalizedHandle) {
@@ -235,7 +222,6 @@ router.post('/promote', requireAdminMiddleware, async (request, response) => {
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
-        // 规范化用户名
         const normalizedHandle = normalizeHandle(request.body.handle);
 
         if (!normalizedHandle) {
@@ -267,7 +253,6 @@ router.post('/demote', requireAdminMiddleware, async (request, response) => {
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
-        // 规范化用户名
         const normalizedHandle = normalizeHandle(request.body.handle);
 
         if (!normalizedHandle) {
@@ -305,7 +290,6 @@ router.post('/create', requireAdminMiddleware, async (request, response) => {
         }
 
         const handles = await getAllUserHandles();
-        // 使用统一的规范化函数
         const handle = normalizeHandle(request.body.handle);
 
         if (!handle) {
@@ -329,7 +313,7 @@ router.post('/create', requireAdminMiddleware, async (request, response) => {
             salt: salt,
             admin: !!request.body.admin,
             enabled: true,
-            expiresAt: null, // 管理员创建的用户默认为永久账户
+            expiresAt: null,
         };
 
         await storage.setItem(toKey(handle), newUser);
@@ -364,7 +348,6 @@ router.post('/delete', requireAdminMiddleware, async (request, response) => {
             return response.status(400).json({ error: 'Sorry, but the default user cannot be deleted. It is required as a fallback.' });
         }
 
-        // 规范化用户名
         const normalizedHandle = normalizeHandle(request.body.handle);
 
         if (!normalizedHandle) {
@@ -395,7 +378,6 @@ router.post('/slugify', requireAdminMiddleware, async (request, response) => {
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
-        // 使用统一的规范化函数
         const text = normalizeHandle(request.body.text);
 
         return response.send(text);
@@ -405,14 +387,12 @@ router.post('/slugify', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-/**
- * 清理单个用户的备份文件
- */
+
 router.post('/clear-backups', requireAdminMiddleware, async (request, response) => {
     try {
         if (!request.body.handle) {
             console.warn('Clear backups failed: Missing required fields');
-            return response.status(400).json({ error: '缺少必需字段' });
+            return response.status(400).json({ error: 'Missing required fields' });
         }
 
         const handle = request.body.handle;
@@ -421,14 +401,12 @@ router.post('/clear-backups', requireAdminMiddleware, async (request, response) 
         let deletedSize = 0;
         let deletedFiles = 0;
 
-        // 只清理备份目录
         if (fs.existsSync(directories.backups)) {
             const backupsSize = await calculateDirectorySize(directories.backups);
             deletedSize += backupsSize;
             const files = await fsPromises.readdir(directories.backups);
             deletedFiles += files.length;
             await fsPromises.rm(directories.backups, { recursive: true, force: true });
-            // 重新创建空目录
             await fsPromises.mkdir(directories.backups, { recursive: true });
         }
 
@@ -437,17 +415,15 @@ router.post('/clear-backups', requireAdminMiddleware, async (request, response) 
             success: true,
             deletedSize: deletedSize,
             deletedFiles: deletedFiles,
-            message: `已清理 ${deletedFiles} 个备份文件，释放 ${(deletedSize / 1024 / 1024).toFixed(2)} MB 空间`,
+            message: `Cleared ${deletedFiles} backup files, freed ${(deletedSize / 1024 / 1024).toFixed(2)} MB`,
         });
     } catch (error) {
         console.error('Clear backups failed:', error);
-        return response.status(500).json({ error: '清理备份文件失败: ' + error.message });
+        return response.status(500).json({ error: 'Failed to clear backup files: ' + error.message });
     }
 });
 
-/**
- * 一键清理所有用户的备份文件
- */
+
 router.post('/clear-all-backups', requireAdminMiddleware, async (request, response) => {
     try {
         const userHandles = await getAllUserHandles();
@@ -461,7 +437,6 @@ router.post('/clear-all-backups', requireAdminMiddleware, async (request, respon
                 let userDeletedSize = 0;
                 let userDeletedFiles = 0;
 
-                // 只清理备份目录
                 if (fs.existsSync(directories.backups)) {
                     const backupsSize = await calculateDirectorySize(directories.backups);
                     userDeletedSize += backupsSize;
@@ -495,17 +470,15 @@ router.post('/clear-all-backups', requireAdminMiddleware, async (request, respon
             totalDeletedSize: totalDeletedSize,
             totalDeletedFiles: totalDeletedFiles,
             results: results,
-            message: `已清理 ${userHandles.length} 个用户的备份文件，共 ${totalDeletedFiles} 个文件，释放 ${(totalDeletedSize / 1024 / 1024).toFixed(2)} MB 空间`,
+            message: `Cleared backups for ${userHandles.length} users, ${totalDeletedFiles} files, freed ${(totalDeletedSize / 1024 / 1024).toFixed(2)} MB`,
         });
     } catch (error) {
         console.error('Clear all backups failed:', error);
-        return response.status(500).json({ error: '清理所有备份文件失败: ' + error.message });
+        return response.status(500).json({ error: 'Failed to clear all backup files: ' + error.message });
     }
 });
 
-/**
- * 一键删除长时间未登录且占用存储较少的用户数据
- */
+
 router.post('/delete-inactive-users', requireAdminMiddleware, async (request, response) => {
     try {
         const { dryRun = false, inactiveDays: requestedInactiveDays, maxStorageMiB: requestedMaxStorageMiB } = request.body || {};
@@ -516,14 +489,13 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
         const parsedMaxStorageMiB = Number(requestedMaxStorageMiB);
         const maxStorageMiB = Number.isFinite(parsedMaxStorageMiB) && parsedMaxStorageMiB > 0 ? parsedMaxStorageMiB : null;
         const maxStorageBytes = maxStorageMiB ? maxStorageMiB * 1024 * 1024 : null;
-        const storageFilterMessage = maxStorageMiB ? ` 且存储占用不超过 ${maxStorageMiB} MiB` : '';
+        const storageFilterMessage = maxStorageMiB ? ` and storage usage <= ${maxStorageMiB} MiB` : '';
         const now = Date.now();
         const forwardedProto = request.get('x-forwarded-proto');
         const protocol = forwardedProto ? forwardedProto.split(',')[0] : request.protocol;
         const host = request.get('x-forwarded-host') || request.get('host');
         const siteUrl = host ? `${protocol}://${host}` : '';
 
-        // 获取所有用户
         const users = await storage.values(x => x.key.startsWith(KEY_PREFIX));
 
         const inactiveUsers = [];
@@ -531,34 +503,28 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
         let totalDeletedSize = 0;
 
         for (const user of users) {
-            // 不能删除管理员自己
             if (user.handle === request.user.profile.handle) {
                 continue;
             }
 
-            // 不能删除默认用户
             if (user.handle === DEFAULT_USER.handle) {
                 continue;
             }
 
-            // 不能删除管理员账户
             if (user.admin) {
                 continue;
             }
 
-            // 获取用户的最后活动时间
             const userStats = systemMonitor.getUserLoadStats(user.handle);
             let lastActivityTime = null;
 
             if (userStats && userStats.lastActivity) {
-                // 如果有心跳记录，优先使用心跳时间
                 if (userStats.lastHeartbeat) {
                     lastActivityTime = userStats.lastHeartbeat;
                 } else {
                     lastActivityTime = userStats.lastActivity;
                 }
             } else {
-                // 如果没有活动记录，使用用户创建时间作为最后活动时间
                 lastActivityTime = user.created || 0;
             }
 
@@ -566,7 +532,6 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
             const daysSinceLastActivity = Math.floor(timeSinceLastActivity / (24 * 60 * 60 * 1000));
             const hasBoundEmail = typeof user.email === 'string' && user.email.trim().length > 0;
 
-            // 如果超过指定天数未登录
             if (timeSinceLastActivity > inactiveThreshold) {
                 const directories = getUserDirectories(user.handle);
                 const storageSize = await calculateDirectorySize(directories.root);
@@ -585,7 +550,6 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
                     hasEmail: hasBoundEmail,
                 });
 
-                // 如果不是试运行模式，执行删除
                 if (!dryRun) {
                     let emailNotified = false;
                     let emailError = null;
@@ -609,15 +573,12 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
                             }
                         }
 
-                        // 删除用户记录
                         await storage.removeItem(toKey(user.handle));
 
-                        // 删除用户数据目录
                         if (fs.existsSync(directories.root)) {
                             await fsPromises.rm(directories.root, { recursive: true, force: true });
                         }
 
-                        // 重置用户统计数据
                         systemMonitor.resetUserStats(user.handle);
 
                         totalDeletedSize += storageSize;
@@ -628,7 +589,7 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
                             deletedSize: storageSize,
                             emailNotified: emailNotified,
                             emailError: emailError,
-                            message: `已删除用户 ${user.handle}，释放 ${(storageSize / 1024 / 1024).toFixed(2)} MB 空间`,
+                            message: `Deleted user ${user.handle}, freed ${(storageSize / 1024 / 1024).toFixed(2)} MB`,
                         });
 
                         console.info(`Deleted inactive user ${user.handle}: ${(storageSize / 1024 / 1024).toFixed(2)} MB`);
@@ -648,7 +609,6 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
         }
 
         if (dryRun) {
-            // 试运行模式，只返回将要删除的用户列表
             return response.json({
                 success: true,
                 dryRun: true,
@@ -657,10 +617,9 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
                 inactiveUsers: inactiveUsers,
                 totalUsers: inactiveUsers.length,
                 totalSize: inactiveUsers.reduce((sum, u) => sum + u.storageSize, 0),
-                message: `发现 ${inactiveUsers.length} 个用户超过 ${inactiveDays} 天未登录${storageFilterMessage}`,
+                message: `Found ${inactiveUsers.length} users inactive for more than ${inactiveDays} days${storageFilterMessage}`,
             });
         } else {
-            // 实际删除模式
             return response.json({
                 success: true,
                 dryRun: false,
@@ -671,11 +630,11 @@ router.post('/delete-inactive-users', requireAdminMiddleware, async (request, re
                 totalDeleted: results.filter(r => r.success).length,
                 totalFailed: results.filter(r => !r.success).length,
                 totalDeletedSize: totalDeletedSize,
-                message: `已删除 ${results.filter(r => r.success).length} 个用户，释放 ${(totalDeletedSize / 1024 / 1024).toFixed(2)} MB 空间`,
+                message: `Deleted ${results.filter(r => r.success).length} users, freed ${(totalDeletedSize / 1024 / 1024).toFixed(2)} MB`,
             });
         }
     } catch (error) {
         console.error('Delete inactive users failed:', error);
-        return response.status(500).json({ error: '删除不活跃用户失败: ' + error.message });
+        return response.status(500).json({ error: 'Failed to delete inactive users: ' + error.message });
     }
 });

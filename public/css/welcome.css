@@ -74,7 +74,6 @@ body.hideChatAvatars .welcomePanel .recentChatList .recentChat .avatar {
     gap: 5px;
 }
 
-/* 大按钮容器 */
 .welcomeBigButtons,
 .custom-welcomeBigButtons {
     display: flex;
@@ -84,7 +83,6 @@ body.hideChatAvatars .welcomePanel .recentChatList .recentChat .avatar {
     padding: 10px 0 0 0;
 }
 
-/* 大按钮公共样式 */
 .welcomeBigButtons .wb,
 .mes .welcomeBigButtons .wb,
 .custom-welcomeBigButtons .custom-wb,
@@ -135,7 +133,6 @@ body.hideChatAvatars .welcomePanel .recentChatList .recentChat .avatar {
     filter: brightness(1.05);
 }
 
-/* 在欢迎提示中与下面的灰色按钮分隔开 */
 .mes .welcomeBigButtons,
 .mes .custom-welcomeBigButtons {
     margin: 6px 0 2px 0;

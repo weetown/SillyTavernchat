@@ -4,9 +4,7 @@ import scheduledTasksManager from '../scheduled-tasks.js';
 
 export const router = express.Router();
 
-/**
- * 获取定时任务配置
- */
+
 router.get('/config', requireAdminMiddleware, async (request, response) => {
     try {
         const config = scheduledTasksManager.getTaskConfig();
@@ -25,44 +23,39 @@ router.get('/config', requireAdminMiddleware, async (request, response) => {
         });
     } catch (error) {
         console.error('Get scheduled task config failed:', error);
-        return response.status(500).json({ error: '获取定时任务配置失败: ' + error.message });
+        return response.status(500).json({ error: 'Failed to fetch scheduled task configuration: ' + error.message });
     }
 });
 
-/**
- * 保存定时任务配置
- */
+
 router.post('/config', requireAdminMiddleware, async (request, response) => {
     try {
         const { enabled, cronExpression } = request.body;
 
         if (enabled && !cronExpression) {
-            return response.status(400).json({ error: '启用定时任务时必须提供cron表达式' });
+            return response.status(400).json({ error: 'A cron expression is required when enabling scheduled tasks' });
         }
 
-        // 如果启用，验证cron表达式
         if (enabled) {
             const cron = await import('node-cron');
             if (!cron.default.validate(cronExpression)) {
-                return response.status(400).json({ error: '无效的cron表达式' });
+                return response.status(400).json({ error: 'Invalid cron expression' });
             }
         }
 
-        // 保存配置
         const saved = scheduledTasksManager.saveTaskConfig({
             enabled: enabled || false,
             cronExpression: cronExpression || '',
         });
 
         if (!saved) {
-            return response.status(500).json({ error: '保存配置失败' });
+            return response.status(500).json({ error: 'Failed to save configuration' });
         }
 
-        // 如果启用，启动任务；如果禁用，停止任务
         if (enabled) {
             const started = scheduledTasksManager.startClearAllBackupsTask(cronExpression);
             if (!started) {
-                return response.status(500).json({ error: '启动定时任务失败' });
+                return response.status(500).json({ error: 'Failed to start scheduled task' });
             }
         } else {
             scheduledTasksManager.stopTask('clearAllBackups');
@@ -70,17 +63,15 @@ router.post('/config', requireAdminMiddleware, async (request, response) => {
 
         return response.json({
             success: true,
-            message: enabled ? '定时任务已启用' : '定时任务已禁用',
+            message: enabled ? 'Scheduled task enabled' : 'Scheduled task disabled',
         });
     } catch (error) {
         console.error('Save scheduled task config failed:', error);
-        return response.status(500).json({ error: '保存定时任务配置失败: ' + error.message });
+        return response.status(500).json({ error: 'Failed to save scheduled task configuration: ' + error.message });
     }
 });
 
-/**
- * 获取定时任务状态
- */
+
 router.get('/status', requireAdminMiddleware, async (request, response) => {
     try {
         const status = scheduledTasksManager.getAllTasksStatus();
@@ -90,27 +81,23 @@ router.get('/status', requireAdminMiddleware, async (request, response) => {
         });
     } catch (error) {
         console.error('Get scheduled tasks status failed:', error);
-        return response.status(500).json({ error: '获取定时任务状态失败: ' + error.message });
+        return response.status(500).json({ error: 'Failed to fetch scheduled task status: ' + error.message });
     }
 });
 
-/**
- * 手动执行清理所有备份文件任务（用于测试）
- */
+
 router.post('/execute/clear-all-backups', requireAdminMiddleware, async (request, response) => {
     try {
-        // 在后台执行，不阻塞响应
         scheduledTasksManager.executeClearAllBackups().catch(error => {
-            console.error('手动执行清理备份任务失败:', error);
+            console.error('Manual backup cleanup task failed:', error);
         });
 
         return response.json({
             success: true,
-            message: '清理任务已开始执行，请查看服务器日志了解详情',
+            message: 'Cleanup task started. Check server logs for details.',
         });
     } catch (error) {
         console.error('Execute clear all backups task failed:', error);
-        return response.status(500).json({ error: '执行清理任务失败: ' + error.message });
+        return response.status(500).json({ error: 'Failed to execute cleanup task: ' + error.message });
     }
 });
-

@@ -1,42 +1,30 @@
 // @ts-nocheck
-// 管理员面板扩展功能
 let systemLoadInterval;
 let systemLoadAutoPaused = false;
 let currentSystemData = null;
 let currentInvitationCodes = [];
 let csrfToken = null;
 
-// 初始化管理员扩展功能
 function initializeAdminExtensions() {
-    // 获取CSRF token
     getCsrfToken().then(() => {
-        // 绑定选项卡切换事件
         bindTabEvents();
 
-        // 绑定系统负载相关事件
         bindSystemLoadEvents();
 
-        // 绑定邀请码管理相关事件
         bindInvitationCodeEvents();
 
-        // 绑定公告管理相关事件
         bindAnnouncementEvents();
 
-        // 绑定默认配置相关事件
         bindDefaultConfigEvents();
 
-        // 绑定邮件配置相关事件
         initializeEmailConfig();
 
-        // 检查当前显示的选项卡并自动加载数据
         checkAndLoadCurrentTab();
     });
 }
 
-// 检查当前显示的选项卡并自动加载数据
 function checkAndLoadCurrentTab() {
     setTimeout(() => {
-        // 检查系统负载选项卡是否显示
         const systemLoadBlock = document.querySelector('.systemLoadBlock');
         if (systemLoadBlock && isElementVisible(systemLoadBlock)) {
             console.log('System load tab is visible, loading data...');
@@ -44,45 +32,37 @@ function checkAndLoadCurrentTab() {
             startSystemLoadAutoRefresh();
         }
 
-        // 检查邀请码管理选项卡是否显示
         const invitationCodesBlock = document.querySelector('.invitationCodesBlock');
         if (invitationCodesBlock && isElementVisible(invitationCodesBlock)) {
             console.log('Invitation codes tab is visible, loading data...');
             loadInvitationCodes();
         }
 
-        // 检查公告管理选项卡是否显示
         const announcementsBlock = document.querySelector('.announcementsBlock');
         if (announcementsBlock && isElementVisible(announcementsBlock)) {
             console.log('Announcements tab is visible, loading data...');
             loadAnnouncements();
         }
 
-        // 检查默认配置选项卡是否显示
         const defaultConfigBlock = document.querySelector('.defaultConfigBlock');
         if (defaultConfigBlock && isElementVisible(defaultConfigBlock)) {
             console.log('Default config tab is visible, loading data...');
             loadDefaultConfigStatus();
             loadDefaultConfigUsers();
         }
-    }, 100); // 稍微延迟以确保DOM完全渲染
+    }, 100);
 }
 
-// 检查元素是否可见
 function isElementVisible(element) {
     if (!element) return false;
 
-    // 检查display样式
     const style = window.getComputedStyle(element);
     if (style.display === 'none') return false;
 
-    // 检查是否有offsetParent (更可靠的可见性检测)
     return element.offsetParent !== null;
 }
 
-// 绑定选项卡切换事件
 function bindTabEvents() {
-    // 系统负载选项卡
     const systemLoadButton = document.querySelector('.systemLoadButton');
     if (systemLoadButton) {
         systemLoadButton.addEventListener('click', function() {
@@ -90,7 +70,6 @@ function bindTabEvents() {
         });
     }
 
-    // 邀请码管理选项卡
     const invitationCodesButton = document.querySelector('.invitationCodesButton');
     if (invitationCodesButton) {
         invitationCodesButton.addEventListener('click', function() {
@@ -98,7 +77,6 @@ function bindTabEvents() {
         });
     }
 
-    // 公告管理选项卡
     const announcementsButton = document.querySelector('.announcementsButton');
     if (announcementsButton) {
         announcementsButton.addEventListener('click', function() {
@@ -106,7 +84,6 @@ function bindTabEvents() {
         });
     }
 
-    // 邮件配置选项卡
     const emailConfigButton = document.querySelector('.emailConfigButton');
     if (emailConfigButton) {
         emailConfigButton.addEventListener('click', function() {
@@ -114,7 +91,6 @@ function bindTabEvents() {
         });
     }
 
-    // OAuth配置选项卡
     const oauthConfigButton = document.querySelector('.oauthConfigButton');
     if (oauthConfigButton) {
         oauthConfigButton.addEventListener('click', function() {
@@ -122,7 +98,6 @@ function bindTabEvents() {
         });
     }
 
-    // 默认配置选项卡
     const defaultConfigButton = document.querySelector('.defaultConfigButton');
     if (defaultConfigButton) {
         defaultConfigButton.addEventListener('click', function() {
@@ -131,36 +106,26 @@ function bindTabEvents() {
     }
 }
 
-// 显示系统负载选项卡
 function showSystemLoadTab() {
-    // 隐藏其他选项卡
     hideAllTabs();
 
-    // 重置分页和搜索状态
     currentUserPage = 1;
     userSearchTerm = '';
 
-    // 显示系统负载选项卡
     const systemLoadBlock = document.querySelector('.systemLoadBlock');
     if (systemLoadBlock) {
         systemLoadBlock.style.display = 'block';
-        // 立即加载数据
         loadSystemLoadData();
-        // 启动自动刷新
         startSystemLoadAutoRefresh();
     }
 }
 
-// 显示邀请码管理选项卡
 function showInvitationCodesTab() {
-    // 隐藏其他选项卡
     hideAllTabs();
 
-    // 重置分页状态
     currentCodePage = 1;
     codeSearchTerm = '';
 
-    // 显示邀请码管理选项卡
     const invitationCodesBlock = document.querySelector('.invitationCodesBlock');
     if (invitationCodesBlock) {
         invitationCodesBlock.style.display = 'block';
@@ -168,36 +133,28 @@ function showInvitationCodesTab() {
     }
 }
 
-// 显示公告管理选项卡
 function showAnnouncementsTab() {
-    // 隐藏其他选项卡
     hideAllTabs();
 
-    // 显示公告管理选项卡
     const announcementsBlock = document.querySelector('.announcementsBlock');
     if (announcementsBlock) {
         announcementsBlock.style.display = 'block';
-        bindAnnouncementEvents(); // 重新绑定事件
+        bindAnnouncementEvents();
         loadAnnouncements();
     }
 }
 
-// 显示邮件配置选项卡
 function showEmailConfigTab() {
-    // 隐藏其他选项卡
     hideAllTabs();
 
-    // 显示邮件配置选项卡
     const emailConfigBlock = document.querySelector('.emailConfigBlock');
     if (emailConfigBlock) {
         emailConfigBlock.style.display = 'block';
-        loadEmailConfig(); // 加载邮件配置
+        loadEmailConfig();
     }
 }
 
-// 隐藏所有选项卡
 function hideAllTabs() {
-    // 停止系统负载自动刷新
     stopSystemLoadAutoRefresh();
 
     const tabs = document.querySelectorAll('.navTab');
@@ -206,9 +163,7 @@ function hideAllTabs() {
     });
 }
 
-// 系统负载相关功能
 function bindSystemLoadEvents() {
-    // 刷新系统负载按钮
     const refreshButton = document.getElementById('refreshSystemLoad');
     if (refreshButton) {
         refreshButton.addEventListener('click', function() {
@@ -216,7 +171,6 @@ function bindSystemLoadEvents() {
         });
     }
 
-    // 清除统计数据按钮
     const clearStatsButton = document.getElementById('clearSystemStats');
     if (clearStatsButton) {
         clearStatsButton.addEventListener('click', function() {
@@ -224,7 +178,6 @@ function bindSystemLoadEvents() {
         });
     }
 
-	// 鼠标悬停用户统计区域时暂停自动刷新，便于查看
 	const userActivityList = document.getElementById('userActivityList');
 	if (userActivityList) {
 		userActivityList.addEventListener('mouseenter', function() {
@@ -235,7 +188,6 @@ function bindSystemLoadEvents() {
 		});
 	}
 
-	// 页面不可见时暂停，返回时恢复
 	document.addEventListener('visibilitychange', function() {
 		if (document.hidden) {
 			pauseSystemLoadAutoRefresh();
@@ -245,7 +197,6 @@ function bindSystemLoadEvents() {
 	});
 }
 
-// 加载系统负载数据
 async function loadSystemLoadData() {
     try {
         showLoadingState('userActivityList');
@@ -264,24 +215,19 @@ async function loadSystemLoadData() {
 
     } catch (error) {
         console.error('Error loading system load data:', error);
-        showErrorState('userActivityList', '加载系统数据失败');
+        showErrorState('userActivityList', 'Failed to load system data');
     }
 }
 
-// 渲染系统负载数据
 function renderSystemLoadData() {
     if (!currentSystemData) return;
 
-    // 更新系统概览
     updateSystemOverview(currentSystemData.system);
 
-    // 更新用户活动统计
     updateUserActivity(currentSystemData.users);
 }
 
-// 更新系统概览
 function updateSystemOverview(systemData) {
-    // CPU 使用率
     const cpuUsage = document.getElementById('cpuUsage');
     const cpuProgress = document.getElementById('cpuProgress');
     if (cpuUsage && cpuProgress && systemData.cpu) {
@@ -289,7 +235,6 @@ function updateSystemOverview(systemData) {
         cpuUsage.textContent = cpuPercent;
         cpuProgress.style.width = `${cpuPercent}%`;
 
-        // 根据使用率设置颜色
         if (cpuPercent > 80) {
             cpuProgress.style.background = 'linear-gradient(90deg, #ff6b6b 0%, #ee5a24 100%)';
         } else if (cpuPercent > 60) {
@@ -299,7 +244,6 @@ function updateSystemOverview(systemData) {
         }
     }
 
-    // 内存使用
     const memoryUsage = document.getElementById('memoryUsage');
     const memoryProgress = document.getElementById('memoryProgress');
     if (memoryUsage && memoryProgress && systemData.memory) {
@@ -307,7 +251,6 @@ function updateSystemOverview(systemData) {
         memoryUsage.textContent = memoryPercent;
         memoryProgress.style.width = `${memoryPercent}%`;
 
-        // 根据使用率设置颜色
         if (memoryPercent > 80) {
             memoryProgress.style.background = 'linear-gradient(90deg, #ff6b6b 0%, #ee5a24 100%)';
         } else if (memoryPercent > 60) {
@@ -322,7 +265,6 @@ function updateSystemOverview(systemData) {
     const onlineCount = typeof systemData?.onlineUsers === 'number' ? systemData.onlineUsers : userSummary.online;
     const totalUsers = typeof systemData?.totalTrackedUsers === 'number' ? systemData.totalTrackedUsers : userSummary.total;
 
-    // 活跃用户数
     const activeUsers = document.getElementById('activeUsers');
     if (activeUsers) {
         activeUsers.textContent = activeCount;
@@ -331,22 +273,20 @@ function updateSystemOverview(systemData) {
     const activeUsersSummary = document.getElementById('activeUsersSummary');
     if (activeUsersSummary) {
         if (totalUsers === 0) {
-            activeUsersSummary.textContent = '暂无用户';
+            activeUsersSummary.textContent = 'No users';
         } else {
-            activeUsersSummary.textContent = `在线 ${onlineCount} · 总计 ${totalUsers}`;
+            activeUsersSummary.textContent = `Online ${onlineCount} · Total ${totalUsers}`;
         }
     }
 
-    // 运行时间
     const uptime = document.getElementById('uptime');
     if (uptime && systemData.uptime) {
         uptime.textContent = systemData.uptime.processFormatted || '--';
     }
 }
 
-// 用户活动分页相关
 let currentUserPage = 1;
-const usersPerPage = 20; // 每页显示20个用户
+const usersPerPage = 20;
 let filteredUsers = [];
 let userSearchTerm = '';
 
@@ -391,40 +331,35 @@ function getUserSummaryFromList(users) {
     };
 }
 
-// 更新用户统计
 function updateUserActivity(usersData) {
     const userActivityList = document.getElementById('userActivityList');
     if (!userActivityList) return;
 
     if (!usersData || usersData.length === 0) {
-        userActivityList.innerHTML = createEmptyState('fa-users', '暂无用户数据', '没有用户统计数据');
+        userActivityList.innerHTML = createEmptyState('fa-users', 'No user data', 'No user statistics available');
         return;
     }
 
-    // 应用搜索过滤
     filteredUsers = userSearchTerm ? usersData.filter(user =>
         (user.userName && user.userName.toLowerCase().includes(userSearchTerm.toLowerCase())) ||
         (user.userHandle && user.userHandle.toLowerCase().includes(userSearchTerm.toLowerCase()))
     ) : usersData;
 
-    // 计算分页
     const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
     const startIndex = (currentUserPage - 1) * usersPerPage;
     const endIndex = startIndex + usersPerPage;
     const pageUsers = filteredUsers.slice(startIndex, endIndex);
 
-    // 渲染用户列表
     const userActivityHtml = pageUsers.map(user => createUserActivityItem(user)).join('');
 
-    // 创建分页控件
     const paginationHtml = createPaginationControls(currentUserPage, totalPages, filteredUsers.length);
 
     userActivityList.innerHTML = `
         <div class="userActivityControls">
-            <input type="text" id="userSearchInput" placeholder="搜索用户名或句柄..."
+            <input type="text" id="userSearchInput" placeholder="Search username or handle..."
                    value="${userSearchTerm}" class="text_pole" style="flex: 1; margin-right: 10px;">
             <span class="userCount" style="white-space: nowrap; opacity: 0.7;">
-                显示 ${startIndex + 1}-${Math.min(endIndex, filteredUsers.length)} / ${filteredUsers.length} 用户
+                Showing ${startIndex + 1}-${Math.min(endIndex, filteredUsers.length)} / ${filteredUsers.length} users
             </span>
         </div>
         ${paginationHtml}
@@ -432,48 +367,41 @@ function updateUserActivity(usersData) {
         ${paginationHtml}
     `;
 
-    // 绑定搜索事件
     const searchInput = document.getElementById('userSearchInput');
     if (searchInput) {
         searchInput.addEventListener('input', debounceSearch(function(e) {
             userSearchTerm = e.target.value.trim();
-            currentUserPage = 1; // 重置到第一页
+            currentUserPage = 1;
             updateUserActivity(currentSystemData.users);
         }, 300));
     }
 
-    // 绑定分页按钮事件
     bindPaginationEvents();
 }
 
-// 创建分页控件
 function createPaginationControls(currentPage, totalPages, totalUsers) {
     if (totalPages <= 1) return '';
 
     let html = '<div class="paginationControls" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0;">';
 
-    // 上一页按钮
     if (currentPage > 1) {
         html += `<button class="menu_button pagination-btn" data-page="${currentPage - 1}">
-            <i class="fa-solid fa-chevron-left"></i> 上一页
+            <i class="fa-solid fa-chevron-left"></i> Previous
         </button>`;
     } else {
         html += `<button class="menu_button" disabled style="opacity: 0.5;">
-            <i class="fa-solid fa-chevron-left"></i> 上一页
+            <i class="fa-solid fa-chevron-left"></i> Previous
         </button>`;
     }
 
-    // 页码按钮
     const maxButtons = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
     let endPage = Math.min(totalPages, startPage + maxButtons - 1);
 
-    // 调整起始页
     if (endPage - startPage < maxButtons - 1) {
         startPage = Math.max(1, endPage - maxButtons + 1);
     }
 
-    // 第一页
     if (startPage > 1) {
         html += `<button class="menu_button pagination-btn" data-page="1">1</button>`;
         if (startPage > 2) {
@@ -481,7 +409,6 @@ function createPaginationControls(currentPage, totalPages, totalUsers) {
         }
     }
 
-    // 中间页码
     for (let i = startPage; i <= endPage; i++) {
         if (i === currentPage) {
             html += `<button class="menu_button" disabled style="background: var(--SmartThemeBlurTintColor);">${i}</button>`;
@@ -490,7 +417,6 @@ function createPaginationControls(currentPage, totalPages, totalUsers) {
         }
     }
 
-    // 最后一页
     if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
             html += `<span style="opacity: 0.5;">...</span>`;
@@ -498,14 +424,13 @@ function createPaginationControls(currentPage, totalPages, totalUsers) {
         html += `<button class="menu_button pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
     }
 
-    // 下一页按钮
     if (currentPage < totalPages) {
         html += `<button class="menu_button pagination-btn" data-page="${currentPage + 1}">
-            下一页 <i class="fa-solid fa-chevron-right"></i>
+            Next <i class="fa-solid fa-chevron-right"></i>
         </button>`;
     } else {
         html += `<button class="menu_button" disabled style="opacity: 0.5;">
-            下一页 <i class="fa-solid fa-chevron-right"></i>
+            Next <i class="fa-solid fa-chevron-right"></i>
         </button>`;
     }
 
@@ -513,7 +438,6 @@ function createPaginationControls(currentPage, totalPages, totalUsers) {
     return html;
 }
 
-// 绑定分页按钮事件
 function bindPaginationEvents() {
     const paginationBtns = document.querySelectorAll('.pagination-btn');
     paginationBtns.forEach(btn => {
@@ -521,7 +445,6 @@ function bindPaginationEvents() {
             currentUserPage = parseInt(this.dataset.page);
             updateUserActivity(currentSystemData.users);
 
-            // 滚动到顶部
             const userActivityList = document.getElementById('userActivityList');
             if (userActivityList) {
                 userActivityList.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -530,7 +453,6 @@ function bindPaginationEvents() {
     });
 }
 
-// 防抖函数
 function debounceSearch(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -543,19 +465,17 @@ function debounceSearch(func, wait) {
     };
 }
 
-// 创建用户统计项目
 function createUserActivityItem(user) {
-    // 使用新的在线状态文本和颜色逻辑
-    const onlineStatus = user.onlineStatusText || (user.isOnline ? '在线' : '离线');
-    let statusColor = '#95a5a6'; // 默认离线颜色
+    const onlineStatus = user.onlineStatusText || (user.isOnline ? 'Online' : 'Offline');
+    let statusColor = '#95a5a6';
 
     if (user.isOnline) {
-        if (user.onlineStatusText === '在线') {
-            statusColor = '#27ae60'; // 绿色 - 真正在线
-        } else if (user.onlineStatusText === '可能离线') {
-            statusColor = '#f39c12'; // 橙色 - 可能离线
+        if (user.onlineStatusText === 'Online') {
+            statusColor = '#27ae60';
+        } else if (user.onlineStatusText === 'Possibly offline') {
+            statusColor = '#f39c12';
         } else {
-            statusColor = '#3498db'; // 蓝色 - 在线但无心跳
+            statusColor = '#3498db';
         }
     }
 
@@ -568,43 +488,41 @@ function createUserActivityItem(user) {
                     <span style="color: #666; margin-left: 10px;">${user.userHandle}</span>
                 </div>
                 <div class="userActivityDetails">
-                    <div class="userActivityDetail">最后聊天: ${user.lastChatTimeFormatted}</div>
-                    <div class="userActivityDetail">最后会话: ${user.lastSessionTimeFormatted}</div>
-                    ${user.onlineDurationFormatted ? `<div class="userActivityDetail">在线时长: ${user.onlineDurationFormatted}</div>` : ''}
-                    ${user.lastHeartbeatFormatted && user.lastHeartbeatFormatted !== '无' ? `<div class="userActivityDetail">最后心跳: ${user.lastHeartbeatFormatted}</div>` : ''}
+                    <div class="userActivityDetail">Last chat: ${user.lastChatTimeFormatted}</div>
+                    <div class="userActivityDetail">Last session: ${user.lastSessionTimeFormatted}</div>
+                    ${user.onlineDurationFormatted ? `<div class="userActivityDetail">Online duration: ${user.onlineDurationFormatted}</div>` : ''}
+                    ${user.lastHeartbeatFormatted && user.lastHeartbeatFormatted !== 'None' ? `<div class="userActivityDetail">Last heartbeat: ${user.lastHeartbeatFormatted}</div>` : ''}
                 </div>
             </div>
             <div class="userActivityStats">
                 <div class="userActivityStat">
                     <div class="userActivityStatValue">${user.totalMessages || 0}</div>
-                    <div class="userActivityStatLabel">总消息</div>
+                    <div class="userActivityStatLabel">Total messages</div>
                 </div>
                 <div class="userActivityStat">
                     <div class="userActivityStatValue">${user.todayMessages || 0}</div>
-                    <div class="userActivityStatLabel">今日消息</div>
+                    <div class="userActivityStatLabel">Messages today</div>
                 </div>
                 <div class="userActivityStat">
                     <div class="userActivityStatValue">${user.sessionCount || 0}</div>
-                    <div class="userActivityStatLabel">会话次数</div>
+                    <div class="userActivityStatLabel">Sessions</div>
                 </div>
             </div>
         </div>
     `;
 }
 
-// 获取活动等级文本
 function getActivityLevelText(level) {
     const levelMap = {
-        'very_high': '非常活跃',
-        'high': '高度活跃',
-        'medium': '中等活跃',
-        'low': '低度活跃',
-        'minimal': '轻度活跃'
+        'very_high': 'Very active',
+        'high': 'Highly active',
+        'medium': 'Moderately active',
+        'low': 'Low activity',
+        'minimal': 'Minimal activity'
     };
-    return levelMap[level] || '未知';
+    return levelMap[level] || 'Unknown';
 }
 
-// 获取活动等级颜色
 function getActivityLevelColor(level) {
     const colorMap = {
         'very_high': '#e74c3c',
@@ -616,17 +534,15 @@ function getActivityLevelColor(level) {
     return colorMap[level] || '#666';
 }
 
-// 开始系统负载自动刷新
 function startSystemLoadAutoRefresh() {
     stopSystemLoadAutoRefresh();
     systemLoadInterval = setInterval(() => {
         if (!systemLoadAutoPaused) {
             loadSystemLoadData();
         }
-    }, 60000); // 每60秒刷新一次
+    }, 60000);
 }
 
-// 停止系统负载自动刷新
 function stopSystemLoadAutoRefresh() {
     if (systemLoadInterval) {
         clearInterval(systemLoadInterval);
@@ -634,7 +550,6 @@ function stopSystemLoadAutoRefresh() {
     }
 }
 
-// 暂停/恢复自动刷新（不销毁现有间隔，仅设置暂停标记）
 function pauseSystemLoadAutoRefresh() {
     systemLoadAutoPaused = true;
 }
@@ -643,9 +558,8 @@ function resumeSystemLoadAutoRefresh() {
     systemLoadAutoPaused = false;
 }
 
-// 清除系统统计数据
 async function clearSystemStats() {
-    if (!confirm('确定要清除所有系统统计数据吗？此操作不可恢复。')) {
+    if (!confirm('Are you sure you want to clear all system statistics? This action cannot be undone.')) {
         return;
     }
 
@@ -659,35 +573,28 @@ async function clearSystemStats() {
             throw new Error('Failed to clear system stats');
         }
 
-        alert('系统统计数据已清除');
+        alert('System statistics cleared.');
         loadSystemLoadData();
 
     } catch (error) {
         console.error('Error clearing system stats:', error);
-        alert('清除统计数据失败');
+        alert('Failed to clear system statistics.');
     }
 }
 
-// 邀请码分页相关
 let currentCodePage = 1;
-const codesPerPage = 50; // 每页显示50个邀请码
+const codesPerPage = 50;
 let codeSearchTerm = '';
 
-// 邀请码管理相关功能
 function bindInvitationCodeEvents() {
-    // 购买链接表单
     bindPurchaseLinkForm();
 
-    // 加载购买链接
     loadPurchaseLink();
 
-    // 创建模式切换
     bindCreationModeToggle();
 
-    // 创建邀请码表单 - 移除之前的事件监听器以防重复绑定
     const createInvitationForm = document.querySelector('.createInvitationForm');
     if (createInvitationForm) {
-        // 克隆节点来移除所有事件监听器
         const newForm = createInvitationForm.cloneNode(true);
         createInvitationForm.parentNode.replaceChild(newForm, createInvitationForm);
 
@@ -697,10 +604,8 @@ function bindInvitationCodeEvents() {
         });
     }
 
-    // 批量创建邀请码表单 - 移除之前的事件监听器以防重复绑定
     const createBatchInvitationForm = document.querySelector('.createBatchInvitationForm');
     if (createBatchInvitationForm) {
-        // 克隆节点来移除所有事件监听器
         const newBatchForm = createBatchInvitationForm.cloneNode(true);
         createBatchInvitationForm.parentNode.replaceChild(newBatchForm, createBatchInvitationForm);
 
@@ -710,7 +615,6 @@ function bindInvitationCodeEvents() {
         });
     }
 
-    // 刷新邀请码列表按钮
     const refreshInvitationCodes = document.getElementById('refreshInvitationCodes');
     if (refreshInvitationCodes) {
         refreshInvitationCodes.addEventListener('click', function() {
@@ -718,7 +622,6 @@ function bindInvitationCodeEvents() {
         });
     }
 
-    // 清理过期邀请码按钮
     const cleanupExpiredCodes = document.getElementById('cleanupExpiredCodes');
     if (cleanupExpiredCodes) {
         cleanupExpiredCodes.addEventListener('click', function() {
@@ -726,7 +629,6 @@ function bindInvitationCodeEvents() {
         });
     }
 
-    // 筛选器事件
     const typeFilter = document.getElementById('invitationTypeFilter');
     const statusFilter = document.getElementById('invitationStatusFilter');
     if (typeFilter) {
@@ -740,11 +642,9 @@ function bindInvitationCodeEvents() {
         });
     }
 
-    // 批量操作按钮
     bindBatchOperationEvents();
 }
 
-// 绑定购买链接表单
 function bindPurchaseLinkForm() {
     const purchaseLinkForm = document.querySelector('.purchaseLinkForm');
     if (purchaseLinkForm) {
@@ -758,7 +658,6 @@ function bindPurchaseLinkForm() {
     }
 }
 
-// 加载购买链接
 async function loadPurchaseLink() {
     try {
         const response = await fetch('/api/invitation-codes/purchase-link', {
@@ -778,7 +677,6 @@ async function loadPurchaseLink() {
     }
 }
 
-// 保存购买链接
 async function savePurchaseLink() {
     const input = document.getElementById('purchaseLinkInput');
     const statusDiv = document.querySelector('.purchaseLinkStatus');
@@ -795,10 +693,10 @@ async function savePurchaseLink() {
         });
 
         if (!response.ok) {
-            throw new Error('保存失败');
+            throw new Error('Save failed');
         }
 
-        statusDiv.textContent = '✓ 购买链接已保存';
+        statusDiv.textContent = '✓ Purchase link saved';
         statusDiv.style.color = 'green';
         statusDiv.style.display = 'block';
 
@@ -807,13 +705,12 @@ async function savePurchaseLink() {
         }, 3000);
     } catch (error) {
         console.error('Error saving purchase link:', error);
-        statusDiv.textContent = '✗ 保存失败：' + error.message;
+        statusDiv.textContent = '✗ Save failed：' + error.message;
         statusDiv.style.color = 'red';
         statusDiv.style.display = 'block';
     }
 }
 
-// 绑定创建模式切换
 function bindCreationModeToggle() {
     const toggleButtons = document.querySelectorAll('.creation-toggle-btn');
     toggleButtons.forEach(button => {
@@ -824,9 +721,7 @@ function bindCreationModeToggle() {
     });
 }
 
-// 切换创建模式
 function switchCreationMode(mode) {
-    // 更新按钮状态
     const toggleButtons = document.querySelectorAll('.creation-toggle-btn');
     toggleButtons.forEach(btn => {
         if (btn.dataset.mode === mode) {
@@ -836,7 +731,6 @@ function switchCreationMode(mode) {
         }
     });
 
-    // 切换表单显示
     const singleMode = document.getElementById('singleCreationMode');
     const batchMode = document.getElementById('batchCreationMode');
 
@@ -849,34 +743,28 @@ function switchCreationMode(mode) {
     }
 }
 
-// 绑定批量操作事件
 function bindBatchOperationEvents() {
-    // 全选/取消全选
     const selectAllBtn = document.getElementById('selectAllCodes');
     if (selectAllBtn) {
         selectAllBtn.addEventListener('click', toggleSelectAll);
     }
 
-    // 下载选中
     const downloadSelectedBtn = document.getElementById('downloadSelectedCodes');
     if (downloadSelectedBtn) {
         downloadSelectedBtn.addEventListener('click', downloadSelectedCodes);
     }
 
-    // 下载全部
     const downloadAllBtn = document.getElementById('downloadAllCodes');
     if (downloadAllBtn) {
         downloadAllBtn.addEventListener('click', downloadAllCodes);
     }
 
-    // 删除选中
     const deleteSelectedBtn = document.getElementById('deleteSelectedCodes');
     if (deleteSelectedBtn) {
         deleteSelectedBtn.addEventListener('click', deleteSelectedCodes);
     }
 }
 
-// 加载邀请码列表
 async function loadInvitationCodes() {
     try {
         showLoadingState('invitationCodesContainer');
@@ -891,48 +779,41 @@ async function loadInvitationCodes() {
         }
 
         const data = await response.json();
-        // 过滤掉无效的邀请码（code为undefined、null或空字符串）
         currentInvitationCodes = (data.codes || []).filter(code => code && code.code && typeof code.code === 'string');
 
-        // 如果发现有无效数据，提示用户
         const totalCodes = data.codes ? data.codes.length : 0;
         if (totalCodes > currentInvitationCodes.length) {
-            console.warn(`发现 ${totalCodes - currentInvitationCodes.length} 个无效邀请码已被过滤`);
+            console.warn(`Filtered out ${totalCodes - currentInvitationCodes.length} invalid invitation codes`);
         }
 
         renderInvitationCodes();
 
     } catch (error) {
         console.error('Error loading invitation codes:', error);
-        showErrorState('invitationCodesContainer', '加载邀请码失败');
+        showErrorState('invitationCodesContainer', 'Failed to load invitation codes');
     }
 }
 
-// 渲染邀请码列表
 function renderInvitationCodes() {
     const container = document.getElementById('invitationCodesContainer');
     if (!container) return;
 
     if (currentInvitationCodes.length === 0) {
-        container.innerHTML = createEmptyState('fa-ticket', '暂无邀请码', '点击上方按钮创建新的邀请码');
+        container.innerHTML = createEmptyState('fa-ticket', 'No invitation codes', 'Click the button above to create new invitation codes');
         return;
     }
 
-    // 获取筛选条件
     const typeFilter = document.getElementById('invitationTypeFilter');
     const statusFilter = document.getElementById('invitationStatusFilter');
     const selectedType = typeFilter ? typeFilter.value : 'all';
     const selectedStatus = statusFilter ? statusFilter.value : 'all';
 
-    // 筛选邀请码（同时再次过滤无效数据）
     let filteredCodes = currentInvitationCodes.filter(code => code && code.code && typeof code.code === 'string');
 
-    // 按类型筛选
     if (selectedType !== 'all') {
         filteredCodes = filteredCodes.filter(code => code.durationType === selectedType);
     }
 
-    // 按状态筛选
     if (selectedStatus !== 'all') {
         if (selectedStatus === 'used') {
             filteredCodes = filteredCodes.filter(code => code.used === true);
@@ -941,7 +822,6 @@ function renderInvitationCodes() {
         }
     }
 
-    // 按搜索词筛选
     if (codeSearchTerm) {
         filteredCodes = filteredCodes.filter(code =>
             code.code.toLowerCase().includes(codeSearchTerm.toLowerCase()) ||
@@ -950,16 +830,13 @@ function renderInvitationCodes() {
         );
     }
 
-    // 显示筛选结果
     if (filteredCodes.length === 0) {
-        container.innerHTML = createEmptyState('fa-filter', '没有符合条件的邀请码', '请调整筛选条件或搜索词');
+        container.innerHTML = createEmptyState('fa-filter', 'No invitation codes match the filters', 'Adjust the filters or search term');
         return;
     }
 
-    // 计算分页
     const totalPages = Math.ceil(filteredCodes.length / codesPerPage);
 
-    // 如果当前页超出范围，自动调整到最后一页
     if (currentCodePage > totalPages) {
         currentCodePage = Math.max(1, totalPages);
     }
@@ -968,21 +845,18 @@ function renderInvitationCodes() {
     const endIndex = startIndex + codesPerPage;
     const pageCodes = filteredCodes.slice(startIndex, endIndex);
 
-    // 创建搜索框和统计信息
     const controlsHtml = `
         <div class="invitationCodeControls" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px; background: var(--SmartThemeBlurTintColor); border-radius: 10px;">
-            <input type="text" id="codeSearchInput" placeholder="搜索邀请码、创建者或使用者..."
+            <input type="text" id="codeSearchInput" placeholder="Search invitation codes, creators, or users..."
                    value="${escapeHtml(codeSearchTerm)}" class="text_pole" style="flex: 1;">
             <span class="codeCount" style="white-space: nowrap; opacity: 0.7; font-size: 0.9em; padding: 5px 10px; background: var(--black30a); border-radius: 5px;">
-                显示 ${startIndex + 1}-${Math.min(endIndex, filteredCodes.length)} / ${filteredCodes.length} 个邀请码
+                Showing ${startIndex + 1}-${Math.min(endIndex, filteredCodes.length)} / ${filteredCodes.length} invitation codes
             </span>
         </div>
     `;
 
-    // 创建分页控件
     const paginationHtml = createCodePaginationControls(currentCodePage, totalPages, filteredCodes.length);
 
-    // 渲染邀请码列表
     const codesHtml = pageCodes.map(code => createInvitationCodeItem(code)).join('');
 
     container.innerHTML = `
@@ -994,54 +868,45 @@ function renderInvitationCodes() {
         ${paginationHtml}
     `;
 
-    // 绑定搜索事件
     const searchInput = document.getElementById('codeSearchInput');
     if (searchInput) {
         searchInput.addEventListener('input', debounceSearch(function(e) {
             codeSearchTerm = e.target.value.trim();
-            currentCodePage = 1; // 重置到第一页
+            currentCodePage = 1;
             renderInvitationCodes();
         }, 300));
     }
 
-    // 绑定删除按钮事件
     bindInvitationCodeDeleteEvents();
 
-    // 绑定分页按钮事件
     bindCodePaginationEvents();
 
-    // 更新全选按钮状态
     updateSelectAllButton();
 }
 
-// 创建邀请码分页控件
 function createCodePaginationControls(currentPage, totalPages, totalCodes) {
     if (totalPages <= 1) return '';
 
     let html = '<div class="paginationControls" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0; flex-wrap: wrap;">';
 
-    // 上一页按钮
     if (currentPage > 1) {
         html += `<button class="menu_button code-pagination-btn" data-page="${currentPage - 1}">
-            <i class="fa-solid fa-chevron-left"></i> 上一页
+            <i class="fa-solid fa-chevron-left"></i> Previous
         </button>`;
     } else {
         html += `<button class="menu_button" disabled style="opacity: 0.5;">
-            <i class="fa-solid fa-chevron-left"></i> 上一页
+            <i class="fa-solid fa-chevron-left"></i> Previous
         </button>`;
     }
 
-    // 页码按钮
     const maxButtons = 7;
     let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
     let endPage = Math.min(totalPages, startPage + maxButtons - 1);
 
-    // 调整起始页
     if (endPage - startPage < maxButtons - 1) {
         startPage = Math.max(1, endPage - maxButtons + 1);
     }
 
-    // 第一页
     if (startPage > 1) {
         html += `<button class="menu_button code-pagination-btn" data-page="1">1</button>`;
         if (startPage > 2) {
@@ -1049,7 +914,6 @@ function createCodePaginationControls(currentPage, totalPages, totalCodes) {
         }
     }
 
-    // 中间页码
     for (let i = startPage; i <= endPage; i++) {
         if (i === currentPage) {
             html += `<button class="menu_button" disabled style="background: var(--SmartThemeBlurTintColor);">${i}</button>`;
@@ -1058,7 +922,6 @@ function createCodePaginationControls(currentPage, totalPages, totalCodes) {
         }
     }
 
-    // 最后一页
     if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
             html += `<span style="opacity: 0.5;">...</span>`;
@@ -1066,14 +929,13 @@ function createCodePaginationControls(currentPage, totalPages, totalCodes) {
         html += `<button class="menu_button code-pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
     }
 
-    // 下一页按钮
     if (currentPage < totalPages) {
         html += `<button class="menu_button code-pagination-btn" data-page="${currentPage + 1}">
-            下一页 <i class="fa-solid fa-chevron-right"></i>
+            Next <i class="fa-solid fa-chevron-right"></i>
         </button>`;
     } else {
         html += `<button class="menu_button" disabled style="opacity: 0.5;">
-            下一页 <i class="fa-solid fa-chevron-right"></i>
+            Next <i class="fa-solid fa-chevron-right"></i>
         </button>`;
     }
 
@@ -1081,7 +943,6 @@ function createCodePaginationControls(currentPage, totalPages, totalCodes) {
     return html;
 }
 
-// 绑定邀请码分页按钮事件
 function bindCodePaginationEvents() {
     const paginationBtns = document.querySelectorAll('.code-pagination-btn');
     paginationBtns.forEach(btn => {
@@ -1089,7 +950,6 @@ function bindCodePaginationEvents() {
             currentCodePage = parseInt(this.dataset.page);
             renderInvitationCodes();
 
-            // 滚动到顶部
             const container = document.getElementById('invitationCodesContainer');
             if (container) {
                 container.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1098,53 +958,49 @@ function bindCodePaginationEvents() {
     });
 }
 
-// 创建邀请码项目
 function createInvitationCodeItem(code) {
     const status = getInvitationCodeStatus(code);
     const statusClass = status.class;
     const statusText = status.text;
-    const createdDate = new Date(code.createdAt).toLocaleString('zh-CN');
+    const createdDate = new Date(code.createdAt).toLocaleString('en-US');
 
-    // 类型映射
     const durationTypeText = {
-        '1day': '1天',
-        '1week': '1周',
-        '1month': '1个月',
-        '1quarter': '1季度',
-        '6months': '半年',
-        '1year': '1年',
-        'permanent': '永久'
-    }[code.durationType] || code.durationType || '未知';
+        '1day': '1 day',
+        '1week': '1 week',
+        '1month': '1 month',
+        '1quarter': '1 quarter',
+        '6months': '6 months',
+        '1year': '1 year',
+        'permanent': 'Permanent'
+    }[code.durationType] || code.durationType || 'Unknown';
 
-    // 用户到期时间（仅在已使用时显示）
     let userExpiresText = '';
     if (code.used && code.userExpiresAt) {
-        userExpiresText = new Date(code.userExpiresAt).toLocaleString('zh-CN');
+        userExpiresText = new Date(code.userExpiresAt).toLocaleString('en-US');
     } else if (code.used && !code.userExpiresAt) {
-        userExpiresText = '永久';
+        userExpiresText = 'Permanent';
     }
 
-    // 确保字段不为 undefined
-    const createdBy = code.createdBy || '未知';
-    const usedBy = code.usedBy || '未知';
+    const createdBy = code.createdBy || 'Unknown';
+    const usedBy = code.usedBy || 'Unknown';
 
     return `
         <div class="invitationCodeItem" data-code="${code.code}">
             <input type="checkbox" class="invitationCodeCheckbox" data-code="${code.code}" onchange="toggleCodeSelection('${code.code}')">
             <div class="invitationCodeInfo">
-                <div class="invitationCodeValue" title="点击复制" onclick="copyToClipboard('${code.code}')">${code.code}</div>
+                <div class="invitationCodeValue" title="Click to copy" onclick="copyToClipboard('${code.code}')">${code.code}</div>
                 <div class="invitationCodeMeta">
-                    <span>创建者: ${escapeHtml(createdBy)}</span>
-                    <span>创建时间: ${createdDate}</span>
-                    <span>类型: ${durationTypeText}</span>
-                    ${code.used ? `<span>使用者: ${escapeHtml(usedBy)}</span>` : ''}
-                    ${code.used ? `<span>使用时间: ${new Date(code.usedAt).toLocaleString('zh-CN')}</span>` : ''}
-                    ${code.used && userExpiresText ? `<span>用户到期: ${userExpiresText}</span>` : ''}
+                    <span>Created by: ${escapeHtml(createdBy)}</span>
+                    <span>Created at: ${createdDate}</span>
+                    <span>Type: ${durationTypeText}</span>
+                    ${code.used ? `<span>Used by: ${escapeHtml(usedBy)}</span>` : ''}
+                    ${code.used ? `<span>Used at: ${new Date(code.usedAt).toLocaleString('en-US')}</span>` : ''}
+                    ${code.used && userExpiresText ? `<span>User expires: ${userExpiresText}</span>` : ''}
                 </div>
             </div>
             <div class="invitationCodeActions">
                 <span class="invitationCodeStatus ${statusClass}">${statusText}</span>
-                <button class="menu_button warning" onclick="deleteInvitationCode('${code.code}')" title="删除邀请码">
+                <button class="menu_button warning" onclick="deleteInvitationCode('${code.code}')" title="Delete invitation code">
                     <i class="fa-fw fa-solid fa-trash"></i>
                 </button>
             </div>
@@ -1152,22 +1008,18 @@ function createInvitationCodeItem(code) {
     `;
 }
 
-// 获取邀请码状态
 function getInvitationCodeStatus(code) {
     if (code.used) {
-        return { class: 'used', text: '已使用' };
+        return { class: 'used', text: 'Used' };
     }
 
-    // 邀请码永不过期，只有已使用和未使用两种状态
-    return { class: 'unused', text: '未使用' };
+    return { class: 'unused', text: 'Unused' };
 }
 
-// 创建邀请码
 async function createInvitationCode() {
     const form = document.querySelector('.createInvitationForm');
     const submitButton = form.querySelector('button[type="submit"]');
 
-    // 防止重复提交
     if (submitButton.disabled) {
         return;
     }
@@ -1178,10 +1030,9 @@ async function createInvitationCode() {
         durationType: durationType || 'permanent'
     };
 
-    // 禁用提交按钮防止重复提交
     submitButton.disabled = true;
     const originalText = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>创建中...</span>';
+    submitButton.innerHTML = '<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>Creating...</span>';
 
     try {
         const response = await fetch('/api/invitation-codes/create', {
@@ -1192,43 +1043,38 @@ async function createInvitationCode() {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '创建邀请码失败');
+            throw new Error(error.error || 'Failed to create invitation code');
         }
 
         const newCode = await response.json();
         const durationText = {
-            '1day': '1天',
-            '1week': '1周',
-            '1month': '1个月',
-            '1quarter': '1季度',
-            '6months': '半年',
-            '1year': '1年',
-            'permanent': '永久'
-        }[durationType] || '未知';
-        alert(`邀请码创建成功：${newCode.code}\n有效期类型：${durationText}`);
+            '1day': '1 day',
+            '1week': '1 week',
+            '1month': '1 month',
+            '1quarter': '1 quarter',
+            '6months': '6 months',
+            '1year': '1 year',
+            'permanent': 'Permanent'
+        }[durationType] || 'Unknown';
+        alert(`Invitation code created: ${newCode.code}\nDuration type: ${durationText}`);
 
-        // 清空表单
         form.reset();
 
-        // 重置到第一页显示新创建的邀请码
         currentCodePage = 1;
 
-        // 重新加载邀请码列表
         loadInvitationCodes();
 
     } catch (error) {
         console.error('Error creating invitation code:', error);
-        alert(error.message || '创建邀请码失败');
+        alert(error.message || 'Failed to create invitation code');
     } finally {
-        // 恢复提交按钮
         submitButton.disabled = false;
         submitButton.innerHTML = originalText;
     }
 }
 
-// 删除邀请码
 async function deleteInvitationCode(code) {
-    if (!confirm(`确定要删除邀请码 ${code} 吗？`)) {
+    if (!confirm(`Are you sure you want to delete invitation code ${code}?`)) {
         return;
     }
 
@@ -1240,24 +1086,22 @@ async function deleteInvitationCode(code) {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '删除邀请码失败');
+            throw new Error(error.error || 'Failed to delete invitation code');
         }
 
-        alert('邀请码删除成功');
+        alert('Invitation code deleted.');
         loadInvitationCodes();
 
     } catch (error) {
         console.error('Error deleting invitation code:', error);
-        alert(error.message || '删除邀请码失败');
+        alert(error.message || 'Failed to delete invitation code');
     }
 }
 
-// 批量创建邀请码
 async function createBatchInvitationCodes() {
     const form = document.querySelector('.createBatchInvitationForm');
     const submitButton = form.querySelector('button[type="submit"]');
 
-    // 防止重复提交
     if (submitButton.disabled) {
         return;
     }
@@ -1266,7 +1110,7 @@ async function createBatchInvitationCodes() {
     const durationType = form.querySelector('select[name="batchDurationType"]').value;
 
     if (!count || count < 1 || count > 100) {
-        alert('数量必须在1-100之间');
+        alert('Quantity must be between 1 and 100');
         return;
     }
 
@@ -1275,10 +1119,9 @@ async function createBatchInvitationCodes() {
         durationType: durationType || 'permanent'
     };
 
-    // 禁用提交按钮防止重复提交
     submitButton.disabled = true;
     const originalText = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>创建中...</span>';
+    submitButton.innerHTML = '<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>Creating...</span>';
 
     try {
         const response = await fetch('/api/invitation-codes/batch-create', {
@@ -1289,42 +1132,37 @@ async function createBatchInvitationCodes() {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '批量创建邀请码失败');
+            throw new Error(error.error || 'Failed to batch create invitation codes');
         }
 
         const result = await response.json();
         const durationText = {
-            '1day': '1天',
-            '1week': '1周',
-            '1month': '1个月',
-            '1quarter': '1季度',
-            '6months': '半年',
-            '1year': '1年',
-            'permanent': '永久'
-        }[durationType] || '未知';
-        alert(`成功创建了 ${result.count} 个邀请码\n有效期类型：${durationText}`);
+            '1day': '1 day',
+            '1week': '1 week',
+            '1month': '1 month',
+            '1quarter': '1 quarter',
+            '6months': '6 months',
+            '1year': '1 year',
+            'permanent': 'Permanent'
+        }[durationType] || 'Unknown';
+        alert(`Successfully created ${result.count} invitation codes\nDuration type: ${durationText}`);
 
-        // 清空表单
         form.reset();
         form.querySelector('input[name="batchCount"]').value = '10';
 
-        // 重置到第一页显示新创建的邀请码
         currentCodePage = 1;
 
-        // 重新加载邀请码列表
         loadInvitationCodes();
 
     } catch (error) {
         console.error('Error batch creating invitation codes:', error);
-        alert(error.message || '批量创建邀请码失败');
+        alert(error.message || 'Failed to batch create invitation codes');
     } finally {
-        // 恢复提交按钮
         submitButton.disabled = false;
         submitButton.innerHTML = originalText;
     }
 }
 
-// 切换代码选择状态
 function toggleCodeSelection(code) {
     const item = document.querySelector(`[data-code="${code}"]`);
     const checkbox = document.querySelector(`input[data-code="${code}"]`);
@@ -1338,7 +1176,6 @@ function toggleCodeSelection(code) {
     updateSelectAllButton();
 }
 
-// 全选/取消全选
 function toggleSelectAll() {
     const checkboxes = document.querySelectorAll('.invitationCodeCheckbox');
     const selectAllBtn = document.getElementById('selectAllCodes');
@@ -1359,7 +1196,6 @@ function toggleSelectAll() {
     updateSelectAllButton();
 }
 
-// 更新全选按钮状态
 function updateSelectAllButton() {
     const checkboxes = document.querySelectorAll('.invitationCodeCheckbox');
     const selectAllBtn = document.getElementById('selectAllCodes');
@@ -1370,40 +1206,35 @@ function updateSelectAllButton() {
     const allChecked = checkedCount === checkboxes.length;
 
     if (allChecked) {
-        selectAllBtn.innerHTML = '<i class="fa-fw fa-solid fa-square"></i><span>取消全选</span>';
+        selectAllBtn.innerHTML = '<i class="fa-fw fa-solid fa-square"></i><span>Clear selection</span>';
     } else {
-        selectAllBtn.innerHTML = '<i class="fa-fw fa-solid fa-check-square"></i><span>全选</span>';
+        selectAllBtn.innerHTML = '<i class="fa-fw fa-solid fa-check-square"></i><span>Select all</span>';
     }
 }
 
-// 获取选中的邀请码
 function getSelectedCodes() {
     const selectedCheckboxes = document.querySelectorAll('.invitationCodeCheckbox:checked');
     return Array.from(selectedCheckboxes).map(cb => cb.dataset.code);
 }
 
-// 下载选中的邀请码
 function downloadSelectedCodes() {
     const selectedCodes = getSelectedCodes();
 
     if (selectedCodes.length === 0) {
-        alert('请先选择要下载的邀请码');
+        alert('Please select invitation codes to download.');
         return;
     }
 
-    // 获取完整的邀请码对象
     const selectedCodeObjects = currentInvitationCodes.filter(code => selectedCodes.includes(code.code));
-    downloadCodes(selectedCodeObjects, '选中的邀请码');
+    downloadCodes(selectedCodeObjects, 'Selected invitation codes');
 }
 
-// 下载全部邀请码
 function downloadAllCodes() {
     if (currentInvitationCodes.length === 0) {
-        alert('没有邀请码可下载');
+        alert('No invitation codes to download');
         return;
     }
 
-    // 获取当前显示的邀请码（考虑筛选）
     const typeFilter = document.getElementById('invitationTypeFilter');
     const statusFilter = document.getElementById('invitationStatusFilter');
     const selectedType = typeFilter ? typeFilter.value : 'all';
@@ -1411,12 +1242,10 @@ function downloadAllCodes() {
 
     let filteredCodes = currentInvitationCodes;
 
-    // 按类型筛选
     if (selectedType !== 'all') {
         filteredCodes = filteredCodes.filter(code => code.durationType === selectedType);
     }
 
-    // 按状态筛选
     if (selectedStatus !== 'all') {
         if (selectedStatus === 'used') {
             filteredCodes = filteredCodes.filter(code => code.used === true);
@@ -1426,44 +1255,38 @@ function downloadAllCodes() {
     }
 
     if (filteredCodes.length === 0) {
-        alert('没有符合条件的邀请码可下载');
+        alert('No matching invitation codes to download');
         return;
     }
 
-    downloadCodes(filteredCodes, '全部邀请码');
+    downloadCodes(filteredCodes, 'All invitation codes');
 }
 
-// 下载邀请码文件
 function downloadCodes(codeObjects, filename) {
-    // 类型映射
     const durationTypeText = {
-        '1day': '1天',
-        '1week': '1周',
-        '1month': '1个月',
-        '1quarter': '1季度',
-        '6months': '半年',
-        '1year': '1年',
-        'permanent': '永久'
+        '1day': '1 day',
+        '1week': '1 week',
+        '1month': '1 month',
+        '1quarter': '1 quarter',
+        '6months': '6 months',
+        '1year': '1 year',
+        'permanent': 'Permanent'
     };
 
-    // 创建文本内容（包含类型提示）
     const lines = codeObjects.map(codeObj => {
-        const typeText = durationTypeText[codeObj.durationType] || codeObj.durationType || '未知';
-        const statusText = codeObj.used ? '已使用' : '未使用';
-        return `${codeObj.code} - 类型:${typeText} - 状态:${statusText}`;
+        const typeText = durationTypeText[codeObj.durationType] || codeObj.durationType || 'Unknown';
+        const statusText = codeObj.used ? 'Used' : 'Unused';
+        return `${codeObj.code} - Type:${typeText} - Status:${statusText}`;
     });
 
     const textContent = lines.join('\n');
 
-    // 生成文件名
     const timestamp = new Date().toISOString().slice(0, 10);
     const finalFilename = `${filename}_${timestamp}.txt`;
 
-    // 下载TXT文件
     downloadFile(textContent, finalFilename, 'text/plain');
 }
 
-// 下载文件辅助函数
 function downloadFile(content, filename, mimeType) {
     const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
     const link = document.createElement('a');
@@ -1480,16 +1303,15 @@ function downloadFile(content, filename, mimeType) {
     }
 }
 
-// 删除选中的邀请码
 async function deleteSelectedCodes() {
     const selectedCodes = getSelectedCodes();
 
     if (selectedCodes.length === 0) {
-        alert('请先选择要删除的邀请码');
+        alert('Please select invitation codes to delete.');
         return;
     }
 
-    if (!confirm(`确定要删除选中的 ${selectedCodes.length} 个邀请码吗？此操作不可恢复。`)) {
+    if (!confirm(`Are you sure you want to delete the selected ${selectedCodes.length} invitation codes? This action cannot be undone.`)) {
         return;
     }
 
@@ -1502,14 +1324,14 @@ async function deleteSelectedCodes() {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '批量删除邀请码失败');
+            throw new Error(error.error || 'Failed to delete invitation codes in bulk');
         }
 
         const result = await response.json();
-        let message = `成功删除了 ${result.deletedCount}/${result.totalRequested} 个邀请码`;
+        let message = `Successfully deleted ${result.deletedCount}/${result.totalRequested} invitation codes`;
 
         if (result.errors && result.errors.length > 0) {
-            message += `\n\n错误信息:\n${result.errors.join('\n')}`;
+            message += `\n\nError details:\n${result.errors.join('\n')}`;
         }
 
         alert(message);
@@ -1517,19 +1339,15 @@ async function deleteSelectedCodes() {
 
     } catch (error) {
         console.error('Error batch deleting invitation codes:', error);
-        alert(error.message || '批量删除邀请码失败');
+        alert(error.message || 'Failed to delete invitation codes in bulk');
     }
 }
 
-// 绑定邀请码删除按钮事件
 function bindInvitationCodeDeleteEvents() {
-    // 这个函数在renderInvitationCodes中调用，用于绑定动态生成的删除按钮
-    // 实际的删除功能通过onclick属性直接绑定到deleteInvitationCode函数
 }
 
-// 清理过期邀请码
 async function cleanupExpiredInvitationCodes() {
-    if (!confirm('确定要清理所有过期的邀请码吗？')) {
+    if (!confirm('Are you sure you want to clean up all expired invitation codes?')) {
         return;
     }
 
@@ -1541,21 +1359,20 @@ async function cleanupExpiredInvitationCodes() {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || '清理过期邀请码失败');
+            throw new Error(error.error || 'Failed to clean up expired invitation codes');
         }
 
         const result = await response.json();
-        alert(`清理完成，共清理了 ${result.cleanedCount} 个过期邀请码`);
+        alert(`Cleanup complete. Removed ${result.cleanedCount} expired invitation codes`);
 
         loadInvitationCodes();
 
     } catch (error) {
         console.error('Error cleaning up expired codes:', error);
-        alert(error.message || '清理过期邀请码失败');
+        alert(error.message || 'Failed to clean up expired invitation codes');
     }
 }
 
-// 获取CSRF token
 async function getCsrfToken() {
     try {
         const response = await fetch('/csrf-token');
@@ -1568,13 +1385,11 @@ async function getCsrfToken() {
     }
 }
 
-// 获取请求头
 function getRequestHeaders() {
     const headers = {
         'Content-Type': 'application/json',
     };
 
-    // 优先使用全局的getRequestHeaders函数
     if (window.getRequestHeaders && typeof window.getRequestHeaders === 'function') {
         try {
             return window.getRequestHeaders();
@@ -1583,7 +1398,6 @@ function getRequestHeaders() {
         }
     }
 
-    // 降级方案：使用本地CSRF token
     if (csrfToken) {
         headers['x-csrf-token'] = csrfToken;
     }
@@ -1591,14 +1405,13 @@ function getRequestHeaders() {
     return headers;
 }
 
-// 工具函数
 function showLoadingState(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
         container.innerHTML = `
             <div class="loadingState">
                 <div class="loadingSpinner"></div>
-                <p>加载中...</p>
+                <p>Loading...</p>
             </div>
         `;
     }
@@ -1610,7 +1423,7 @@ function showErrorState(containerId, message) {
         container.innerHTML = `
             <div class="emptyState">
                 <i class="fa-solid fa-exclamation-triangle"></i>
-                <h4>加载失败</h4>
+                <h4>Load failed</h4>
                 <p>${escapeHtml(message)}</p>
             </div>
         `;
@@ -1635,30 +1448,26 @@ function escapeHtml(text) {
 
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        alert('邀请码已复制到剪贴板');
+        alert('Invitation code copied to clipboard');
     }).catch(() => {
-        // 降级处理
         const textArea = document.createElement('textarea');
         textArea.value = text;
         document.body.appendChild(textArea);
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        alert('邀请码已复制到剪贴板');
+        alert('Invitation code copied to clipboard');
     });
 }
 
-// 页面卸载时清理定时器
 window.addEventListener('beforeunload', function() {
     stopSystemLoadAutoRefresh();
 });
 
-// 公告管理相关功能
 let currentAnnouncements = [];
 let currentLoginAnnouncements = [];
 
 function bindAnnouncementEvents() {
-    // 公告类型切换按钮
     const typeTabButtons = document.querySelectorAll('.announcement-type-tab');
     typeTabButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -1667,7 +1476,6 @@ function bindAnnouncementEvents() {
         });
     });
 
-    // 刷新公告按钮
     const refreshButton = document.getElementById('refreshAnnouncements');
     if (refreshButton) {
         refreshButton.addEventListener('click', function() {
@@ -1675,7 +1483,6 @@ function bindAnnouncementEvents() {
         });
     }
 
-    // 刷新登录页面公告按钮
     const refreshLoginButton = document.getElementById('refreshLoginAnnouncements');
     if (refreshLoginButton) {
         refreshLoginButton.addEventListener('click', function() {
@@ -1683,10 +1490,8 @@ function bindAnnouncementEvents() {
         });
     }
 
-    // 创建公告表单
     const createAnnouncementForm = document.querySelector('.createAnnouncementForm');
     if (createAnnouncementForm) {
-        // 克隆并替换表单以避免重复事件监听器
         const newForm = createAnnouncementForm.cloneNode(true);
         createAnnouncementForm.parentNode.replaceChild(newForm, createAnnouncementForm);
 
@@ -1696,10 +1501,8 @@ function bindAnnouncementEvents() {
         });
     }
 
-    // 创建登录页面公告表单
     const createLoginAnnouncementForm = document.querySelector('.createLoginAnnouncementForm');
     if (createLoginAnnouncementForm) {
-        // 克隆并替换表单以避免重复事件监听器
         const newLoginForm = createLoginAnnouncementForm.cloneNode(true);
         createLoginAnnouncementForm.parentNode.replaceChild(newLoginForm, createLoginAnnouncementForm);
 
@@ -1710,9 +1513,7 @@ function bindAnnouncementEvents() {
     }
 }
 
-// 切换公告类型
 function switchAnnouncementType(type) {
-    // 更新按钮状态
     const typeTabButtons = document.querySelectorAll('.announcement-type-tab');
     typeTabButtons.forEach(button => {
         if (button.dataset.type === type) {
@@ -1722,7 +1523,6 @@ function switchAnnouncementType(type) {
         }
     });
 
-    // 切换显示的内容
     const mainSection = document.getElementById('mainAnnouncementSection');
     const loginSection = document.getElementById('loginAnnouncementSection');
 
@@ -1737,7 +1537,6 @@ function switchAnnouncementType(type) {
     }
 }
 
-// 加载公告列表
 async function loadAnnouncements() {
     try {
         showLoadingState('announcementsContainer');
@@ -1756,17 +1555,16 @@ async function loadAnnouncements() {
 
     } catch (error) {
         console.error('Error loading announcements:', error);
-        showErrorState('announcementsContainer', '加载公告失败');
+        showErrorState('announcementsContainer', 'Failed to load announcements');
     }
 }
 
-// 渲染公告列表
 function renderAnnouncements() {
     const container = document.getElementById('announcementsContainer');
     if (!container) return;
 
     if (currentAnnouncements.length === 0) {
-        container.innerHTML = createEmptyState('fa-bullhorn', '暂无公告', '还没有创建任何公告');
+        container.innerHTML = createEmptyState('fa-bullhorn', 'No announcements', 'No announcements created yet');
         return;
     }
 
@@ -1774,17 +1572,15 @@ function renderAnnouncements() {
     container.innerHTML = announcementsHtml;
 }
 
-// 创建公告项目
 function createAnnouncementItem(announcement) {
-    const createdAt = new Date(announcement.createdAt).toLocaleString('zh-CN');
-    const updatedAt = announcement.updatedAt ? new Date(announcement.updatedAt).toLocaleString('zh-CN') : createdAt;
+    const createdAt = new Date(announcement.createdAt).toLocaleString('en-US');
+    const updatedAt = announcement.updatedAt ? new Date(announcement.updatedAt).toLocaleString('en-US') : createdAt;
 
-    let timeInfo = `创建时间: ${createdAt}`;
+    let timeInfo = `Created at: ${createdAt}`;
     if (announcement.updatedAt && announcement.updatedAt !== announcement.createdAt) {
-        timeInfo += ` | 更新时间: ${updatedAt}`;
+        timeInfo += ` | Updated at: ${updatedAt}`;
     }
 
-    // 移除时间有效性信息
     let validityInfo = '';
 
     return `
@@ -1793,23 +1589,23 @@ function createAnnouncementItem(announcement) {
                 <div class="announcementTitle">${escapeHtml(announcement.title)}</div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span class="announcementStatus ${announcement.enabled ? 'enabled' : 'disabled'}">
-                        ${announcement.enabled ? '已启用' : '已禁用'}
+                        ${announcement.enabled ? 'Enabled' : 'Disabled'}
                     </span>
                 </div>
             </div>
             <div class="announcementContent">${escapeHtml(announcement.content)}</div>
             <div class="announcementMeta">
                 <span>${timeInfo}${validityInfo}</span>
-                <span>创建者: ${escapeHtml(announcement.createdBy)}</span>
+                <span>Created by: ${escapeHtml(announcement.createdBy)}</span>
             </div>
             <div class="announcementActions">
                 <button type="button" class="menu_button menu_button_icon warning" onclick="toggleAnnouncement('${announcement.id}')">
                     <i class="fa-fw fa-solid fa-${announcement.enabled ? 'pause' : 'play'}"></i>
-                    <span>${announcement.enabled ? '禁用' : '启用'}</span>
+                    <span>${announcement.enabled ? 'Disable' : 'Enable'}</span>
                 </button>
                 <button type="button" class="menu_button menu_button_icon danger" onclick="deleteAnnouncement('${announcement.id}')">
                     <i class="fa-fw fa-solid fa-trash"></i>
-                    <span>删除</span>
+                    <span>Delete</span>
                 </button>
             </div>
         </div>
@@ -1817,36 +1613,31 @@ function createAnnouncementItem(announcement) {
 }
 
 
-// 创建新公告
 async function createAnnouncement() {
     const form = document.querySelector('.createAnnouncementForm');
     if (!form) {
         console.error('Form not found');
-        alert('表单未找到，请刷新页面重试');
+        alert('Form not found. Please refresh and try again.');
         return;
     }
 
     const submitButton = form.querySelector('button[type="submit"]');
     if (!submitButton) {
         console.error('Submit button not found');
-        alert('提交按钮未找到，请刷新页面重试');
+        alert('Submit button not found. Please refresh and try again.');
         return;
     }
 
-    // 防止重复提交
     if (submitButton.disabled) {
         return;
     }
 
-    // 等待DOM更新后再查询元素
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // 使用多种方式查询元素
     let titleInput = form.querySelector('input[name="title"]');
     let contentInput = form.querySelector('textarea[name="content"]');
     let enabledInput = form.querySelector('input[name="enabled"]');
 
-    // 如果表单内查询失败，尝试全局查询
     if (!titleInput) {
         titleInput = document.querySelector('.announcementsBlock input[name="title"]');
     }
@@ -1858,7 +1649,6 @@ async function createAnnouncement() {
     }
 
 
-    // 如果通过name查询失败，使用索引方式获取
     let title = '';
     let content = '';
     let enabled = false;
@@ -1866,7 +1656,6 @@ async function createAnnouncement() {
     if (titleInput) {
         title = titleInput.value.trim();
     } else {
-        // 通过索引获取第一个text类型的input
         const textInputs = form.querySelectorAll('input[type="text"]');
         if (textInputs.length > 0) {
             title = textInputs[0].value.trim();
@@ -1876,7 +1665,6 @@ async function createAnnouncement() {
     if (contentInput) {
         content = contentInput.value.trim();
     } else {
-        // 通过索引获取第一个textarea
         const textareas = form.querySelectorAll('textarea');
         if (textareas.length > 0) {
             content = textareas[0].value.trim();
@@ -1886,7 +1674,6 @@ async function createAnnouncement() {
     if (enabledInput) {
         enabled = enabledInput.checked;
     } else {
-        // 通过索引获取checkbox
         const checkboxes = form.querySelectorAll('input[type="checkbox"]');
         if (checkboxes.length > 0) {
             enabled = checkboxes[0].checked;
@@ -1897,22 +1684,20 @@ async function createAnnouncement() {
     const data = {
         title: title,
         content: content,
-        type: 'info', // 默认类型为信息
+        type: 'info',
         enabled: enabled
     };
 
-    // 验证必填字段
     if (!data.title || !data.content) {
-        alert('请填写标题和内容');
+        alert('Please enter a title and content.');
         return;
     }
 
     submitButton.disabled = true;
     const originalText = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>创建中...</span>';
+    submitButton.innerHTML = '<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>Creating...</span>';
 
     try {
-        // 确保有CSRF token
         if (!csrfToken) {
             await getCsrfToken();
         }
@@ -1931,24 +1716,21 @@ async function createAnnouncement() {
         const newAnnouncement = await response.json();
         console.log('Announcement created:', newAnnouncement);
 
-        // 重置表单
         form.reset();
 
-        // 重新加载公告列表
         await loadAnnouncements();
 
-        alert('公告创建成功！');
+        alert('Announcement created.');
 
     } catch (error) {
         console.error('Error creating announcement:', error);
-        alert('创建公告失败: ' + error.message);
+        alert('Failed to create announcement: ' + error.message);
     } finally {
         submitButton.disabled = false;
         submitButton.innerHTML = originalText;
     }
 }
 
-// 切换公告启用状态
 async function toggleAnnouncement(announcementId) {
     try {
         const response = await fetch(`/api/announcements/${announcementId}/toggle`, {
@@ -1964,21 +1746,19 @@ async function toggleAnnouncement(announcementId) {
         const updatedAnnouncement = await response.json();
         console.log('Announcement toggled:', updatedAnnouncement);
 
-        // 重新加载公告列表
         await loadAnnouncements();
 
     } catch (error) {
         console.error('Error toggling announcement:', error);
-        alert('切换公告状态失败: ' + error.message);
+        alert('Failed to toggle announcement status: ' + error.message);
     }
 }
 
-// 删除公告
 async function deleteAnnouncement(announcementId) {
     const announcement = currentAnnouncements.find(a => a.id === announcementId);
     if (!announcement) return;
 
-    if (!confirm(`确定要删除公告"${announcement.title}"吗？此操作不可恢复。`)) {
+    if (!confirm(`Are you sure you want to delete the announcement "${announcement.title}"? This action cannot be undone.`)) {
         return;
     }
 
@@ -1995,20 +1775,17 @@ async function deleteAnnouncement(announcementId) {
 
         console.log('Announcement deleted:', announcementId);
 
-        // 重新加载公告列表
         await loadAnnouncements();
 
-        alert('公告删除成功！');
+        alert('Announcement deleted.');
 
     } catch (error) {
         console.error('Error deleting announcement:', error);
-        alert('删除公告失败: ' + error.message);
+        alert('Failed to delete announcement: ' + error.message);
     }
 }
 
-// ========== 登录页面公告管理功能 ==========
 
-// 加载登录页面公告列表
 async function loadLoginAnnouncements() {
     try {
         showLoadingState('loginAnnouncementsContainer');
@@ -2027,17 +1804,16 @@ async function loadLoginAnnouncements() {
 
     } catch (error) {
         console.error('Error loading login announcements:', error);
-        showErrorState('loginAnnouncementsContainer', '加载登录页面公告失败');
+        showErrorState('loginAnnouncementsContainer', 'Failed to load login page announcements');
     }
 }
 
-// 渲染登录页面公告列表
 function renderLoginAnnouncements() {
     const container = document.getElementById('loginAnnouncementsContainer');
     if (!container) return;
 
     if (currentLoginAnnouncements.length === 0) {
-        container.innerHTML = createEmptyState('fa-bullhorn', '暂无登录页面公告', '还没有创建任何登录页面公告');
+        container.innerHTML = createEmptyState('fa-bullhorn', 'No login page announcements', 'No login page announcements created yet');
         return;
     }
 
@@ -2045,23 +1821,22 @@ function renderLoginAnnouncements() {
     container.innerHTML = announcementsHtml;
 }
 
-// 创建登录页面公告项目
 function createLoginAnnouncementItem(announcement) {
-    const createdAt = new Date(announcement.createdAt).toLocaleString('zh-CN');
-    const updatedAt = announcement.updatedAt ? new Date(announcement.updatedAt).toLocaleString('zh-CN') : createdAt;
+    const createdAt = new Date(announcement.createdAt).toLocaleString('en-US');
+    const updatedAt = announcement.updatedAt ? new Date(announcement.updatedAt).toLocaleString('en-US') : createdAt;
 
-    let timeInfo = `创建时间: ${createdAt}`;
+    let timeInfo = `Created at: ${createdAt}`;
     if (announcement.updatedAt && announcement.updatedAt !== announcement.createdAt) {
-        timeInfo += ` | 更新时间: ${updatedAt}`;
+        timeInfo += ` | Updated at: ${updatedAt}`;
     }
 
     const typeMap = {
-        'info': '信息',
-        'warning': '警告',
-        'success': '成功',
-        'error': '错误'
+        'info': 'Info',
+        'warning': 'Warning',
+        'success': 'Success',
+        'error': 'Error'
     };
-    const typeName = typeMap[announcement.type] || '信息';
+    const typeName = typeMap[announcement.type] || 'Info';
 
     return `
         <div class="announcementItem" data-id="${announcement.id}">
@@ -2070,60 +1845,55 @@ function createLoginAnnouncementItem(announcement) {
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span class="announcementType ${announcement.type || 'info'}">${typeName}</span>
                     <span class="announcementStatus ${announcement.enabled ? 'enabled' : 'disabled'}">
-                        ${announcement.enabled ? '已启用' : '已禁用'}
+                        ${announcement.enabled ? 'Enabled' : 'Disabled'}
                     </span>
                 </div>
             </div>
             <div class="announcementContent">${escapeHtml(announcement.content)}</div>
             <div class="announcementMeta">
                 <span>${timeInfo}</span>
-                <span>创建者: ${escapeHtml(announcement.createdBy)}</span>
+                <span>Created by: ${escapeHtml(announcement.createdBy)}</span>
             </div>
             <div class="announcementActions">
                 <button type="button" class="menu_button menu_button_icon warning" onclick="toggleLoginAnnouncement('${announcement.id}')">
                     <i class="fa-fw fa-solid fa-${announcement.enabled ? 'pause' : 'play'}"></i>
-                    <span>${announcement.enabled ? '禁用' : '启用'}</span>
+                    <span>${announcement.enabled ? 'Disable' : 'Enable'}</span>
                 </button>
                 <button type="button" class="menu_button menu_button_icon danger" onclick="deleteLoginAnnouncement('${announcement.id}')">
                     <i class="fa-fw fa-solid fa-trash"></i>
-                    <span>删除</span>
+                    <span>Delete</span>
                 </button>
             </div>
         </div>
     `;
 }
 
-// 创建新的登录页面公告
 async function createLoginAnnouncement(formElement) {
     const form = formElement || document.querySelector('.createLoginAnnouncementForm');
     if (!form) {
         console.error('Login announcement form not found');
-        alert('表单未找到，请刷新页面重试');
+        alert('Form not found. Please refresh and try again.');
         return;
     }
 
     const submitButton = form.querySelector('button[type="submit"]');
     if (!submitButton) {
         console.error('Submit button not found');
-        alert('提交按钮未找到，请刷新页面重试');
+        alert('Submit button not found. Please refresh and try again.');
         return;
     }
 
-    // 防止重复提交
     if (submitButton.disabled) {
         return;
     }
 
-    // 等待DOM更新后再查询元素
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // 使用多种方式查询元素
     let titleInput = form.querySelector('input[name="title"]');
     let contentInput = form.querySelector('textarea[name="content"]');
     let typeInput = form.querySelector('select[name="type"]');
     let enabledInput = form.querySelector('input[name="enabled"]');
 
-    // 如果表单内查询失败，尝试在登录公告区域全局查询
     if (!titleInput) {
         titleInput = document.querySelector('#loginAnnouncementSection input[name="title"]');
     }
@@ -2137,7 +1907,6 @@ async function createLoginAnnouncement(formElement) {
         enabledInput = document.querySelector('#loginAnnouncementSection input[name="enabled"]');
     }
 
-    // 如果通过name查询失败，使用索引方式获取
     let title = '';
     let content = '';
     let type = 'info';
@@ -2146,7 +1915,6 @@ async function createLoginAnnouncement(formElement) {
     if (titleInput) {
         title = titleInput.value.trim();
     } else {
-        // 通过索引获取第一个text类型的input
         const textInputs = form.querySelectorAll('input[type="text"]');
         if (textInputs.length > 0) {
             title = textInputs[0].value.trim();
@@ -2156,7 +1924,6 @@ async function createLoginAnnouncement(formElement) {
     if (contentInput) {
         content = contentInput.value.trim();
     } else {
-        // 通过索引获取第一个textarea
         const textareas = form.querySelectorAll('textarea');
         if (textareas.length > 0) {
             content = textareas[0].value.trim();
@@ -2166,7 +1933,6 @@ async function createLoginAnnouncement(formElement) {
     if (typeInput) {
         type = typeInput.value;
     } else {
-        // 通过索引获取第一个select
         const selects = form.querySelectorAll('select');
         if (selects.length > 0) {
             type = selects[0].value;
@@ -2176,7 +1942,6 @@ async function createLoginAnnouncement(formElement) {
     if (enabledInput) {
         enabled = enabledInput.checked;
     } else {
-        // 通过索引获取checkbox
         const checkboxes = form.querySelectorAll('input[type="checkbox"]');
         if (checkboxes.length > 0) {
             enabled = checkboxes[0].checked;
@@ -2192,18 +1957,16 @@ async function createLoginAnnouncement(formElement) {
 
     console.log('Login announcement form data:', data);
 
-    // 验证必填字段
     if (!data.title || !data.content) {
-        alert('请填写标题和内容');
+        alert('Please enter a title and content.');
         return;
     }
 
     submitButton.disabled = true;
     const originalText = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>创建中...</span>';
+    submitButton.innerHTML = '<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>Creating...</span>';
 
     try {
-        // 确保有CSRF token
         if (!csrfToken) {
             await getCsrfToken();
         }
@@ -2222,24 +1985,21 @@ async function createLoginAnnouncement(formElement) {
         const newAnnouncement = await response.json();
         console.log('Login announcement created:', newAnnouncement);
 
-        // 重置表单
         form.reset();
 
-        // 重新加载公告列表
         await loadLoginAnnouncements();
 
-        alert('登录页面公告创建成功！');
+        alert('Login page announcement created.');
 
     } catch (error) {
         console.error('Error creating login announcement:', error);
-        alert('创建登录页面公告失败: ' + error.message);
+        alert('Failed to create login page announcement: ' + error.message);
     } finally {
         submitButton.disabled = false;
         submitButton.innerHTML = originalText;
     }
 }
 
-// 切换登录页面公告启用状态
 async function toggleLoginAnnouncement(announcementId) {
     try {
         const response = await fetch(`/api/announcements/login/${announcementId}/toggle`, {
@@ -2255,21 +2015,19 @@ async function toggleLoginAnnouncement(announcementId) {
         const updatedAnnouncement = await response.json();
         console.log('Login announcement toggled:', updatedAnnouncement);
 
-        // 重新加载公告列表
         await loadLoginAnnouncements();
 
     } catch (error) {
         console.error('Error toggling login announcement:', error);
-        alert('切换登录页面公告状态失败: ' + error.message);
+        alert('Failed to toggle login page announcement status: ' + error.message);
     }
 }
 
-// 删除登录页面公告
 async function deleteLoginAnnouncement(announcementId) {
     const announcement = currentLoginAnnouncements.find(a => a.id === announcementId);
     if (!announcement) return;
 
-    if (!confirm(`确定要删除登录页面公告"${announcement.title}"吗？此操作不可恢复。`)) {
+    if (!confirm(`Are you sure you want to delete the login page announcement "${announcement.title}"? This action cannot be undone.`)) {
         return;
     }
 
@@ -2286,26 +2044,22 @@ async function deleteLoginAnnouncement(announcementId) {
 
         console.log('Login announcement deleted:', announcementId);
 
-        // 重新加载公告列表
         await loadLoginAnnouncements();
 
-        alert('登录页面公告删除成功！');
+        alert('Login page announcement deleted.');
 
     } catch (error) {
         console.error('Error deleting login announcement:', error);
-        alert('删除登录页面公告失败: ' + error.message);
+        alert('Failed to delete login page announcement: ' + error.message);
     }
 }
 
-// 将函数添加到全局作用域，以便HTML的onclick可以调用
 window.toggleLoginAnnouncement = toggleLoginAnnouncement;
 window.deleteLoginAnnouncement = deleteLoginAnnouncement;
 
 // ============================================================
-// 邮件配置管理
 // ============================================================
 
-// 加载邮件配置
 async function loadEmailConfig() {
     try {
         const response = await fetch('/api/email-config/get', {
@@ -2319,7 +2073,6 @@ async function loadEmailConfig() {
 
         const config = await response.json();
 
-        // 填充表单
         $('#emailEnabled').prop('checked', config.enabled || false);
         $('#emailSmtpHost').val(config.host || '');
         $('#emailSmtpPort').val(config.port || 587);
@@ -2331,18 +2084,17 @@ async function loadEmailConfig() {
 
     } catch (error) {
         console.error('Error loading email config:', error);
-        alert('加载邮件配置失败: ' + error.message);
+        alert('Failed to load email configuration: ' + error.message);
     }
 }
 
-// 保存邮件配置
 async function saveEmailConfig() {
     const saveButton = $('#saveEmailConfig');
     const originalText = saveButton.html();
 
     try {
         saveButton.prop('disabled', true);
-        saveButton.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i> 保存中...');
+        saveButton.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i> Saving...');
 
         const config = {
             enabled: $('#emailEnabled').prop('checked'),
@@ -2350,22 +2102,20 @@ async function saveEmailConfig() {
             port: parseInt($('#emailSmtpPort').val()) || 587,
             secure: $('#emailSmtpSecure').prop('checked'),
             user: $('#emailSmtpUser').val().trim(),
-            password: $('#emailSmtpPassword').val() || '',  // 确保密码字段不为 undefined
+            password: $('#emailSmtpPassword').val() || '',
             from: $('#emailFrom').val().trim(),
             fromName: $('#emailFromName').val().trim() || 'SillyTavern'
         };
 
-        // 验证必填字段
         if (config.enabled) {
             if (!config.host || !config.user || !config.password || !config.from) {
-                alert('请填写所有必填字段（SMTP服务器、用户名、密码、发件人邮箱）');
+                alert('Please fill in all required fields (SMTP host, username, password, sender email).');
                 return;
             }
 
-            // 验证邮箱格式
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(config.from)) {
-                alert('发件人邮箱格式不正确');
+                alert('Sender email format is invalid.');
                 return;
             }
         }
@@ -2384,41 +2134,38 @@ async function saveEmailConfig() {
         const result = await response.json();
         console.log('Email config saved:', result);
 
-        alert('邮件配置保存成功！部分更改可能需要重启服务器才能生效。');
+        alert('Email configuration saved. Some changes may require a server restart to take effect.');
 
     } catch (error) {
         console.error('Error saving email config:', error);
-        alert('保存邮件配置失败: ' + error.message);
+        alert('Failed to save email configuration: ' + error.message);
     } finally {
         saveButton.prop('disabled', false);
         saveButton.html(originalText);
     }
 }
 
-// 测试邮件配置
 async function testEmailConfig() {
     const testButton = $('#testEmailConfig');
     const originalText = testButton.html();
 
     try {
-        // 先保存当前配置
         await saveEmailConfig();
 
-        const testEmail = prompt('请输入测试邮箱地址：', '');
+        const testEmail = prompt('Enter a test email address:', '');
 
         if (!testEmail) {
             return;
         }
 
-        // 验证邮箱格式
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(testEmail)) {
-            alert('邮箱格式不正确');
+            alert('Email format is invalid.');
             return;
         }
 
         testButton.prop('disabled', true);
-        testButton.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i> 发送中...');
+        testButton.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i> Sending...');
 
         const response = await fetch('/api/email-config/test', {
             method: 'POST',
@@ -2434,36 +2181,29 @@ async function testEmailConfig() {
         const result = await response.json();
         console.log('Email test result:', result);
 
-        alert('测试邮件已发送，请检查您的邮箱！');
+        alert('Test email sent. Please check your inbox.');
 
     } catch (error) {
         console.error('Error testing email config:', error);
-        alert('测试邮件发送失败: ' + error.message);
+        alert('Failed to send test email: ' + error.message);
     } finally {
         testButton.prop('disabled', false);
         testButton.html(originalText);
     }
 }
 
-// 初始化邮件配置事件
 function initializeEmailConfig() {
-    // 绑定保存按钮
     $('#saveEmailConfig').off('click').on('click', saveEmailConfig);
 
-    // 绑定测试按钮
     $('#testEmailConfig').off('click').on('click', testEmailConfig);
 }
 
 // ============================================================
-// OAuth配置管理
 // ============================================================
 
-// 显示OAuth配置选项卡
 function showOAuthConfigTab() {
-    // 隐藏其他选项卡
     hideAllTabs();
 
-    // 显示OAuth配置选项卡
     const oauthConfigBlock = document.querySelector('.oauthConfigBlock');
     if (oauthConfigBlock) {
         oauthConfigBlock.style.display = 'block';
@@ -2472,16 +2212,12 @@ function showOAuthConfigTab() {
     }
 }
 
-// 绑定OAuth配置事件
 function bindOAuthConfigEvents() {
-    // 绑定加载配置按钮
     $('#loadOAuthConfig').off('click').on('click', loadOAuthConfiguration);
 
-    // 绑定保存配置按钮
     $('#saveOAuthConfig').off('click').on('click', saveOAuthConfiguration);
 }
 
-// 加载OAuth配置
 async function loadOAuthConfiguration() {
     try {
         const response = await fetch('/api/oauth-config/get', {
@@ -2495,36 +2231,31 @@ async function loadOAuthConfiguration() {
 
         const config = await response.json();
 
-        // GitHub配置
         $('#oauthGithubEnabled').prop('checked', config.github?.enabled || false);
         $('#oauthGithubClientId').val(config.github?.clientId || '');
         $('#oauthGithubClientSecret').val(config.github?.clientSecret || '');
-        // 如果配置中没有callbackUrl，使用动态URL
         const githubCallback = config.github?.callbackUrl || config.github?.defaultCallbackUrl || '';
         $('#oauthGithubCallback').val(githubCallback);
-        // 更新placeholder显示动态URL
         if (config.github?.defaultCallbackUrl) {
-            $('#oauthGithubCallback').attr('placeholder', `留空则自动使用: ${config.github.defaultCallbackUrl}`);
+            $('#oauthGithubCallback').attr('placeholder', `Leave blank to use: ${config.github.defaultCallbackUrl}`);
         }
 
-        // Discord配置
         $('#oauthDiscordEnabled').prop('checked', config.discord?.enabled || false);
         $('#oauthDiscordClientId').val(config.discord?.clientId || '');
         $('#oauthDiscordClientSecret').val(config.discord?.clientSecret || '');
         const discordCallback = config.discord?.callbackUrl || config.discord?.defaultCallbackUrl || '';
         $('#oauthDiscordCallback').val(discordCallback);
         if (config.discord?.defaultCallbackUrl) {
-            $('#oauthDiscordCallback').attr('placeholder', `留空则自动使用: ${config.discord.defaultCallbackUrl}`);
+            $('#oauthDiscordCallback').attr('placeholder', `Leave blank to use: ${config.discord.defaultCallbackUrl}`);
         }
 
-        // Linux.do配置
         $('#oauthLinuxdoEnabled').prop('checked', config.linuxdo?.enabled || false);
         $('#oauthLinuxdoClientId').val(config.linuxdo?.clientId || '');
         $('#oauthLinuxdoClientSecret').val(config.linuxdo?.clientSecret || '');
         const linuxdoCallback = config.linuxdo?.callbackUrl || config.linuxdo?.defaultCallbackUrl || '';
         $('#oauthLinuxdoCallback').val(linuxdoCallback);
         if (config.linuxdo?.defaultCallbackUrl) {
-            $('#oauthLinuxdoCallback').attr('placeholder', `留空则自动使用: ${config.linuxdo.defaultCallbackUrl}`);
+            $('#oauthLinuxdoCallback').attr('placeholder', `Leave blank to use: ${config.linuxdo.defaultCallbackUrl}`);
         }
         $('#oauthLinuxdoAuthUrl').val(config.linuxdo?.authUrl || 'https://connect.linux.do/oauth2/authorize');
         $('#oauthLinuxdoTokenUrl').val(config.linuxdo?.tokenUrl || 'https://connect.linux.do/oauth2/token');
@@ -2534,20 +2265,18 @@ async function loadOAuthConfiguration() {
 
     } catch (error) {
         console.error('Error loading OAuth config:', error);
-        alert('加载OAuth配置失败: ' + error.message);
+        alert('Failed to load OAuth configuration: ' + error.message);
     }
 }
 
-// 保存OAuth配置
 async function saveOAuthConfiguration() {
     const saveButton = $('#saveOAuthConfig');
     const originalText = saveButton.html();
 
     try {
         saveButton.prop('disabled', true);
-        saveButton.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i> 保存中...');
+        saveButton.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i> Saving...');
 
-        // 获取回调URL，如果为空则使用空字符串（后端会使用动态URL）
         const githubCallback = $('#oauthGithubCallback').val().trim();
         const discordCallback = $('#oauthDiscordCallback').val().trim();
         const linuxdoCallback = $('#oauthLinuxdoCallback').val().trim();
@@ -2557,36 +2286,35 @@ async function saveOAuthConfiguration() {
                 enabled: $('#oauthGithubEnabled').prop('checked'),
                 clientId: $('#oauthGithubClientId').val().trim(),
                 clientSecret: $('#oauthGithubClientSecret').val().trim(),
-                callbackUrl: githubCallback, // 空字符串表示使用动态URL
+                callbackUrl: githubCallback,
             },
             discord: {
                 enabled: $('#oauthDiscordEnabled').prop('checked'),
                 clientId: $('#oauthDiscordClientId').val().trim(),
                 clientSecret: $('#oauthDiscordClientSecret').val().trim(),
-                callbackUrl: discordCallback, // 空字符串表示使用动态URL
+                callbackUrl: discordCallback,
             },
             linuxdo: {
                 enabled: $('#oauthLinuxdoEnabled').prop('checked'),
                 clientId: $('#oauthLinuxdoClientId').val().trim(),
                 clientSecret: $('#oauthLinuxdoClientSecret').val().trim(),
-                callbackUrl: linuxdoCallback, // 空字符串表示使用动态URL
+                callbackUrl: linuxdoCallback,
                 authUrl: $('#oauthLinuxdoAuthUrl').val().trim() || 'https://connect.linux.do/oauth2/authorize',
                 tokenUrl: $('#oauthLinuxdoTokenUrl').val().trim() || 'https://connect.linux.do/oauth2/token',
                 userInfoUrl: $('#oauthLinuxdoUserInfoUrl').val().trim() || 'https://connect.linux.do/oauth2/userinfo',
             },
         };
 
-        // 验证启用的配置是否完整
         if (config.github.enabled && (!config.github.clientId || !config.github.clientSecret)) {
-            alert('GitHub OAuth 已启用，但缺少 Client ID 或 Client Secret');
+            alert('GitHub OAuth is enabled, but Client ID or Client Secret is missing');
             return;
         }
         if (config.discord.enabled && (!config.discord.clientId || !config.discord.clientSecret)) {
-            alert('Discord OAuth 已启用，但缺少 Client ID 或 Client Secret');
+            alert('Discord OAuth is enabled, but Client ID or Client Secret is missing');
             return;
         }
         if (config.linuxdo.enabled && (!config.linuxdo.clientId || !config.linuxdo.clientSecret)) {
-            alert('Linux.do OAuth 已启用，但缺少 Client ID 或 Client Secret');
+            alert('Linux.do OAuth is enabled, but Client ID or Client Secret is missing');
             return;
         }
 
@@ -2604,11 +2332,11 @@ async function saveOAuthConfiguration() {
         const result = await response.json();
         console.log('OAuth config saved:', result);
 
-        alert('OAuth配置保存成功！需要重启服务器才能生效。');
+        alert('OAuth configuration saved. Restart the server to apply changes.');
 
     } catch (error) {
         console.error('Error saving OAuth config:', error);
-        alert('保存OAuth配置失败: ' + error.message);
+        alert('Failed to save OAuth configuration: ' + error.message);
     } finally {
         saveButton.prop('disabled', false);
         saveButton.html(originalText);
@@ -2616,32 +2344,30 @@ async function saveOAuthConfiguration() {
 }
 
 // ============================================================
-// 默认配置模板管理
 // ============================================================
 
 const DEFAULT_CONFIG_LABELS = {
-    settings: '设置',
-    secrets: 'API 密钥',
-    characters: '角色卡',
-    worlds: '世界书',
-    backgrounds: '背景图',
-    themes: '主题',
-    avatars: '用户头像',
-    assets: '资源文件',
-    instruct: '指令模板',
-    context: '上下文模板',
-    sysprompt: '系统提示词',
-    reasoning: '推理模板',
-    quickreplies: '快捷回复',
-    openai_settings: 'OpenAI 预设',
-    kobold_settings: 'KoboldAI 预设',
-    novel_settings: 'NovelAI 预设',
-    textgen_settings: 'TextGen 预设',
-    moving_ui: 'MovingUI 布局',
+    settings: 'Settings',
+    secrets: 'API keys',
+    characters: 'Character cards',
+    worlds: 'Lorebooks',
+    backgrounds: 'Backgrounds',
+    themes: 'Themes',
+    avatars: 'User avatars',
+    assets: 'Asset files',
+    instruct: 'Instruction templates',
+    context: 'Context templates',
+    sysprompt: 'System prompts',
+    reasoning: 'Reasoning templates',
+    quickreplies: 'Quick replies',
+    openai_settings: 'OpenAI presets',
+    kobold_settings: 'KoboldAI presets',
+    novel_settings: 'NovelAI presets',
+    textgen_settings: 'TextGen presets',
+    moving_ui: 'MovingUI layout',
 };
 
 function showDefaultConfigTab() {
-    // 隐藏其他选项卡
     hideAllTabs();
 
     const defaultConfigBlock = document.querySelector('.defaultConfigBlock');
@@ -2661,9 +2387,9 @@ function bindDefaultConfigEvents() {
 
 function formatDefaultConfigCategories(categories) {
     if (!Array.isArray(categories) || categories.length === 0) {
-        return '无';
+        return 'None';
     }
-    return categories.map((id) => DEFAULT_CONFIG_LABELS[id] || id).join('、');
+    return categories.map((id) => DEFAULT_CONFIG_LABELS[id] || id).join(', ');
 }
 
 async function loadDefaultConfigStatus() {
@@ -2672,7 +2398,7 @@ async function loadDefaultConfigStatus() {
         return;
     }
 
-    statusBox.textContent = '正在加载默认配置状态...';
+    statusBox.textContent = 'Loading default configuration status...';
 
     try {
         const response = await fetch('/api/default-config/status', {
@@ -2688,25 +2414,25 @@ async function loadDefaultConfigStatus() {
 
         if (!data.exists) {
             statusBox.innerHTML = `
-                <div><strong>状态:</strong> 未配置</div>
-                <div>当前新用户仅使用内置默认内容。</div>
+                <div><strong>Status:</strong> Not configured</div>
+                <div>New users will use the built-in defaults only.</div>
             `;
             return;
         }
 
-        const sourceHandle = data.sourceHandle || '未知';
-        const updatedAt = data.updatedAt ? new Date(data.updatedAt).toLocaleString() : '未知';
+        const sourceHandle = data.sourceHandle || 'Unknown';
+        const updatedAt = data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'Unknown';
         const categoriesText = formatDefaultConfigCategories(data.categories);
 
         statusBox.innerHTML = `
-            <div><strong>状态:</strong> 已配置</div>
-            <div><strong>来源用户:</strong> ${escapeHtml(sourceHandle)}</div>
-            <div><strong>更新时间:</strong> ${escapeHtml(updatedAt)}</div>
-            <div><strong>包含内容:</strong> ${escapeHtml(categoriesText)}</div>
+            <div><strong>Status:</strong> Configured</div>
+            <div><strong>Source user:</strong> ${escapeHtml(sourceHandle)}</div>
+            <div><strong>Updated at:</strong> ${escapeHtml(updatedAt)}</div>
+            <div><strong>Includes:</strong> ${escapeHtml(categoriesText)}</div>
         `;
     } catch (error) {
         console.error('Error loading default config status:', error);
-        statusBox.textContent = '加载默认配置状态失败，请重试。';
+        statusBox.textContent = 'Failed to load default configuration status. Please try again.';
     }
 }
 
@@ -2717,7 +2443,7 @@ async function loadDefaultConfigUsers() {
     }
 
     const previousValue = select.value;
-    select.innerHTML = '<option value="">加载中...</option>';
+    select.innerHTML = '<option value="">Loading...</option>';
 
     try {
         const response = await fetch('/api/users/get', {
@@ -2749,7 +2475,7 @@ async function loadDefaultConfigUsers() {
         }
     } catch (error) {
         console.error('Error loading users for default config:', error);
-        select.innerHTML = '<option value="">加载失败</option>';
+        select.innerHTML = '<option value="">Load failed</option>';
     }
 }
 
@@ -2766,18 +2492,18 @@ function getSelectedDefaultConfigCategories() {
 async function saveDefaultConfigSnapshot() {
     const select = document.getElementById('defaultConfigSourceUser');
     if (!select || !select.value) {
-        alert('请选择来源用户');
+        alert('Please select a source user.');
         return;
     }
 
     const categories = getSelectedDefaultConfigCategories();
     if (categories.length === 0) {
-        alert('请至少选择一个默认配置内容');
+        alert('Please select at least one default configuration item.');
         return;
     }
 
     if (categories.includes('secrets')) {
-        const confirmed = confirm('你选择了复制 API 密钥（secrets.json）。新用户会继承这些密钥，确定继续吗？');
+        const confirmed = confirm('You chose to copy API keys (secrets.json). New users will inherit these keys. Continue?');
         if (!confirmed) {
             return;
         }
@@ -2788,7 +2514,7 @@ async function saveDefaultConfigSnapshot() {
 
     try {
         saveButton.prop('disabled', true);
-        saveButton.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>保存中...</span>');
+        saveButton.html('<i class="fa-fw fa-solid fa-spinner fa-spin"></i><span>Saving...</span>');
 
         const response = await fetch('/api/default-config/snapshot', {
             method: 'POST',
@@ -2801,7 +2527,7 @@ async function saveDefaultConfigSnapshot() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || '保存默认配置失败');
+            throw new Error(errorData.error || 'Failed to save default configuration');
         }
 
         const result = await response.json();
@@ -2810,13 +2536,13 @@ async function saveDefaultConfigSnapshot() {
         await loadDefaultConfigStatus();
         if (Array.isArray(result.missing) && result.missing.length > 0) {
             const missingText = formatDefaultConfigCategories(result.missing);
-            alert(`默认配置已更新，但以下内容在来源用户中未找到：${missingText}`);
+            alert(`Default configuration updated, but the following items were not found in the source user: ${missingText}`);
         } else {
-            alert('默认配置已更新，新用户注册时会自动应用。');
+            alert('Default configuration updated and will be applied to new users on registration.');
         }
     } catch (error) {
         console.error('Error saving default config snapshot:', error);
-        alert('保存默认配置失败: ' + error.message);
+        alert('Failed to save default configuration: ' + error.message);
     } finally {
         saveButton.prop('disabled', false);
         saveButton.html(originalText);
@@ -2824,7 +2550,7 @@ async function saveDefaultConfigSnapshot() {
 }
 
 async function clearDefaultConfigTemplate() {
-    if (!confirm('确定要清空默认配置模板吗？新用户将回到系统内置默认值。')) {
+    if (!confirm('Are you sure you want to clear the default configuration template? New users will revert to system defaults.')) {
         return;
     }
 
@@ -2836,18 +2562,17 @@ async function clearDefaultConfigTemplate() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || '清空默认配置失败');
+            throw new Error(errorData.error || 'Failed to clear default configuration');
         }
 
         await loadDefaultConfigStatus();
-        alert('默认配置模板已清空。');
+        alert('Default configuration template cleared.');
     } catch (error) {
         console.error('Error clearing default config template:', error);
-        alert('清空默认配置失败: ' + error.message);
+        alert('Failed to clear default configuration: ' + error.message);
     }
 }
 
-// 导出函数供外部调用
 if (typeof window !== 'undefined') {
     window.initializeAdminExtensions = initializeAdminExtensions;
     window.toggleAnnouncement = toggleAnnouncement;

@@ -20,7 +20,7 @@ This checklist was generated from a repository-wide scan for Chinese characters.
 - [x] public/scripts/user-heartbeat.js
 - [x] public/scripts/dynamic-styles.js
 - [x] public/scripts/announcements.js
-- [ ] public/scripts/admin-extensions.js
+- [x] public/scripts/admin-extensions.js
 - [x] public/scripts/rich-editor.js
 
 ## Public script templates
@@ -32,47 +32,47 @@ This checklist was generated from a repository-wide scan for Chinese characters.
 - [x] public/scripts/templates/welcomePrompt.html
 
 ## Public CSS (contains Chinese comments or content strings)
-- [ ] public/css/admin-extensions.css
-- [ ] public/css/announcements.css
-- [ ] public/css/forum.css
-- [ ] public/css/login.css
-- [ ] public/css/public-characters.css
-- [ ] public/css/register.css
-- [ ] public/css/rich-editor.css
-- [ ] public/css/welcome.css
+- [x] public/css/admin-extensions.css
+- [x] public/css/announcements.css
+- [x] public/css/forum.css
+- [x] public/css/login.css
+- [x] public/css/public-characters.css
+- [x] public/css/register.css
+- [x] public/css/rich-editor.css
+- [x] public/css/welcome.css
 
 ## Public locales
-- [ ] public/locales/lang.json
-- [ ] public/locales/ja-jp.json
-- [ ] public/locales/zh-cn.json
-- [ ] public/locales/zh-tw.json
+- [x] public/locales/lang.json
+- [x] public/locales/ja-jp.json
+- [x] public/locales/zh-cn.json
+- [x] public/locales/zh-tw.json
 
 ## Public assets/config
-- [ ] default/config.yaml
+- [x] default/config.yaml
 
 ## Server-side endpoints and services
-- [ ] src/email-service.js
-- [ ] src/invitation-codes.js
-- [ ] src/scheduled-tasks.js
-- [ ] src/server-main.js
-- [ ] src/server-startup.js
-- [ ] src/system-monitor.js
-- [ ] src/users.js
-- [ ] src/middleware/chatTracker.js
-- [ ] src/endpoints/announcements.js
-- [ ] src/endpoints/chats.js
-- [ ] src/endpoints/content-manager.js
-- [ ] src/endpoints/email-config.js
-- [ ] src/endpoints/email-status.js
-- [ ] src/endpoints/invitation-codes.js
-- [ ] src/endpoints/oauth-config.js
-- [ ] src/endpoints/oauth.js
-- [ ] src/endpoints/public-characters.js
-- [ ] src/endpoints/public-config.js
-- [ ] src/endpoints/scheduled-tasks.js
-- [ ] src/endpoints/stats.js
-- [ ] src/endpoints/system-load.js
-- [ ] src/endpoints/thumbnails.js
-- [ ] src/endpoints/users-admin.js
-- [ ] src/endpoints/users-private.js
-- [ ] src/endpoints/users-public.js
+- [x] src/email-service.js
+- [x] src/invitation-codes.js
+- [x] src/scheduled-tasks.js
+- [x] src/server-main.js
+- [x] src/server-startup.js
+- [x] src/system-monitor.js
+- [x] src/users.js
+- [x] src/middleware/chatTracker.js
+- [x] src/endpoints/announcements.js
+- [x] src/endpoints/chats.js
+- [x] src/endpoints/content-manager.js
+- [x] src/endpoints/email-config.js
+- [x] src/endpoints/email-status.js
+- [x] src/endpoints/invitation-codes.js
+- [x] src/endpoints/oauth-config.js
+- [x] src/endpoints/oauth.js
+- [x] src/endpoints/public-characters.js
+- [x] src/endpoints/public-config.js
+- [x] src/endpoints/scheduled-tasks.js
+- [x] src/endpoints/stats.js
+- [x] src/endpoints/system-load.js
+- [x] src/endpoints/thumbnails.js
+- [x] src/endpoints/users-admin.js
+- [x] src/endpoints/users-private.js
+- [x] src/endpoints/users-public.js

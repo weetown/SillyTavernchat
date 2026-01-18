@@ -1,16 +1,11 @@
 import nodemailer from 'nodemailer';
 import { getConfigValue } from './util.js';
 
-/**
- * 邮件服务配置缓存
- */
+
 let emailConfig = null;
 let transporter = null;
 
-/**
- * 从配置文件加载邮件配置
- * @returns {Object|null} 邮件配置对象
- */
+
 function loadEmailConfig() {
     try {
         const config = {
@@ -24,23 +19,19 @@ function loadEmailConfig() {
             fromName: getConfigValue('email.fromName', 'SillyTavern'),
         };
 
-        // 验证必需的配置项
         if (config.enabled && (!config.host || !config.user || !config.password || !config.from)) {
-            console.warn('邮件服务已启用但配置不完整，请检查 config.yaml 中的 email 配置');
+            console.warn('Email service is enabled but configuration is incomplete. Check the email settings in config.yaml.');
             return null;
         }
 
         return config;
     } catch (error) {
-        console.error('加载邮件配置失败:', error);
+        console.error('Failed to load email config:', error);
         return null;
     }
 }
 
-/**
- * 初始化邮件传输器
- * @returns {Object|null} nodemailer 传输器对象
- */
+
 function initTransporter() {
     emailConfig = loadEmailConfig();
 
@@ -49,7 +40,6 @@ function initTransporter() {
     }
 
     try {
-        // 端口465默认使用SSL，其他端口使用STARTTLS
         const useSSL = emailConfig.port === 465 ? true : emailConfig.secure;
 
         const transportConfig = {
@@ -62,7 +52,6 @@ function initTransporter() {
             },
         };
 
-        // 如果不使用SSL但端口是587，添加TLS配置
         if (!useSSL && emailConfig.port === 587) {
             transportConfig.requireTLS = true;
             transportConfig.tls = {
@@ -71,8 +60,7 @@ function initTransporter() {
             };
         }
 
-        // 添加调试日志
-        console.log('邮件服务配置:', {
+        console.log('Email service config:', {
             host: transportConfig.host,
             port: transportConfig.port,
             secure: transportConfig.secure,
@@ -81,18 +69,15 @@ function initTransporter() {
 
         transporter = nodemailer.createTransport(transportConfig);
 
-        console.log('邮件服务已初始化');
+        console.log('Email service initialized');
         return transporter;
     } catch (error) {
-        console.error('初始化邮件传输器失败:', error);
+        console.error('Failed to initialize mail transporter:', error);
         return null;
     }
 }
 
-/**
- * 检查邮件服务是否可用
- * @returns {boolean} 是否可用
- */
+
 export function isEmailServiceAvailable() {
     if (!transporter) {
         initTransporter();
@@ -100,10 +85,7 @@ export function isEmailServiceAvailable() {
     return transporter !== null && emailConfig?.enabled === true;
 }
 
-/**
- * 获取邮件配置（包含密码，仅供管理员使用）
- * @returns {Object} 邮件配置
- */
+
 export function getEmailConfig() {
     if (!emailConfig) {
         emailConfig = loadEmailConfig();
@@ -119,32 +101,23 @@ export function getEmailConfig() {
         port: emailConfig.port,
         secure: emailConfig.secure,
         user: emailConfig.user,
-        password: emailConfig.password,  // 包含密码，因为只有管理员能访问
+        password: emailConfig.password,
         from: emailConfig.from,
         fromName: emailConfig.fromName,
     };
 }
 
-/**
- * 重新加载邮件配置
- */
+
 export function reloadEmailConfig() {
     transporter = null;
     emailConfig = null;
     initTransporter();
 }
 
-/**
- * 发送邮件
- * @param {string} to 收件人邮箱
- * @param {string} subject 邮件主题
- * @param {string} text 纯文本内容
- * @param {string|null} [html] HTML内容（可选）
- * @returns {Promise<boolean>} 是否发送成功
- */
+
 export async function sendEmail(to, subject, text, html = null) {
     if (!isEmailServiceAvailable()) {
-        console.error('邮件服务未启用或配置不完整');
+        console.error('Email service is not enabled or configuration is incomplete');
         return false;
     }
 
@@ -161,36 +134,30 @@ export async function sendEmail(to, subject, text, html = null) {
         }
 
         const info = await transporter.sendMail(mailOptions);
-        console.log('邮件发送成功:', info.messageId, 'to', to);
+        console.log('Email sent successfully:', info.messageId, 'to', to);
         return true;
     } catch (error) {
-        console.error('发送邮件失败:', error);
+        console.error('Failed to send email:', error);
         return false;
     }
 }
 
-/**
- * 发送验证码邮件
- * @param {string} to 收件人邮箱
- * @param {string} code 验证码
- * @param {string} userName 用户名
- * @returns {Promise<boolean>} 是否发送成功
- */
+
 export async function sendVerificationCode(to, code, userName) {
-    const subject = 'SillyTavern - 注册验证码';
+    const subject = 'SillyTavern - Registration Verification Code';
     const text = `
-尊敬的 ${userName}，
+Dear ${userName},
 
-感谢您注册 SillyTavern！
+Thank you for registering with SillyTavern!
 
-您的验证码是：${code}
+Your verification code is: ${code}
 
-此验证码将在 5 分钟内有效。请不要将此验证码告诉任何人。
+This code is valid for 5 minutes. Please do not share it with anyone.
 
-如果这不是您本人的操作，请忽略此邮件。
+If you did not request this, please ignore this email.
 
-祝好，
-SillyTavern 团队
+Best regards,
+The SillyTavern Team
     `.trim();
 
     const html = `
@@ -243,18 +210,18 @@ SillyTavern 团队
 </head>
 <body>
     <div class="header">
-        <h1>SillyTavern 注册验证</h1>
+        <h1>SillyTavern Registration Verification</h1>
     </div>
     <div class="content">
-        <p>尊敬的 <strong>${userName}</strong>，</p>
-        <p>感谢您注册 SillyTavern！</p>
-        <p>您的验证码是：</p>
+        <p>Dear <strong>${userName}</strong>,</p>
+        <p>Thank you for registering with SillyTavern!</p>
+        <p>Your verification code is:</p>
         <div class="code">${code}</div>
-        <p>此验证码将在 <strong>5 分钟</strong>内有效。请不要将此验证码告诉任何人。</p>
-        <p>如果这不是您本人的操作，请忽略此邮件。</p>
+        <p>This code is valid for <strong>5 minutes</strong>. Please do not share it with anyone.</p>
+        <p>If you did not request this, please ignore this email.</p>
     </div>
     <div class="footer">
-        <p>此邮件由 SillyTavern 系统自动发送，请勿回复。</p>
+        <p>This email was sent automatically by the SillyTavern system. Please do not reply.</p>
     </div>
 </body>
 </html>
@@ -263,28 +230,22 @@ SillyTavern 团队
     return await sendEmail(to, subject, text, html);
 }
 
-/**
- * 发送密码恢复码邮件
- * @param {string} to 收件人邮箱
- * @param {string} code 恢复码
- * @param {string} userName 用户名
- * @returns {Promise<boolean>} 是否发送成功
- */
+
 export async function sendPasswordRecoveryCode(to, code, userName) {
-    const subject = 'SillyTavern - 密码找回';
+    const subject = 'SillyTavern - Password Recovery';
     const text = `
-尊敬的 ${userName}，
+Dear ${userName},
 
-我们收到了您的密码找回请求。
+We received your password recovery request.
 
-您的密码恢复码是：${code}
+Your password recovery code is: ${code}
 
-此恢复码将在 5 分钟内有效。请使用此恢复码重置您的密码。
+This recovery code is valid for 5 minutes. Use it to reset your password.
 
-如果这不是您本人的操作，请立即联系管理员，您的账户可能存在安全风险。
+If you did not request this, contact your administrator immediately. Your account may be at risk.
 
-祝好，
-SillyTavern 团队
+Best regards,
+The SillyTavern Team
     `.trim();
 
     const html = `
@@ -343,21 +304,21 @@ SillyTavern 团队
 </head>
 <body>
     <div class="header">
-        <h1>密码找回请求</h1>
+        <h1>Password Recovery Request</h1>
     </div>
     <div class="content">
-        <p>尊敬的 <strong>${userName}</strong>，</p>
-        <p>我们收到了您的密码找回请求。</p>
-        <p>您的密码恢复码是：</p>
+        <p>Dear <strong>${userName}</strong>,</p>
+        <p>We received your password recovery request.</p>
+        <p>Your password recovery code is:</p>
         <div class="code">${code}</div>
-        <p>此恢复码将在 <strong>5 分钟</strong>内有效。请使用此恢复码重置您的密码。</p>
+        <p>This recovery code is valid for <strong>5 minutes</strong>. Use it to reset your password.</p>
         <div class="warning">
-            <strong>⚠️ 安全提醒：</strong>
-            <p>如果这不是您本人的操作，请立即联系管理员，您的账户可能存在安全风险。</p>
+            <strong>⚠️ Security notice:</strong>
+            <p>If you did not request this, contact your administrator immediately. Your account may be at risk.</p>
         </div>
     </div>
     <div class="footer">
-        <p>此邮件由 SillyTavern 系统自动发送，请勿回复。</p>
+        <p>This email was sent automatically by the SillyTavern system. Please do not reply.</p>
     </div>
 </body>
 </html>
@@ -366,46 +327,38 @@ SillyTavern 团队
     return await sendEmail(to, subject, text, html);
 }
 
-/**
- * 发送因长期未登录被删除账户的通知邮件
- * @param {string} to 收件人邮箱
- * @param {string} userName 用户名
- * @param {number} daysInactive 未登录天数
- * @param {number} storageSize 存储占用（字节）
- * @param {string} siteUrl 站点网址
- * @returns {Promise<boolean>} 是否发送成功
- */
+
 export async function sendInactiveUserDeletionNotice(to, userName, daysInactive, storageSize, siteUrl) {
     const durationLabelMap = new Map([
-        [7, '1周'],
-        [15, '半个月'],
-        [30, '1个月'],
-        [60, '2个月'],
+        [7, '1 week'],
+        [15, 'half a month'],
+        [30, '1 month'],
+        [60, '2 months'],
     ]);
-    const durationLabel = durationLabelMap.get(daysInactive) || `${daysInactive} 天`;
+    const durationLabel = durationLabelMap.get(daysInactive) || `${daysInactive} days`;
     const storageMiB = Number.isFinite(storageSize) ? (storageSize / 1024 / 1024) : 0;
     const storageLabel = storageMiB.toFixed(2);
-    const siteLine = siteUrl ? `站点入口：${siteUrl}` : '站点入口：请联系管理员获取';
+    const siteLine = siteUrl ? `Site entry: ${siteUrl}` : 'Site entry: Contact the administrator for details';
 
-    const subject = '叮咚！这里有一封来自酒馆的“寻人启事” 💌';
+    const subject = 'Ding dong! A tavern notice is looking for you 💌';
     const text = `
-亲爱的 ${userName} 小伙伴：
+Dear ${userName},
 
-   好久不见呀！酒馆里的壁炉依旧暖和，可老板娘发现您的专属座位上已经落了一层薄薄的灰尘——数了数指头，您已经有 ${durationLabel} （约 ${daysInactive} 天）没来喝一杯、聊聊天了呢。
+   Long time no see! The hearth is still warm, but your seat has gathered dust — it has been ${durationLabel} (about ${daysInactive} days) since your last visit.
 
-虽然您的行李只占用了轻飘飘的 ${storageLabel} MiB，但为了给更多刚上路的冒险者腾出休息的位置，我们不得不先把您的房间暂时“退房打扫”了。
+Although your luggage only uses ${storageLabel} MiB, we need to free space for new adventurers, so we temporarily cleared your room.
 
-别担心，酒馆的大门永远为您敞开，您的回忆我们都会珍藏在风里。
+Don’t worry—our doors are always open, and your memories are safe with us.
 
-为了把空间留给还在热闹聊天的伙伴，我们先帮你把账户内容做了清空整理。
+To make room for active guests, we cleared your account data for now.
 
-如果您哪天想念这里的空气了，随时欢迎再次光临，开启新的冒险！
+If you ever miss the tavern, you are always welcome to return for a new adventure!
 
-踏入酒馆的路： ${siteLine}
+Your way back to the tavern: ${siteLine}
 
-期待在酒馆再次遇见闪闪发光的你 ~ ✨
+We hope to see you shining in the tavern again! ✨
 
-如需帮助，请联系管理员。
+If you need help, contact the administrator.
     `.trim();
 
     const html = `
@@ -453,21 +406,21 @@ export async function sendInactiveUserDeletionNotice(to, userName, daysInactive,
 </head>
 <body>
     <div class="header">
-        <h1>小酒馆整理通知</h1>
+        <h1>Tavern Cleanup Notice</h1>
     </div>
     <div class="content">
-        <p>亲爱的 <strong>${userName}</strong> 小伙伴：</p>
+        <p>Dear <strong>${userName}</strong>,</p>
         <div class="notice">
-            <p>我们发现你已经有 <strong>${durationLabel}</strong> 没来酒馆啦（约 ${daysInactive} 天）。</p>
-            <p>你的酒馆背包占用约 <strong>${storageLabel} MiB</strong>。</p>
+            <p>We noticed you have not visited for <strong>${durationLabel}</strong> (about ${daysInactive} days).</p>
+            <p>Your tavern storage uses about <strong>${storageLabel} MiB</strong>.</p>
         </div>
-        <p>为了把空间留给还在热闹聊天的伙伴，我们先帮你把账户内容做了清空整理。</p>
-        <p>别担心，随时欢迎你回家重新开张，我们在酒馆等你。</p>
-        <p>站点入口：${siteUrl ? `<a href="${siteUrl}">${siteUrl}</a>` : '请联系管理员获取'}</p>
-        <p>如需帮助，请联系管理员。</p>
+        <p>To make room for active guests, we cleared your account data for now.</p>
+        <p>Don’t worry — you’re always welcome to come back. We’ll be here waiting.</p>
+        <p>Site entry: ${siteUrl ? `<a href="${siteUrl}">${siteUrl}</a>` : 'Contact the administrator for details'}</p>
+        <p>If you need help, contact the administrator.</p>
     </div>
     <div class="footer">
-        <p>此邮件由 SillyTavern 系统自动发送，请勿回复。</p>
+        <p>This email was sent automatically by the SillyTavern system. Please do not reply.</p>
     </div>
 </body>
 </html>
@@ -476,26 +429,22 @@ export async function sendInactiveUserDeletionNotice(to, userName, daysInactive,
     return await sendEmail(to, subject, text, html);
 }
 
-/**
- * 测试邮件配置
- * @param {string} testEmail 测试邮箱地址
- * @returns {Promise<{success: boolean, error?: string}>} 测试结果
- */
+
 export async function testEmailConfig(testEmail) {
     if (!isEmailServiceAvailable()) {
         return {
             success: false,
-            error: '邮件服务未启用或配置不完整',
+            error: 'Email service is not enabled or configuration is incomplete',
         };
     }
 
     try {
-        console.log('开始验证SMTP连接...');
+        console.log('Starting SMTP connection verification...');
         await transporter.verify();
-        console.log('SMTP连接验证成功');
+        console.log('SMTP connection verified');
 
-        const subject = 'SillyTavern - 邮件配置测试';
-        const text = '这是一封测试邮件。如果您收到此邮件，说明邮件服务配置正确。';
+        const subject = 'SillyTavern - Email Configuration Test';
+        const text = 'This is a test email. If you received it, the email service is configured correctly.';
         const html = `
 <!DOCTYPE html>
 <html>
@@ -520,15 +469,15 @@ export async function testEmailConfig(testEmail) {
 </head>
 <body>
     <div class="success">
-        <h2>✓ 邮件配置测试成功</h2>
-        <p>这是一封测试邮件。如果您收到此邮件，说明邮件服务配置正确。</p>
-        <p>发送时间：${new Date().toLocaleString('zh-CN')}</p>
+        <h2>✓ Email configuration test successful</h2>
+        <p>This is a test email. If you received it, the email service is configured correctly.</p>
+        <p>Sent at: ${new Date().toLocaleString('en-US')}</p>
     </div>
 </body>
 </html>
         `.trim();
 
-        console.log('开始发送测试邮件到:', testEmail);
+        console.log('Sending test email to:', testEmail);
         const success = await sendEmail(testEmail, subject, text, html);
 
         if (success) {
@@ -536,15 +485,14 @@ export async function testEmailConfig(testEmail) {
         } else {
             return {
                 success: false,
-                error: '邮件发送失败，请检查服务器日志',
+                error: 'Email send failed. Please check the server logs',
             };
         }
     } catch (error) {
-        console.error('邮件配置测试失败:', error);
+        console.error('Email configuration test failed:', error);
         return {
             success: false,
-            error: error.message || '未知错误',
+            error: error.message || 'Unknown error',
         };
     }
 }
-

@@ -163,17 +163,15 @@ export async function init() {
         const totalUsers = userHandles.length;
 
         if (totalUsers > 20) {
-            console.log(`正在加载 ${totalUsers} 个用户的统计数据...`);
+            console.log(`Loading statistics for ${totalUsers} users...`);
         }
 
-        // 并发处理所有用户的统计数据，每批处理30个用户
         const BATCH_SIZE = 30;
         let processed = 0;
 
         for (let i = 0; i < userHandles.length; i += BATCH_SIZE) {
             const batch = userHandles.slice(i, i + BATCH_SIZE);
 
-            // 并发处理当前批次
             await Promise.all(batch.map(async (handle) => {
                 const directories = getUserDirectories(handle);
                 try {
@@ -192,12 +190,12 @@ export async function init() {
 
             processed += batch.length;
             if (totalUsers > 20) {
-                console.log(`  统计数据加载进度: ${Math.min(processed, totalUsers)}/${totalUsers}`);
+                console.log(`  Stats load progress: ${Math.min(processed, totalUsers)}/${totalUsers}`);
             }
         }
 
         if (totalUsers > 20) {
-            console.log(`✓ 所有用户统计数据加载完成`);
+            console.log('✓ All user statistics loaded');
         }
     } catch (err) {
         console.error('Failed to initialize stats:', err);

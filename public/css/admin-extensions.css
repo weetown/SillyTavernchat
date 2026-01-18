@@ -1,6 +1,4 @@
-/* 管理员面板扩展样式 */
 
-/* 系统负载监控样式 */
 .systemOverview {
     margin-bottom: 30px;
 }
@@ -52,7 +50,6 @@
     transition: width 0.3s ease;
 }
 
-/* 用户活动统计样式 */
 .userActivitySection {
     margin-top: 30px;
 }
@@ -141,7 +138,6 @@
     font-size: 0.8rem;
 }
 
-/* 邀请码管理样式 */
 .createInvitationSection {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
@@ -390,7 +386,6 @@
     font-size: 0.9rem;
 }
 
-/* 空状态样式 */
 .emptyState {
     text-align: center;
     padding: 40px 20px;
@@ -413,7 +408,6 @@
     font-size: 0.9rem;
 }
 
-/* 加载状态样式 */
 .loadingState {
     text-align: center;
     padding: 40px 20px;
@@ -435,7 +429,6 @@
     100% { transform: rotate(360deg); }
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
     .systemOverview {
         flex-direction: column;
@@ -473,7 +466,6 @@
     }
 }
 
-/* 深色主题适配 */
 @media (prefers-color-scheme: dark) {
     .systemCard {
         background: rgba(255, 255, 255, 0.05);
@@ -511,13 +503,11 @@
     }
 }
 
-/* 公告管理样式 */
 .announcementsBlock {
     max-width: 100%;
     margin: 0 auto;
 }
 
-/* 公告类型切换按钮样式 */
 .announcement-type-tab {
     transition: all 0.3s ease;
     opacity: 0.7;
@@ -722,7 +712,6 @@
     color: #e74c3c;
 }
 
-/* 默认配置管理样式 */
 .defaultConfigStatusBox {
     background: var(--SmartThemeBlurTintColor);
     border: 1px solid var(--SmartThemeBorderColor);

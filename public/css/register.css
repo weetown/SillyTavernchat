@@ -1,8 +1,7 @@
 /* ========================================
-   注册页面 - 现代化设计
+   Registration page - modern design
    ======================================== */
 
-/* 容器布局 */
 .register-container {
     width: 100%;
     max-width: 100%;
@@ -14,7 +13,6 @@
     justify-content: center;
 }
 
-/* 主卡片 */
 .register-card {
     background: linear-gradient(145deg, rgba(30, 30, 35, 0.95) 0%, rgba(20, 20, 25, 0.98) 100%);
     backdrop-filter: blur(20px);
@@ -30,7 +28,6 @@
     overflow: hidden;
 }
 
-/* 卡片背景光效 */
 .register-card::before {
     content: '';
     position: absolute;
@@ -54,7 +51,6 @@
     }
 }
 
-/* Logo和标题区域 */
 .register-header {
     text-align: center;
     margin-bottom: 30px;
@@ -95,7 +91,6 @@
     font-weight: 400;
 }
 
-/* 表单布局 */
 .register-form {
     display: flex;
     flex-direction: column;
@@ -104,7 +99,6 @@
     z-index: 1;
 }
 
-/* 表单分区 */
 .form-section {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.06);
@@ -118,7 +112,6 @@
     border-color: rgba(102, 126, 234, 0.2);
 }
 
-/* 分区标题 */
 .form-section-title {
     display: flex;
     align-items: center;
@@ -136,7 +129,6 @@
     font-size: 1.2rem;
 }
 
-/* 表单行 */
 .form-row {
     display: flex;
     gap: 16px;
@@ -147,7 +139,6 @@
     margin-bottom: 0;
 }
 
-/* 表单组 */
 .form-group {
     flex: 1;
     display: flex;
@@ -155,7 +146,6 @@
     gap: 8px;
 }
 
-/* 标签 */
 .form-label {
     display: flex;
     align-items: center;
@@ -170,7 +160,6 @@
     font-size: 0.9rem;
 }
 
-/* 输入框 */
 .form-input {
     padding: 12px 16px;
     border: 2px solid rgba(255, 255, 255, 0.08);
@@ -198,7 +187,6 @@
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
-/* 验证码输入框 */
 .code-input {
     letter-spacing: 8px;
     text-align: center;
@@ -206,7 +194,6 @@
     font-size: 1.3rem;
 }
 
-/* 输入框与按钮组合 */
 .input-with-button {
     display: flex;
     gap: 10px;
@@ -217,7 +204,6 @@
     flex: 1;
 }
 
-/* 发送验证码按钮 */
 .btn-send-code {
     padding: 0 20px;
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
@@ -255,14 +241,12 @@
     font-size: 0.9rem;
 }
 
-/* 提示文字 */
 .form-hint {
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.45);
     margin-top: -2px;
 }
 
-/* 操作按钮区域 */
 .form-actions {
     display: flex;
     flex-direction: column;
@@ -270,7 +254,6 @@
     margin-top: 6px;
 }
 
-/* 按钮基础样式 */
 .btn {
     padding: 13px 28px;
     border: none;
@@ -293,7 +276,6 @@
     font-size: 1rem;
 }
 
-/* 主要按钮 */
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -324,7 +306,6 @@
     transform: translateY(-1px);
 }
 
-/* 次要按钮 */
 .btn-secondary {
     background: transparent;
     color: rgba(255, 255, 255, 0.8);
@@ -342,7 +323,6 @@
     transform: translateY(0);
 }
 
-/* 消息提示框 */
 .message-box {
     margin-top: 20px;
     padding: 16px 20px;
@@ -386,7 +366,6 @@
     color: #667eea;
 }
 
-/* 加载状态 */
 .btn.loading {
     opacity: 0.7;
     cursor: not-allowed;
@@ -411,7 +390,6 @@
     }
 }
 
-/* 输入验证状态 */
 .form-input.valid {
     border-color: #51cf66;
     background: rgba(81, 207, 102, 0.05);
@@ -422,7 +400,6 @@
     background: rgba(255, 107, 107, 0.05);
 }
 
-/* 弹窗覆盖样式 */
 body.register-page #dialogue_popup {
     background: transparent;
     border: none;
@@ -433,10 +410,9 @@ body.register-page #dialogue_popup {
 }
 
 /* ========================================
-   响应式设计
+   Responsive design
    ======================================== */
 
-/* 中等屏幕 */
 @media (max-width: 900px) {
     .register-card {
         max-width: 480px;
@@ -515,7 +491,7 @@ body.register-page #dialogue_popup {
 }
 
 /* ========================================
-   深色模式优化
+   Dark mode tuning
    ======================================== */
 
 @media (prefers-color-scheme: dark) {
@@ -528,7 +504,7 @@ body.register-page #dialogue_popup {
 }
 
 /* ========================================
-   动画和过渡效果
+   Animations and transitions
    ======================================== */
 
 .form-section {
@@ -562,7 +538,6 @@ body.register-page #dialogue_popup {
     }
 }
 
-/* 错误消息兼容旧类名 */
 .error-message {
     margin-top: 20px;
     padding: 16px 20px;

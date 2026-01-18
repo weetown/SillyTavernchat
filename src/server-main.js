@@ -179,13 +179,10 @@ if (!cliArgs.disableCsrf) {
     csrfSyncProtection.invalidCsrfTokenError.message = color.red('Invalid CSRF token. Please refresh the page and try again.');
     csrfSyncProtection.invalidCsrfTokenError.stack = undefined;
 
-    // 创建自定义的CSRF保护中间件，添加豁免逻辑
     const customCsrfProtection = (req, res, next) => {
-        // 对安全方法直接放行
         if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
             return next();
         }
-        // 豁免特定路径
         if (req.path.startsWith('/api/public-characters') ||
             req.path === '/api/users/me' ||
             req.path === '/api/users/heartbeat' ||
@@ -199,7 +196,6 @@ if (!cliArgs.disableCsrf) {
             return next();
         }
 
-        // 对其他路径应用CSRF保护
         return csrfSyncProtection.csrfSynchronisedProtection(req, res, next);
     };
 
@@ -252,7 +248,7 @@ app.get('/register', (request, response) => {
 app.get('/forum', (request, response) => {
     const enableForum = getConfigValue('enableForum', true, 'boolean');
     if (!enableForum) {
-        return response.status(404).send('页面未启用');
+        return response.status(404).send('Page not enabled');
     }
     return response.sendFile('forum.html', { root: path.join(serverDirectory, 'public') });
 });
@@ -260,7 +256,7 @@ app.get('/forum', (request, response) => {
 app.get('/public-characters', (request, response) => {
     const enablePublicCharacters = getConfigValue('enablePublicCharacters', true, 'boolean');
     if (!enablePublicCharacters) {
-        return response.status(404).send('页面未启用');
+        return response.status(404).send('Page not enabled');
     }
     return response.sendFile('public-characters.html', { root: path.join(serverDirectory, 'public') });
 });
@@ -269,17 +265,15 @@ app.get('/public-characters', (request, response) => {
 const webpackMiddleware = getWebpackServeMiddleware();
 app.use(webpackMiddleware);
 app.use(express.static(path.join(serverDirectory, 'public'), {
-    maxAge: '1d',           // 缓存 1 天
-    etag: true,             // 启用 ETag
-    lastModified: true,     // 启用 Last-Modified
+    maxAge: '1d',
+    etag: true,
+    lastModified: true,
     setHeaders: (res, filePath) => {
-        // 对于不经常变化的资源，设置更长的缓存时间
         if (filePath.match(/\.(js|css|woff|woff2|ttf|svg|png|jpg|jpeg|gif|ico)$/)) {
-            res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate'); // 1 天
+            res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
         }
-        // 对于 HTML 文件，使用较短的缓存或协商缓存
         if (filePath.match(/\.html$/)) {
-            res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate'); // 1 小时
+            res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
         }
     },
 }));
@@ -313,7 +307,6 @@ app.get('/api/announcements/login/current', async (req, res) => {
         const data = fs.default.readFileSync(announcementsFilePath, 'utf8');
         const announcements = JSON.parse(data);
 
-        // 筛选有效的公告
         const validAnnouncements = announcements.filter(announcement => {
             return announcement.enabled;
         });

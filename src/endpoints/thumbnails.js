@@ -161,26 +161,23 @@ async function generateThumbnail(directories, type, file) {
  * @returns {Promise<void>} Promise that resolves when the cache is validated
  */
 export async function ensureThumbnailCache(directoriesList) {
-    // 检查是否跳过启动时的缩略图生成（懒加载模式）
     const skipStartupGeneration = getConfigValue('thumbnails.skipStartupGeneration', false, 'boolean');
 
     if (skipStartupGeneration) {
         const totalUsers = directoriesList.length;
-        console.info(`跳过启动时的缩略图生成 (懒加载模式已启用，共 ${totalUsers} 个用户)`);
-        console.info('缩略图将在首次请求时按需生成');
+        console.info(`Skipping thumbnail generation at startup (lazy mode enabled, ${totalUsers} users)`);
+        console.info('Thumbnails will be generated on demand at first request');
         return;
     }
 
-    // 如果未启用缩略图功能，也跳过
     if (!thumbnailsEnabled) {
-        console.info('缩略图生成已禁用');
+        console.info('Thumbnail generation is disabled');
         return;
     }
 
     const totalUsers = directoriesList.length;
     let usersNeedingThumbnails = [];
 
-    // 先快速检查哪些用户需要生成缩略图
     for (const directories of directoriesList) {
         const cacheFiles = fs.readdirSync(directories.thumbnailsBg);
         if (cacheFiles.length === 0) {
@@ -195,28 +192,26 @@ export async function ensureThumbnailCache(directoriesList) {
         return;
     }
 
-    console.info(`正在为 ${usersNeedingThumbnails.length} 个用户生成缩略图缓存...`);
-    console.info(`提示: 如需加快启动速度，可在 config.yaml 中设置 thumbnails.skipStartupGeneration: true`);
+    console.info(`Generating thumbnail cache for ${usersNeedingThumbnails.length} users...`);
+    console.info('Tip: To speed up startup, set thumbnails.skipStartupGeneration: true in config.yaml');
 
-    // 并发处理所有用户的缩略图生成，每批处理10个用户（缩略图生成比较耗资源）
     const BATCH_SIZE = 10;
     let processed = 0;
 
     for (let i = 0; i < usersNeedingThumbnails.length; i += BATCH_SIZE) {
         const batch = usersNeedingThumbnails.slice(i, i + BATCH_SIZE);
 
-        // 并发处理当前批次的所有用户
         await Promise.all(batch.map(async ({ directories, bgFiles }) => {
             const tasks = bgFiles.map(file => generateThumbnail(directories, 'bg', file));
             await Promise.all(tasks);
         }));
 
         processed += batch.length;
-        console.info(`  缩略图生成进度: ${Math.min(processed, usersNeedingThumbnails.length)}/${usersNeedingThumbnails.length}`);
+        console.info(`  Thumbnail generation progress: ${Math.min(processed, usersNeedingThumbnails.length)}/${usersNeedingThumbnails.length}`);
     }
 
     const totalThumbnails = usersNeedingThumbnails.reduce((sum, { bgFiles }) => sum + bgFiles.length, 0);
-    console.info(`✓ 完成！共生成 ${totalThumbnails} 个预览图像`);
+    console.info(`✓ Done! Generated ${totalThumbnails} preview images`);
 }
 
 export const router = express.Router();

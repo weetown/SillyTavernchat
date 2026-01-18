@@ -1,4 +1,3 @@
-/* 论坛样式 */
 .forum-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -6,7 +5,6 @@
     font-family: 'Noto Sans', sans-serif;
 }
 
-/* 头部样式 */
 .forum-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 15px;
@@ -59,7 +57,6 @@
     gap: 10px;
 }
 
-/* 控制区域样式 */
 .forum-controls {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
@@ -127,7 +124,6 @@
     border-color: #667eea;
 }
 
-/* 文章网格样式 */
 .articles-container {
     min-height: 400px;
 }
@@ -229,7 +225,6 @@
     font-weight: bold;
 }
 
-/* 按钮样式 */
 .btn {
     padding: 10px 20px;
     border: none;
@@ -285,7 +280,6 @@
     transform: translateY(-2px);
 }
 
-/* 加载和空状态样式 */
 .loading-indicator, .no-articles {
     text-align: center;
     padding: 60px 20px;
@@ -309,7 +303,6 @@
     font-size: 1.5rem;
 }
 
-/* 分页样式 */
 .pagination {
     display: flex;
     justify-content: center;
@@ -323,7 +316,6 @@
     color: #666;
 }
 
-/* 模态框样式 */
 .modal {
     position: fixed;
     top: 0;
@@ -385,7 +377,6 @@
     padding: 30px;
 }
 
-/* 表单样式 */
 .form-group {
     margin-bottom: 20px;
 }
@@ -423,7 +414,6 @@
     margin-top: 30px;
 }
 
-/* 富文本编辑器样式 */
 .rich-editor-container {
     border: 2px solid #e0e0e0;
     border-radius: 8px;
@@ -483,7 +473,6 @@
     color: #999;
 }
 
-/* 文章详情样式 */
 .article-detail {
     margin-bottom: 30px;
 }
@@ -496,7 +485,6 @@
     border-top: 1px solid #e0e0e0;
 }
 
-/* 评论区样式 */
 .comments-section {
     border-top: 2px solid #e0e0e0;
     padding-top: 30px;
@@ -522,7 +510,7 @@
 }
 
 .comments-list {
-    /* space-y: 20px; */ /* Tailwind CSS 语法，在纯CSS中无效 */
+    /* space-y: 20px; */
     margin-top: 1rem;
 }
 
@@ -555,7 +543,6 @@
     color: #333;
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
     .forum-container {
         padding: 10px;
@@ -605,7 +592,6 @@
     }
 }
 
-/* 评论回复样式 */
 .comment-actions {
     display: flex;
     gap: 8px;
@@ -673,7 +659,6 @@
     font-size: 0.85rem;
 }
 
-/* 评论层级缩进样式 */
 .comment {
     position: relative;
 }
@@ -693,7 +678,6 @@
     background: linear-gradient(to bottom, #667eea, transparent);
 }
 
-/* 评论头部样式调整 */
 .comment-header {
     display: flex;
     align-items: center;
@@ -710,7 +694,6 @@
     font-size: 0.85rem;
 }
 
-/* 点赞按钮动画效果 */
 .article-actions .btn {
     transition: all 0.3s ease;
 }
@@ -723,7 +706,6 @@
     transition: all 0.3s ease;
 }
 
-/* 点赞按钮已点赞状态样式 */
 .article-actions .btn.liked {
     color: #ff6b6b !important;
     background: rgba(255, 107, 107, 0.1) !important;
@@ -735,7 +717,6 @@
     transform: translateY(-2px);
 }
 
-/* 点赞按钮未点赞状态悬停效果 */
 .article-actions .btn:not(.liked):hover .fa-heart {
     color: #ff6b6b;
 }

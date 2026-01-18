@@ -4,12 +4,11 @@ import { requireAdminMiddleware } from '../users.js';
 
 export const router = express.Router();
 
-// 获取系统负载信息（管理员功能）
 router.get('/', requireAdminMiddleware, async (request, response) => {
     try {
         const systemLoad = systemMonitor.getSystemLoad();
         const userStats = systemMonitor.getAllUserLoadStats();
-        const loadHistory = systemMonitor.getSystemLoadHistory(50); // 获取最近50条记录
+        const loadHistory = systemMonitor.getSystemLoadHistory(50);
 
         response.json({
             system: systemLoad,
@@ -22,7 +21,6 @@ router.get('/', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 获取用户统计信息（管理员功能）
 router.get('/users', requireAdminMiddleware, async (request, response) => {
     try {
         const userStats = systemMonitor.getAllUserLoadStats();
@@ -33,7 +31,6 @@ router.get('/users', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 获取特定用户的统计信息（管理员功能）
 router.get('/users/:userHandle', requireAdminMiddleware, async (request, response) => {
     try {
         const { userHandle } = request.params;
@@ -50,7 +47,6 @@ router.get('/users/:userHandle', requireAdminMiddleware, async (request, respons
     }
 });
 
-// 重置用户统计信息（管理员功能）
 router.post('/users/:userHandle/reset', requireAdminMiddleware, async (request, response) => {
     try {
         const { userHandle } = request.params;
@@ -62,7 +58,6 @@ router.post('/users/:userHandle/reset', requireAdminMiddleware, async (request, 
     }
 });
 
-// 清除所有统计数据（管理员功能）
 router.post('/clear', requireAdminMiddleware, async (request, response) => {
     try {
         systemMonitor.clearAllStats();
@@ -73,7 +68,6 @@ router.post('/clear', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 获取系统负载历史（管理员功能）
 router.get('/history', requireAdminMiddleware, async (request, response) => {
     try {
         const limitParam = request.query.limit;

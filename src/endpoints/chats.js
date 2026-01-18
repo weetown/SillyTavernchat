@@ -1367,7 +1367,6 @@ router.post('/save', validateAvatarUrlMiddleware, async function (request, respo
             const jsonlData = chatData.map((item) => JSON.stringify(item)).join('\n');
             getBackupFunction(request.user.profile.handle)(request.user.directories.backups, directoryName, jsonlData);
         }
-        // 记录聊天活动到系统监控器
         if (messages && messages.length > 0) {
             const lastMessage = messages[messages.length - 1];
             if (lastMessage) {

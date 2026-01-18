@@ -3,10 +3,7 @@ import { getConfigValue } from '../util.js';
 
 export const router = express.Router();
 
-/**
- * 获取公共页面配置信息
- * 返回哪些页面被启用
- */
+
 router.get('/public-pages', (request, response) => {
     try {
         const enablePublicCharacters = getConfigValue('enablePublicCharacters', true, 'boolean');
