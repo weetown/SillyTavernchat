@@ -1,52 +1,52 @@
-// 公告弹窗功能
-let announcementsChecked = false; // 防止重复检查
+// Announcement modal.
+let announcementsChecked = false; // Prevent duplicate checks.
 
-// 初始化公告系统
+// Initialize announcement system.
 function initializeAnnouncements() {
-    // 如果已经检查过，直接返回
+    // Return early if already checked.
     if (announcementsChecked) {
         return;
     }
 
-    // 检查用户是否已登录并显示公告
+    // Check login status before showing announcements.
     const checkUserAndAnnouncements = () => {
-        // 检查多种登录状态指示器
+        // Check multiple login status signals.
         const isLoggedIn = document.querySelector('#logout_button') ||
                           document.querySelector('#account_controls') ||
                           window.currentUser;
 
         if (isLoggedIn) {
-            announcementsChecked = true; // 标记已检查
+            announcementsChecked = true; // Mark as checked.
             checkDailyAnnouncements();
         } else {
-            // 如果用户状态还未加载，继续重试（但限制重试次数）
+            // Retry if user status is not ready yet.
             setTimeout(checkUserAndAnnouncements, 1000);
         }
     };
 
-    // 页面加载完成后检查公告
+    // Check announcements after page load.
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            // 延迟执行，等待用户状态加载完成
+            // Delay to allow user status to load.
             setTimeout(checkUserAndAnnouncements, 1000);
         });
     } else {
-        // 页面已加载完成，立即执行
+        // Page already loaded; run soon.
         setTimeout(checkUserAndAnnouncements, 500);
     }
 }
 
-// 检查并显示公告（每次登录都显示）
+// Check and show announcements (every login).
 async function checkDailyAnnouncements() {
     try {
-        // 每次都获取并显示公告，不再检查时间限制
+        // Always fetch and show announcements.
         await fetchAndShowAnnouncements();
     } catch (error) {
         console.error('Error checking announcements:', error);
     }
 }
 
-// 获取并显示公告
+// Fetch and show announcements.
 async function fetchAndShowAnnouncements() {
     try {
         const response = await fetch('/api/announcements/current', {
@@ -63,7 +63,7 @@ async function fetchAndShowAnnouncements() {
 
         const announcements = await response.json();
 
-        // 筛选有效的公告（仅检查启用状态）
+        // Filter enabled announcements only.
         const validAnnouncements = announcements.filter(announcement => {
             return announcement.enabled;
         });
@@ -76,35 +76,35 @@ async function fetchAndShowAnnouncements() {
     }
 }
 
-// 显示公告弹窗
+// Show announcement modal.
 function showAnnouncementsPopup(announcements) {
-    // 如果已经有公告弹窗，直接返回，避免重复显示
+    // Avoid showing multiple popups.
     const existingPopup = document.getElementById('announcementsPopup');
     if (existingPopup) {
         return;
     }
 
-    // 创建弹窗HTML
+    // Create popup HTML.
     const popupHtml = createAnnouncementsPopupHtml(announcements);
 
-    // 添加到页面
+    // Add to page.
     document.body.insertAdjacentHTML('beforeend', popupHtml);
 
-    // 绑定事件
+    // Bind events.
     bindAnnouncementPopupEvents();
 
-    // 显示弹窗
+    // Show popup.
     const popup = document.getElementById('announcementsPopup');
     if (popup) {
         popup.style.display = 'flex';
-        // 添加动画效果
+        // Add animation.
         setTimeout(() => {
             popup.classList.add('show');
         }, 10);
     }
 }
 
-// 创建公告弹窗HTML
+// Build announcement popup HTML.
 function createAnnouncementsPopupHtml(announcements) {
     const announcementsHtml = announcements.map(announcement => `
         <div class="announcement-item">
@@ -114,7 +114,7 @@ function createAnnouncementsPopupHtml(announcements) {
             <div class="announcement-content">${escapeHtml(announcement.content).replace(/\n/g, '<br>')}</div>
             <div class="announcement-footer">
                 <small class="announcement-time">
-                    发布时间: ${new Date(announcement.createdAt).toLocaleString('zh-CN')}
+                    Published: ${new Date(announcement.createdAt).toLocaleString('en-US')}
                 </small>
             </div>
         </div>
@@ -124,7 +124,7 @@ function createAnnouncementsPopupHtml(announcements) {
         <div id="announcementsPopup" class="announcements-popup-overlay">
             <div class="announcements-popup">
                 <div class="announcements-popup-header">
-                    <h2><i class="fa-solid fa-bullhorn"></i> 系统公告</h2>
+                    <h2><i class="fa-solid fa-bullhorn"></i> System announcements</h2>
                     <button type="button" class="announcements-close-btn" id="closeAnnouncementsPopup">
                         <i class="fa-solid fa-times"></i>
                     </button>
@@ -134,7 +134,7 @@ function createAnnouncementsPopupHtml(announcements) {
                 </div>
                 <div class="announcements-popup-footer">
                     <button type="button" class="announcements-confirm-btn" id="confirmAnnouncementsPopup">
-                        我知道了
+                        Got it
                     </button>
                 </div>
             </div>
@@ -142,7 +142,7 @@ function createAnnouncementsPopupHtml(announcements) {
     `;
 }
 
-// 绑定公告弹窗事件
+// Bind popup events.
 function bindAnnouncementPopupEvents() {
     const popup = document.getElementById('announcementsPopup');
     const closeBtn = document.getElementById('closeAnnouncementsPopup');
@@ -156,7 +156,7 @@ function bindAnnouncementPopupEvents() {
         confirmBtn.addEventListener('click', closeAnnouncementsPopup);
     }
 
-    // 点击遮罩层关闭
+    // Close when clicking overlay.
     if (popup) {
         popup.addEventListener('click', function(e) {
             if (e.target === popup) {
@@ -165,7 +165,7 @@ function bindAnnouncementPopupEvents() {
         });
     }
 
-    // ESC键关闭
+    // Close on Escape.
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && document.getElementById('announcementsPopup')) {
             closeAnnouncementsPopup();
@@ -173,7 +173,7 @@ function bindAnnouncementPopupEvents() {
     });
 }
 
-// 关闭公告弹窗
+// Close announcement popup.
 function closeAnnouncementsPopup() {
     const popup = document.getElementById('announcementsPopup');
     if (popup) {
@@ -184,7 +184,7 @@ function closeAnnouncementsPopup() {
     }
 }
 
-// HTML转义函数
+// HTML escaping helper.
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
@@ -195,11 +195,11 @@ function escapeHtml(unsafe) {
 }
 
 
-// 导出函数到全局作用域
+// Export helpers to global scope.
 if (typeof window !== 'undefined') {
     window.checkDailyAnnouncements = checkDailyAnnouncements;
     window.fetchAndShowAnnouncements = fetchAndShowAnnouncements;
 }
 
-// 自动初始化
+// Auto-initialize.
 initializeAnnouncements();

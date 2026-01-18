@@ -117,7 +117,6 @@ const STORAGE_KEYS = {
  * @returns {Promise<import('./users.js').UserDirectoryList[]>} - The list of user directories
  */
 export async function ensurePublicDirectoriesExist() {
-    // 首先确保公共目录存在
     for (const dir of Object.values(PUBLIC_DIRECTORIES)) {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
@@ -127,18 +126,16 @@ export async function ensurePublicDirectoriesExist() {
     const userHandles = await getAllUserHandles();
     const directoriesList = userHandles.map(handle => getUserDirectories(handle));
 
-    // 并发处理所有用户目录创建，每批处理50个用户
     const BATCH_SIZE = 50;
     const totalUsers = directoriesList.length;
 
     if (totalUsers > 20) {
-        console.log(`正在创建 ${totalUsers} 个用户的目录结构...`);
+        console.log(`Creating directory structure for ${totalUsers} users...`);
     }
 
     for (let i = 0; i < directoriesList.length; i += BATCH_SIZE) {
         const batch = directoriesList.slice(i, i + BATCH_SIZE);
 
-        // 并发处理当前批次
         await Promise.all(batch.map(async (userDirectories) => {
             for (const dir of Object.values(userDirectories)) {
                 if (!fs.existsSync(dir)) {
@@ -149,12 +146,12 @@ export async function ensurePublicDirectoriesExist() {
 
         if (totalUsers > 20) {
             const processed = Math.min(i + BATCH_SIZE, totalUsers);
-            console.log(`  目录创建进度: ${processed}/${totalUsers}`);
+            console.log(`  Directory creation progress: ${processed}/${totalUsers}`);
         }
     }
 
     if (totalUsers > 20) {
-        console.log(`✓ 所有用户目录创建完成`);
+        console.log('✓ All user directories created');
     }
 
     return directoriesList;
@@ -505,36 +502,18 @@ export async function migrateSystemPrompts() {
     }
 }
 
-/**
- * 规范化用户名
- * 规则：
- * - 转换为小写
- * - 只保留字母、数字和横杠
- * - 连续的横杠合并为一个
- * - 去除首尾横杠
- * - 验证结果不为空
- *
- * @param {string} handle - 原始用户名
- * @returns {string} - 规范化后的用户名
- *
- * @example
- * normalizeHandle("User-Name")     => "user-name"
- * normalizeHandle("user--name")    => "user-name"
- * normalizeHandle("User_123")      => "user-123"
- * normalizeHandle("-user-")        => "user"
- * normalizeHandle("User@Name#123") => "username123"
- */
+
 export function normalizeHandle(handle) {
     if (!handle || typeof handle !== 'string') {
         return '';
     }
 
     return handle
-        .toLowerCase()                    // 转换为小写
-        .trim()                           // 去除首尾空格
-        .replace(/[^a-z0-9-]/g, '-')      // 将非字母数字字符替换为横杠
-        .replace(/-+/g, '-')              // 连续横杠合并为一个
-        .replace(/^-+|-+$/g, '');         // 去除首尾横杠
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
 }
 
 /**
@@ -884,23 +863,19 @@ async function basicUserLogin(request) {
         if (username === userHandle) {
             const user = await storage.getItem(toKey(userHandle));
 
-            // 禁止未设置密码的OAuth用户通过Basic Auth登录
             if (user && user.oauthProvider && !user.password && !user.salt) {
                 console.warn('Basic Auth login failed: OAuth user', userHandle, 'has no password set');
                 return false;
             }
 
-            // 特殊情况：default-user 允许无密码登录
             const isDefaultUser = userHandle === 'default-user';
 
             // Verify pass again here just to be sure
             if (user && user.enabled) {
-                // default-user 无密码时允许登录
                 if (isDefaultUser && (!user.password || !user.salt)) {
                     request.session.handle = userHandle;
                     return true;
                 }
-                // 其他用户需要验证密码
                 if (user.password && user.salt && user.password === getPasswordHash(password, user.salt)) {
                     request.session.handle = userHandle;
                     return true;
@@ -956,11 +931,9 @@ export async function setUserDataMiddleware(request, response, next) {
         return next();
     }
 
-    // 检查用户是否过期
     if (user.expiresAt && user.expiresAt < Date.now()) {
         console.log('User account expired:', handle);
 
-        // 获取购买链接
         let purchaseLink = '';
         try {
             const { getPurchaseLink } = await import('./invitation-codes.js');
@@ -969,17 +942,14 @@ export async function setUserDataMiddleware(request, response, next) {
             console.error('Error getting purchase link for expired user:', error);
         }
 
-        // 清除会话中的用户标识
         if (request.session && request.session.handle) {
-            // @ts-ignore - 清除过期用户的会话
             request.session.handle = null;
         }
 
-        // 返回特定的过期错误
         const errorResponse = {
-            error: '用户账户已过期',
+            error: 'User account has expired',
             expired: true,
-            message: '您的账户已过期，请重新登录并续费',
+            message: 'Your account has expired. Please log in again and renew.',
         };
 
         if (purchaseLink) {
@@ -999,33 +969,27 @@ export async function setUserDataMiddleware(request, response, next) {
     if (request.method === 'GET' && request.path === '/') {
         request.session.touch = Date.now();
     }
-    // 记录用户会话活动到系统监控器
     const now = Date.now();
     const lastActivity = request.session.lastActivity || 0;
     const timeSinceLastActivity = now - lastActivity;
 
-    // 判断是否为重要页面请求（非静态资源）
     const isImportantRequest = !request.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf)$/i) &&
                               !request.path.startsWith('/api/') ||
                               request.path.startsWith('/api/chats') ||
                               request.path.startsWith('/api/users/heartbeat');
 
-    // 新会话阈值：5分钟没有重要活动，或15分钟没有任何活动
     const newSessionThreshold = isImportantRequest ? 5 * 60 * 1000 : 15 * 60 * 1000;
 
     if (timeSinceLastActivity > newSessionThreshold) {
-        // 开始新会话
         systemMonitor.recordUserLogin(handle, { userName: user.name });
         console.log(`New session started for ${handle} after ${Math.floor(timeSinceLastActivity / 60000)} minutes of inactivity`);
     } else if (isImportantRequest) {
-        // 更新用户活动状态（仅对重要请求）
         systemMonitor.updateUserActivity(handle, {
             userName: user.name,
             requestType: request.method + ' ' + request.path,
         });
     }
 
-    // 更新最后活动时间（所有请求）
     request.session.lastActivity = now;
 
     return next();

@@ -9,14 +9,12 @@ const LOGIN_ANNOUNCEMENTS_FILE = path.join(ANNOUNCEMENTS_DIR, 'login_announcemen
 
 export const router = express.Router();
 
-// 确保公告目录存在
 function ensureAnnouncementsDirectory() {
     if (!fs.existsSync(ANNOUNCEMENTS_DIR)) {
         fs.mkdirSync(ANNOUNCEMENTS_DIR, { recursive: true });
     }
 }
 
-// 读取公告数据
 function loadAnnouncements() {
     ensureAnnouncementsDirectory();
 
@@ -33,7 +31,6 @@ function loadAnnouncements() {
     }
 }
 
-// 保存公告数据
 function saveAnnouncements(announcements) {
     ensureAnnouncementsDirectory();
 
@@ -46,7 +43,6 @@ function saveAnnouncements(announcements) {
     }
 }
 
-// 读取登录页面公告数据
 function loadLoginAnnouncements() {
     ensureAnnouncementsDirectory();
 
@@ -63,7 +59,6 @@ function loadLoginAnnouncements() {
     }
 }
 
-// 保存登录页面公告数据
 function saveLoginAnnouncements(announcements) {
     ensureAnnouncementsDirectory();
 
@@ -76,12 +71,10 @@ function saveLoginAnnouncements(announcements) {
     }
 }
 
-// 生成公告ID
 function generateAnnouncementId() {
     return `announcement_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// 获取所有公告（管理员）
 router.get('/', requireAdminMiddleware, async (request, response) => {
     try {
         const announcements = loadAnnouncements();
@@ -92,12 +85,10 @@ router.get('/', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 获取当前有效公告（用户）
 router.get('/current', async (request, response) => {
     try {
         const announcements = loadAnnouncements();
 
-        // 筛选有效的公告（仅检查启用状态）
         const validAnnouncements = announcements.filter(announcement => {
             return announcement.enabled;
         });
@@ -109,7 +100,6 @@ router.get('/current', async (request, response) => {
     }
 });
 
-// 创建新公告
 router.post('/', requireAdminMiddleware, async (request, response) => {
     try {
         const { title, content, type, enabled } = request.body;
@@ -146,7 +136,6 @@ router.post('/', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 更新公告
 router.put('/:id', requireAdminMiddleware, async (request, response) => {
     try {
         const { id } = request.params;
@@ -161,7 +150,6 @@ router.put('/:id', requireAdminMiddleware, async (request, response) => {
 
         const announcement = announcements[announcementIndex];
 
-        // 更新字段
         if (title !== undefined) announcement.title = title.trim();
         if (content !== undefined) announcement.content = content.trim();
         if (type !== undefined) announcement.type = type;
@@ -182,7 +170,6 @@ router.put('/:id', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 删除公告
 router.delete('/:id', requireAdminMiddleware, async (request, response) => {
     try {
         const { id } = request.params;
@@ -209,7 +196,6 @@ router.delete('/:id', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 切换公告启用状态
 router.post('/:id/toggle', requireAdminMiddleware, async (request, response) => {
     try {
         const { id } = request.params;
@@ -237,15 +223,11 @@ router.post('/:id/toggle', requireAdminMiddleware, async (request, response) => 
     }
 });
 
-// ========== 登录页面公告相关路由 ==========
 
-// 获取当前有效的登录页面公告（公开访问，无需登录）
-// 注意：此路由必须在 /login 路由之前，以避免被拦截
 router.get('/login/current', async (request, response) => {
     try {
         const announcements = loadLoginAnnouncements();
 
-        // 筛选有效的公告
         const validAnnouncements = announcements.filter(announcement => {
             return announcement.enabled;
         });
@@ -257,7 +239,6 @@ router.get('/login/current', async (request, response) => {
     }
 });
 
-// 获取所有登录页面公告（管理员）
 router.get('/login', requireAdminMiddleware, async (request, response) => {
     try {
         const announcements = loadLoginAnnouncements();
@@ -268,7 +249,6 @@ router.get('/login', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 创建新的登录页面公告
 router.post('/login', requireAdminMiddleware, async (request, response) => {
     try {
         const { title, content, type, enabled } = request.body;
@@ -305,7 +285,6 @@ router.post('/login', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 更新登录页面公告
 router.put('/login/:id', requireAdminMiddleware, async (request, response) => {
     try {
         const { id } = request.params;
@@ -320,7 +299,6 @@ router.put('/login/:id', requireAdminMiddleware, async (request, response) => {
 
         const announcement = announcements[announcementIndex];
 
-        // 更新字段
         if (title !== undefined) announcement.title = title.trim();
         if (content !== undefined) announcement.content = content.trim();
         if (type !== undefined) announcement.type = type;
@@ -341,7 +319,6 @@ router.put('/login/:id', requireAdminMiddleware, async (request, response) => {
     }
 });
 
-// 删除登录页面公告
 router.delete('/login/:id', requireAdminMiddleware, async (request, response) => {
     try {
         const { id } = request.params;
@@ -368,7 +345,6 @@ router.delete('/login/:id', requireAdminMiddleware, async (request, response) =>
     }
 });
 
-// 切换登录页面公告启用状态
 router.post('/login/:id/toggle', requireAdminMiddleware, async (request, response) => {
     try {
         const { id } = request.params;

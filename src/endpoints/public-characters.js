@@ -5,14 +5,10 @@ import sanitize from 'sanitize-filename';
 import { sync as writeFileAtomicSync } from 'write-file-atomic';
 import { humanizedISO8601DateTime } from '../util.js';
 
-// 公用角色卡存储目录
 const PUBLIC_CHARACTERS_DIR = path.join(globalThis.DATA_ROOT, 'public_characters');
-// 公用角色卡文件存储目录（避免与元数据JSON混在一起）
 const PUBLIC_CHARACTER_FILES_DIR = path.join(PUBLIC_CHARACTERS_DIR, 'files');
-// 角色卡评论存储目录
 const CHARACTER_COMMENTS_DIR = path.join(globalThis.DATA_ROOT, 'forum_data', 'character_comments');
 
-// 确保目录存在
 if (!fs.existsSync(PUBLIC_CHARACTERS_DIR)) {
     fs.mkdirSync(PUBLIC_CHARACTERS_DIR, { recursive: true });
 }
@@ -25,19 +21,12 @@ if (!fs.existsSync(CHARACTER_COMMENTS_DIR)) {
 
 export const router = express.Router();
 
-/**
- * 生成角色卡ID
- * @returns {string} 角色卡ID
- */
+
 function generateCharacterId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-/**
- * 保存公用角色卡数据
- * @param {object} character 角色卡数据
- * @returns {boolean} 是否成功
- */
+
 function savePublicCharacter(character) {
     try {
         const characterPath = path.join(PUBLIC_CHARACTERS_DIR, `${character.id}.json`);
@@ -49,10 +38,7 @@ function savePublicCharacter(character) {
     }
 }
 
-/**
- * 获取所有公用角色卡
- * @returns {Array} 角色卡列表
- */
+
 function getAllPublicCharacters() {
     try {
         const files = fs.readdirSync(PUBLIC_CHARACTERS_DIR);
@@ -74,7 +60,6 @@ function getAllPublicCharacters() {
             }
         }
 
-        // 按上传时间倒序排列
         return characters.sort((a, b) => new Date(b.uploaded_at || 0).getTime() - new Date(a.uploaded_at || 0).getTime());
     } catch (error) {
         console.error('Error getting all public characters:', error);
@@ -82,11 +67,7 @@ function getAllPublicCharacters() {
     }
 }
 
-/**
- * 获取角色卡详情
- * @param {string} characterId 角色卡ID
- * @returns {object|null} 角色卡数据
- */
+
 function getPublicCharacter(characterId) {
     try {
         const characterPath = path.join(PUBLIC_CHARACTERS_DIR, `${characterId}.json`);
@@ -102,7 +83,6 @@ function getPublicCharacter(characterId) {
     }
 }
 
-// 获取所有公用角色卡
 router.get('/', async function (request, response) {
     try {
         const characters = getAllPublicCharacters();
@@ -113,7 +93,6 @@ router.get('/', async function (request, response) {
     }
 });
 
-// 获取角色卡详情
 router.get('/:characterId', async function (request, response) {
     try {
         const { characterId } = request.params;
@@ -130,15 +109,13 @@ router.get('/:characterId', async function (request, response) {
     }
 });
 
-// 文件类型验证中间件
 function validateFileType(req, res, next) {
     const file = req.file;
 
     if (!file) {
-        return res.status(400).json({ error: '请选择角色卡文件' });
+        return res.status(400).json({ error: 'Please select a character card file' });
     }
 
-    // 只允许图片和JSON/YAML文件
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'application/json', 'text/yaml', 'text/x-yaml'];
     const isValidType = allowedTypes.includes(file.mimetype) ||
                        file.originalname.endsWith('.json') ||
@@ -146,18 +123,16 @@ function validateFileType(req, res, next) {
                        file.originalname.endsWith('.yml');
 
     if (!isValidType) {
-        return res.status(400).json({ error: '不支持的文件类型' });
+        return res.status(400).json({ error: 'Unsupported file type' });
     }
 
-    // 检查文件大小 (10MB)
     if (file.size > 10 * 1024 * 1024) {
-        return res.status(400).json({ error: '文件大小不能超过10MB' });
+        return res.status(400).json({ error: 'File size cannot exceed 10MB' });
     }
 
     next();
 }
 
-// 上传公用角色卡 - 移除局部 multer 配置，使用全局配置
 router.post('/upload', validateFileType, async function (request, response) {
     try {
         if (!request.user) {
@@ -167,7 +142,6 @@ router.post('/upload', validateFileType, async function (request, response) {
         const { name, description, tags, file_type } = request.body;
         const file = request.file;
 
-        // 规范化并推断文件类型
         let fileType = (file_type || '').toString().trim().toLowerCase();
         if (!fileType) {
             const byMime = (file?.mimetype || '').toLowerCase();
@@ -184,46 +158,39 @@ router.post('/upload', validateFileType, async function (request, response) {
         }
 
         if (!file) {
-            return response.status(400).json({ error: '请选择角色卡文件' });
+            return response.status(400).json({ error: 'Please select a character card file' });
         }
 
         if (!name) {
-            // 清理上传的文件
             if (fs.existsSync(file.path)) {
                 fs.unlinkSync(file.path);
             }
-            return response.status(400).json({ error: '请输入角色名称' });
+            return response.status(400).json({ error: 'Please enter a character name' });
         }
 
-        // 解析角色卡数据
         let characterData = {};
         let avatarPath = null;
 
         try {
             if (fileType === 'json') {
-                // JSON文件
                 const fileContent = fs.readFileSync(file.path, 'utf8');
                 characterData = JSON.parse(fileContent);
             } else if (fileType === 'yaml' || fileType === 'yml') {
-                // YAML文件
                 const yamlModule = await import('js-yaml');
                 const yaml = yamlModule.default || yamlModule;
                 const fileContent = fs.readFileSync(file.path, 'utf8');
                 characterData = yaml.load(fileContent) || {};
             } else if (fileType === 'png') {
-                // PNG文件 - 从tEXt块中提取角色数据
                 const characterCardParser = await import('../character-card-parser.js');
                 const parse = characterCardParser.parse;
                 const parsedData = await parse(file.path, 'png');
                 try {
                     characterData = JSON.parse(parsedData);
                 } catch (e) {
-                    // 如果不是合法JSON，抛出格式错误
-                    throw new Error('PNG内嵌角色数据不是有效的JSON');
+                    throw new Error('Embedded PNG character data is not valid JSON');
                 }
             }
 
-            // 移动文件到公共角色卡目录
             const characterId = generateCharacterId();
             const fileName = `${characterId}.${fileType}`;
             const finalPath = path.join(PUBLIC_CHARACTER_FILES_DIR, fileName);
@@ -232,15 +199,13 @@ router.post('/upload', validateFileType, async function (request, response) {
             avatarPath = fileName;
 
         } catch (parseError) {
-            // 清理临时文件
             if (fs.existsSync(file.path)) {
                 fs.unlinkSync(file.path);
             }
             console.error('Error parsing character file:', parseError);
-            return response.status(400).json({ error: '角色卡文件格式错误' });
+            return response.status(400).json({ error: 'Invalid character card file format' });
         }
 
-        // 解析标签
         let parsedTags = [];
         if (tags) {
             try {
@@ -278,7 +243,6 @@ router.post('/upload', validateFileType, async function (request, response) {
     }
 });
 
-// 删除公用角色卡
 router.delete('/:characterId', async function (request, response) {
     try {
         const { characterId } = request.params;
@@ -292,7 +256,6 @@ router.delete('/:characterId', async function (request, response) {
             return response.status(404).json({ error: 'Character not found' });
         }
 
-        // 检查权限：只有上传者或管理员可以删除
         const isUploader = character.uploader.handle === request.user.profile.handle;
         const isAdmin = request.user.profile.admin;
 
@@ -300,7 +263,6 @@ router.delete('/:characterId', async function (request, response) {
             return response.status(403).json({ error: 'Permission denied' });
         }
 
-        // 删除角色卡文件
         const characterPath = path.join(PUBLIC_CHARACTERS_DIR, `${characterId}.json`);
         fs.unlinkSync(characterPath);
         if (character.avatar) {
@@ -322,13 +284,11 @@ router.delete('/:characterId', async function (request, response) {
     }
 });
 
-// 搜索公用角色卡
 router.get('/search', async function (request, response) {
     try {
         const { q, uploader } = request.query;
         let characters = getAllPublicCharacters();
 
-        // 关键词搜索
         if (q) {
             const query = String(q).toLowerCase();
             characters = characters.filter(character =>
@@ -338,7 +298,6 @@ router.get('/search', async function (request, response) {
             );
         }
 
-        // 上传者筛选
         if (uploader) {
             characters = characters.filter(character =>
                 character.uploader.handle === uploader ||
@@ -353,7 +312,6 @@ router.get('/search', async function (request, response) {
     }
 });
 
-// 下载角色卡（增加下载计数）
 router.post('/:characterId/download', async function (request, response) {
     try {
         const { characterId } = request.params;
@@ -363,7 +321,6 @@ router.post('/:characterId/download', async function (request, response) {
             return response.status(404).json({ error: 'Character not found' });
         }
 
-        // 增加下载计数
         character.downloads = (character.downloads || 0) + 1;
         savePublicCharacter(character);
 
@@ -377,13 +334,11 @@ router.post('/:characterId/download', async function (request, response) {
     }
 });
 
-// 获取角色卡头像
 router.get('/avatar/:filename', async function (request, response) {
     try {
         const { filename } = request.params;
         const decodedFilename = decodeURIComponent(filename);
 
-        // 构造头像文件路径
         const primaryPath = path.join(PUBLIC_CHARACTER_FILES_DIR, decodedFilename);
         const fallbackPath = path.join(PUBLIC_CHARACTERS_DIR, decodedFilename);
         const avatarPath = fs.existsSync(primaryPath) ? primaryPath : fallbackPath;
@@ -392,7 +347,6 @@ router.get('/avatar/:filename', async function (request, response) {
             return response.status(404).json({ error: 'Avatar not found' });
         }
 
-        // 设置正确的Content-Type
         const ext = path.extname(decodedFilename).toLowerCase();
         let contentType = 'image/png';
         if (ext === '.jpg' || ext === '.jpeg') {
@@ -404,7 +358,7 @@ router.get('/avatar/:filename', async function (request, response) {
         }
 
         response.setHeader('Content-Type', contentType);
-        response.setHeader('Cache-Control', 'public, max-age=31536000'); // 缓存1年
+        response.setHeader('Cache-Control', 'public, max-age=31536000');
 
         const avatarBuffer = fs.readFileSync(avatarPath);
         response.send(avatarBuffer);
@@ -414,7 +368,6 @@ router.get('/avatar/:filename', async function (request, response) {
     }
 });
 
-// 导入角色卡到用户角色库
 router.post('/:characterId/import', async function (request, response) {
     try {
         if (!request.user) {
@@ -428,21 +381,19 @@ router.post('/:characterId/import', async function (request, response) {
             return response.status(404).json({ error: 'Character not found' });
         }
 
-        // 导入角色卡到用户角色库
         const importResult = await importCharacterToUserLibrary(character, request.user);
 
         if (importResult.success) {
-            // 增加下载计数
             character.downloads = (character.downloads || 0) + 1;
             savePublicCharacter(character);
 
             response.json({
                 success: true,
-                message: '角色卡导入成功',
+                message: 'Character card imported successfully',
                 file_name: importResult.fileName,
             });
         } else {
-            response.status(500).json({ error: importResult.error || '导入失败' });
+            response.status(500).json({ error: importResult.error || 'Import failed' });
         }
     } catch (error) {
         console.error('Error importing character:', error);
@@ -450,18 +401,15 @@ router.post('/:characterId/import', async function (request, response) {
     }
 });
 
-// 导入角色卡到用户角色库的辅助函数 - 使用与主后台相同的导入逻辑
 async function importCharacterToUserLibrary(character, user) {
     try {
         const { getUserDirectories } = await import('../users.js');
         const userDirs = getUserDirectories(user.profile.handle);
 
-        // 确保用户角色库目录存在
         if (!fs.existsSync(userDirs.characters)) {
             fs.mkdirSync(userDirs.characters, { recursive: true });
         }
 
-        // 获取角色卡文件路径
         let characterFilePath = null;
         if (character.avatar && character.avatar !== 'img/ai4.png') {
             const candidate = path.join(PUBLIC_CHARACTER_FILES_DIR, character.avatar);
@@ -471,16 +419,14 @@ async function importCharacterToUserLibrary(character, user) {
         }
 
         if (!characterFilePath || !fs.existsSync(characterFilePath)) {
-            throw new Error('角色卡文件不存在');
+            throw new Error('Character card file not found');
         }
 
-        // 根据文件格式处理角色卡数据
         const extension = path.extname(characterFilePath).toLowerCase().substring(1);
         let jsonData;
         let avatarBuffer;
 
         if (extension === 'png') {
-            // PNG格式：从tEXt块提取角色数据
             const characterCardParser = await import('../character-card-parser.js');
             const { read } = characterCardParser;
             const pngBuffer = fs.readFileSync(characterFilePath);
@@ -488,44 +434,38 @@ async function importCharacterToUserLibrary(character, user) {
             try {
                 jsonData = JSON.parse(metaJson);
             } catch (e) {
-                throw new Error('PNG内嵌角色数据不是有效的JSON');
+                throw new Error('Embedded PNG character data is not valid JSON');
             }
             avatarBuffer = pngBuffer;
         } else if (extension === 'json') {
-            // JSON格式：直接读取角色数据
             const fileContent = fs.readFileSync(characterFilePath, 'utf8');
             jsonData = JSON.parse(fileContent);
-            // 使用默认头像
             const fallback = path.join(process.cwd(), 'public', 'img', 'ai4.png');
             avatarBuffer = fs.existsSync(fallback) ? fs.readFileSync(fallback) : null;
         } else if (extension === 'yaml' || extension === 'yml') {
-            // YAML格式：解析YAML数据
             const yamlModule = await import('js-yaml');
             const yaml = yamlModule.default || yamlModule;
             const fileContent = fs.readFileSync(characterFilePath, 'utf8');
             jsonData = yaml.load(fileContent);
-            // 使用默认头像
             const fallback = path.join(process.cwd(), 'public', 'img', 'ai4.png');
             avatarBuffer = fs.existsSync(fallback) ? fs.readFileSync(fallback) : null;
         } else {
-            throw new Error(`不支持的文件格式: ${extension}`);
+            throw new Error(`Unsupported file format: ${extension}`);
         }
 
         const timestamp = Date.now();
         const baseFileName = sanitize(jsonData.name || character.name || 'character');
         const sanitizedFileName = sanitize(`${baseFileName}_${timestamp}`);
 
-        // 如果没有头像，使用默认头像
         if (!avatarBuffer || avatarBuffer.length === 0) {
             const fallback = path.join(process.cwd(), 'public', 'img', 'ai4.png');
             if (fs.existsSync(fallback)) {
                 avatarBuffer = fs.readFileSync(fallback);
             } else {
-                throw new Error('无法找到默认头像文件');
+                throw new Error('Unable to locate default avatar file');
             }
         }
 
-        // 将角色数据写入PNG（统一格式）
         const characterCardParser = await import('../character-card-parser.js');
         const { write } = characterCardParser;
         const newPng = write(avatarBuffer, JSON.stringify(jsonData));
@@ -548,28 +488,17 @@ async function importCharacterToUserLibrary(character, user) {
     }
 }
 
-/**
- * 生成评论ID
- * @returns {string} 评论ID
- */
+
 function generateCommentId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-/**
- * 获取角色卡评论文件路径
- * @param {string} characterId 角色卡ID
- * @returns {string} 评论文件路径
- */
+
 function getCommentsFilePath(characterId) {
     return path.join(CHARACTER_COMMENTS_DIR, `${characterId}_comments.json`);
 }
 
-/**
- * 获取角色卡评论
- * @param {string} characterId 角色卡ID
- * @returns {Array} 评论列表
- */
+
 function getCharacterComments(characterId) {
     try {
         const commentsPath = getCommentsFilePath(characterId);
@@ -585,12 +514,7 @@ function getCharacterComments(characterId) {
     }
 }
 
-/**
- * 保存角色卡评论
- * @param {string} characterId 角色卡ID
- * @param {Array} comments 评论列表
- * @returns {boolean} 是否成功
- */
+
 function saveCharacterComments(characterId, comments) {
     try {
         const commentsPath = getCommentsFilePath(characterId);
@@ -602,12 +526,7 @@ function saveCharacterComments(characterId, comments) {
     }
 }
 
-/**
- * 在评论列表中查找评论
- * @param {Array} comments 评论列表
- * @param {string} commentId 评论ID
- * @returns {object|null} 找到的评论
- */
+
 function findCommentById(comments, commentId) {
     for (const comment of comments) {
         if (comment.id === commentId) {
@@ -623,12 +542,10 @@ function findCommentById(comments, commentId) {
     return null;
 }
 
-// 获取角色卡评论
 router.get('/:characterId/comments', async function (request, response) {
     try {
         const { characterId } = request.params;
 
-        // 检查角色卡是否存在
         const character = getPublicCharacter(characterId);
         if (!character) {
             return response.status(404).json({ error: 'Character not found' });
@@ -642,7 +559,6 @@ router.get('/:characterId/comments', async function (request, response) {
     }
 });
 
-// 添加评论
 router.post('/:characterId/comments', async function (request, response) {
     try {
         const { characterId } = request.params;
@@ -652,7 +568,6 @@ router.post('/:characterId/comments', async function (request, response) {
             return response.status(401).json({ error: 'Authentication required' });
         }
 
-        // 检查角色卡是否存在
         const character = getPublicCharacter(characterId);
         if (!character) {
             return response.status(404).json({ error: 'Character not found' });
@@ -675,14 +590,12 @@ router.post('/:characterId/comments', async function (request, response) {
         };
 
         if (parentId) {
-            // 这是一个回复
             const parentComment = findCommentById(comments, parentId);
             if (!parentComment) {
                 return response.status(404).json({ error: 'Parent comment not found' });
             }
             parentComment.replies.push(newComment);
         } else {
-            // 这是一个顶级评论
             comments.push(newComment);
         }
 
@@ -698,7 +611,6 @@ router.post('/:characterId/comments', async function (request, response) {
     }
 });
 
-// 删除评论
 router.delete('/:characterId/comments/:commentId', async function (request, response) {
     try {
         const { characterId, commentId } = request.params;
@@ -707,7 +619,6 @@ router.delete('/:characterId/comments/:commentId', async function (request, resp
             return response.status(401).json({ error: 'Authentication required' });
         }
 
-        // 检查角色卡是否存在
         const character = getPublicCharacter(characterId);
         if (!character) {
             return response.status(404).json({ error: 'Character not found' });
@@ -720,7 +631,6 @@ router.delete('/:characterId/comments/:commentId', async function (request, resp
             return response.status(404).json({ error: 'Comment not found' });
         }
 
-        // 检查权限：只有评论作者或管理员可以删除
         const isAuthor = comment.author.handle === request.user.profile.handle;
         const isAdmin = request.user.profile.admin;
 
@@ -728,7 +638,6 @@ router.delete('/:characterId/comments/:commentId', async function (request, resp
             return response.status(403).json({ error: 'Permission denied' });
         }
 
-        // 删除评论的递归函数
         function removeComment(commentsList, targetId) {
             for (let i = 0; i < commentsList.length; i++) {
                 if (commentsList[i].id === targetId) {

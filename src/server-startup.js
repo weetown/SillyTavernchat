@@ -189,7 +189,6 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/minimax', minimaxRouter);
     app.use('/api/data-maid', dataMaidRouter);
     app.use('/api/backups', backupsRouter);
-    // 根据配置控制论坛API路由
     const enableForum = getConfigValue('enableForum', true, 'boolean');
     if (enableForum) {
         app.use('/api/forum', forumRouter);
@@ -201,7 +200,6 @@ export function setupPrivateEndpoints(app) {
     app.use('/api/system-load', systemLoadRouter);
     app.use('/api/default-config', defaultConfigRouter);
 
-    // 根据配置控制角色卡分享API路由
     const enablePublicCharacters = getConfigValue('enablePublicCharacters', true, 'boolean');
     if (enablePublicCharacters) {
         app.use('/api/public-characters', publicCharactersRouter);

@@ -1,4 +1,3 @@
-/* 公告弹窗样式 */
 .announcements-popup-overlay {
     position: fixed;
     top: 0;
@@ -148,17 +147,13 @@
     background-color: var(--crimson-hover);
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
     .announcements-popup-overlay {
-        /* 保持居中布局，但调整尺寸以适应移动设备 */
         padding: 0;
-        /* 使用视口高度但留出安全区域 */
         height: 100vh;
-        height: 100dvh; /* 使用动态视口高度 */
+        height: 100dvh;
         max-height: 100vh;
         max-height: 100dvh;
-        /* 处理iOS安全区域 */
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
         padding-left: env(safe-area-inset-left);
@@ -168,24 +163,21 @@
     .announcements-popup {
         width: 95%;
         max-width: 95%;
-        /* 使用视口高度计算，但留出空间 */
         max-height: 85vh;
         max-height: 85dvh;
         margin: 10px auto;
         border-radius: 8px;
-        /* 保持flex布局但调整高度限制 */
         height: auto;
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        /* 确保弹窗不会被视口边界裁切 */
         position: relative;
     }
 
     .announcements-popup-header {
         padding: 12px 15px;
         border-radius: 8px 8px 0 0;
-        flex-shrink: 0; /* 防止头部被压缩 */
+        flex-shrink: 0;
     }
 
     .announcements-popup-header h2 {
@@ -195,11 +187,10 @@
     .announcements-popup-content {
         padding: 15px;
         overflow-y: auto;
-        flex: 1; /* 让内容区域填充剩余空间 */
-        /* 使用动态高度计算 */
-        max-height: calc(85vh - 120px); /* 减去头部和底部的大概高度 */
+        flex: 1;
+        max-height: calc(85vh - 120px);
         max-height: calc(85dvh - 120px);
-        min-height: 0; /* 允许 flexbox 正确收缩 */
+        min-height: 0;
     }
 
     .announcement-item {
@@ -209,7 +200,7 @@
     .announcements-popup-footer {
         padding: 12px 15px;
         border-radius: 0 0 8px 8px;
-        flex-shrink: 0; /* 防止底部被压缩 */
+        flex-shrink: 0;
     }
 
     .announcements-confirm-btn {
@@ -217,7 +208,6 @@
         font-size: 0.9em;
     }
 
-    /* 处理小屏幕设备的额外调整 */
     @media (max-height: 600px) {
         .announcements-popup {
             max-height: 90vh;
@@ -241,7 +231,6 @@
     }
 }
 
-/* 滚动条样式 */
 .announcements-popup-content::-webkit-scrollbar {
     width: 6px;
 }
@@ -260,7 +249,6 @@
     background: var(--SmartThemeEmColor);
 }
 
-/* 动画效果 */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -276,7 +264,6 @@
     animation: fadeIn 0.3s ease-in-out;
 }
 
-/* 深色主题适配 */
 @media (prefers-color-scheme: dark) {
     .announcements-popup {
         background-color: var(--SmartThemeBlurTintColor);
@@ -297,14 +284,12 @@
     }
 }
 
-/* 无障碍支持 */
 .announcements-close-btn:focus,
 .announcements-confirm-btn:focus {
     outline: 2px solid var(--crimson70a);
     outline-offset: 2px;
 }
 
-/* 高对比度模式 */
 @media (prefers-contrast: high) {
     .announcements-popup {
         border-width: 2px;

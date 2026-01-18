@@ -70,7 +70,6 @@ router.post('/change-avatar', async (request, response) => {
             return response.status(400).json({ error: 'Invalid data URL' });
         }
 
-        // 规范化用户名
         const normalizedHandle = normalizeHandle(request.body.handle);
 
         if (!normalizedHandle) {
@@ -102,7 +101,6 @@ router.post('/change-password', async (request, response) => {
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
-        // 规范化用户名
         const normalizedHandle = normalizeHandle(request.body.handle);
 
         if (!normalizedHandle) {
@@ -128,16 +126,12 @@ router.post('/change-password', async (request, response) => {
             return response.status(403).json({ error: 'User is disabled' });
         }
 
-        // 检查旧密码（如果用户已有密码）
-        // OAuth 用户首次设置密码时不需要验证旧密码
         if (!request.user.profile.admin && user.password && user.salt) {
-            // 用户已有密码，需要验证旧密码
             if (!request.body.oldPassword || user.password !== getPasswordHash(request.body.oldPassword, user.salt)) {
                 console.error('Change password failed: Incorrect old password');
-                return response.status(403).json({ error: '旧密码错误' });
+                return response.status(403).json({ error: 'Current password is incorrect' });
             }
         } else if (!user.password && !user.salt) {
-            // OAuth 用户首次设置密码，记录日志
             console.info(`OAuth user ${normalizedHandle} is setting password for the first time`);
         }
 
@@ -208,7 +202,6 @@ router.post('/change-name', async (request, response) => {
             return response.status(400).json({ error: 'Missing required fields' });
         }
 
-        // 规范化用户名
         const normalizedHandle = normalizeHandle(request.body.handle);
 
         if (!normalizedHandle) {

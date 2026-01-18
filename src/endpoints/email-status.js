@@ -3,9 +3,7 @@ import { isEmailServiceAvailable } from '../email-service.js';
 
 export const router = express.Router();
 
-/**
- * 检查邮件服务是否启用（公开接口，无需认证）
- */
+
 router.get('/status', async (request, response) => {
     try {
         const enabled = isEmailServiceAvailable();
