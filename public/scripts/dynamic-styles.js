@@ -128,7 +128,7 @@ function applyDynamicFocusStyles(styleSheet, { fromExtension = false } = {}) {
             // it should be manually defined in CSS.
             const focusSelector = rule.selectorText.replace(/:hover/g, ':focus-visible');
 
-            // 跳过包含伪元素的选择器，避免生成非法规则（例如 ::-webkit-scrollbar-track）
+            // Skip selectors with pseudo-elements to avoid invalid rules (e.g., ::-webkit-scrollbar-track).
             if (focusSelector.includes('::')) {
                 return;
             }
