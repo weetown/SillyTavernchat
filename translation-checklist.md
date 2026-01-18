@@ -24,12 +24,12 @@ This checklist was generated from a repository-wide scan for Chinese characters.
 - [x] public/scripts/rich-editor.js
 
 ## Public script templates
-- [ ] public/scripts/templates/admin.html
-- [ ] public/scripts/templates/clearUserBackups.html
-- [ ] public/scripts/templates/clearUserChats.html
-- [ ] public/scripts/templates/userProfile.html
-- [ ] public/scripts/templates/welcomePanel.html
-- [ ] public/scripts/templates/welcomePrompt.html
+- [x] public/scripts/templates/admin.html
+- [x] public/scripts/templates/clearUserBackups.html
+- [x] public/scripts/templates/clearUserChats.html
+- [x] public/scripts/templates/userProfile.html
+- [x] public/scripts/templates/welcomePanel.html
+- [x] public/scripts/templates/welcomePrompt.html
 
 ## Public CSS (contains Chinese comments or content strings)
 - [ ] public/css/admin-extensions.css
