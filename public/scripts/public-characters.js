@@ -1,4 +1,4 @@
-// 公用角色卡页面JavaScript
+// Public character cards page JavaScript.
 
 let characters = [];
 let filteredCharacters = [];
@@ -11,12 +11,12 @@ let currentCharacterId = null;
 let comments = [];
 let autoNameRequestId = 0;
 
-// CSRF令牌获取函数（已不再需要）
+// CSRF token helper (no longer needed).
 async function getCsrfToken() {
-    return null; // 不再需要CSRF令牌
+    return null; // CSRF token no longer required.
 }
 
-// 检查用户登录状态
+// Check user login status.
 async function checkLoginStatus() {
     try {
         const response = await fetch('/api/users/me', {
@@ -47,27 +47,27 @@ async function checkLoginStatus() {
     }
 }
 
-// 根据登录状态更新界面
+// Update UI based on login status.
 function updateUIForLoginStatus() {
     if (isLoggedIn) {
-        // 登录用户：显示上传按钮和用户信息
+        // Logged-in users: show upload button and user info.
         $('#uploadButton').show();
         $('#userInfo').show();
         $('#loginPrompt').hide();
 
-        // 更新用户信息
+        // Update user info.
         if (publicCharactersCurrentUser) {
             $('#userName').text(publicCharactersCurrentUser.name || publicCharactersCurrentUser.handle);
         }
     } else {
-        // 游客：隐藏上传按钮，显示登录提示
+        // Guests: hide upload button and show login prompt.
         $('#uploadButton').hide();
         $('#userInfo').hide();
         $('#loginPrompt').show();
     }
 }
 
-// 获取请求头
+// Build request headers.
 function getRequestHeaders(additionalHeaders = {}) {
     const headers = {
         'Content-Type': 'application/json',
@@ -77,37 +77,37 @@ function getRequestHeaders(additionalHeaders = {}) {
     return headers;
 }
 
-// 显示加载指示器
+// Show loading indicator.
 function showLoading() {
     isLoading = true;
     $('#loadingIndicator').show();
 }
 
-// 隐藏加载指示器
+// Hide loading indicator.
 function hideLoading() {
     isLoading = false;
     $('#loadingIndicator').hide();
 }
 
-// 显示错误消息
+// Show error message.
 function showError(message) {
-    // 这里可以使用toastr或其他通知库
+    // Could use toastr or another notification library here.
     alert(message);
 }
 
-// 显示成功消息
+// Show success message.
 function showSuccess(message) {
-    // 这里可以使用toastr或其他通知库
+    // Could use toastr or another notification library here.
     alert(message);
 }
 
-// 格式化日期
+// Format dates.
 function formatDate(timestamp) {
     const date = parseDateInput(timestamp);
     if (!date) {
-        return String(timestamp || '未知');
+        return String(timestamp || 'Unknown');
     }
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -340,7 +340,7 @@ function readFileAsArrayBuffer(file) {
     });
 }
 
-// 加载角色卡列表
+// Load character cards.
 async function loadCharacters() {
     try {
         showLoading();
@@ -352,12 +352,12 @@ async function loadCharacters() {
 
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
-                // 未登录或无权限：提示并显示登录提示区块
+                // Not logged in or unauthorized: show login prompt.
                 console.log('Not authorized to load public characters. Status:', response.status);
                 isLoggedIn = false;
                 updateUIForLoginStatus();
-                showError('请先登录后再访问公共角色卡');
-                // 可选：短暂延迟后跳转到登录页
+                showError('Please log in to access public character cards.');
+                // Optional: short delay before redirecting to login.
                 // setTimeout(() => { window.location.href = '/login'; }, 1500);
                 return;
             }
@@ -372,21 +372,21 @@ async function loadCharacters() {
     } catch (error) {
         console.error('Failed to load characters:', error);
         if (String(error && error.message || '').includes('status: 401') || String(error && error.message || '').includes('status: 403')) {
-            showError('请先登录后再访问公共角色卡');
+            showError('Please log in to access public character cards.');
         } else {
-            showError('加载角色卡失败');
+            showError('Failed to load character cards.');
         }
     } finally {
         hideLoading();
     }
 }
 
-// 渲染角色卡（初始加载或重新筛选时使用）
+// Render character cards (initial load or after filtering).
 function renderCharacters() {
     const grid = $('#charactersGrid');
     grid.empty();
 
-    // 重置页码
+    // Reset page index.
     publicCharactersCurrentPage = 0;
 
     const startIndex = 0;
@@ -397,8 +397,8 @@ function renderCharacters() {
         grid.html(`
             <div class="no-characters">
                 <i class="fa-solid fa-search" style="font-size: 3rem; color: rgba(255,255,255,0.5); margin-bottom: 1rem;"></i>
-                <h3>暂无角色卡</h3>
-                <p>还没有用户上传角色卡，快来上传第一个吧！</p>
+                <h3>No character cards yet</h3>
+                <p>No one has uploaded a character card yet. Be the first!</p>
             </div>
         `);
         $('#loadMoreButton').hide();
@@ -410,11 +410,11 @@ function renderCharacters() {
         grid.append(card);
     });
 
-    // 显示/隐藏加载更多按钮
+    // Show/hide load more button.
     updateLoadMoreButton();
 }
 
-// 追加更多角色卡（加载更多时使用）
+// Append more character cards (load more).
 function appendMoreCharacters() {
     const grid = $('#charactersGrid');
 
@@ -432,14 +432,14 @@ function appendMoreCharacters() {
         grid.append(card);
     });
 
-    // 更新页码
+    // Update page index.
     publicCharactersCurrentPage++;
 
-    // 显示/隐藏加载更多按钮
+    // Show/hide load more button.
     updateLoadMoreButton();
 }
 
-// 更新加载更多按钮的显示状态
+// Update load-more button state.
 function updateLoadMoreButton() {
     const totalLoaded = (publicCharactersCurrentPage + 1) * itemsPerPage;
     if (totalLoaded < filteredCharacters.length) {
@@ -464,36 +464,36 @@ function getAvatarUrl(character) {
     return '/img/default-expressions/neutral.png';
 }
 
-// 创建角色卡元素
+// Create character card element.
 function createCharacterCard(character) {
-    // 根据文件类型确定头像URL
+    // Determine avatar URL based on file type.
     const avatarUrl = getAvatarUrl(character);
 
     const tags = character.tags || [];
     const tagsHtml = tags.map(tag => `<span class="character-tag">${tag}</span>`).join('');
 
-    // 检查当前用户是否有删除权限
+    // Check delete permissions for current user.
     const canDelete = isLoggedIn && (
         publicCharactersCurrentUser?.admin ||
         character.uploader?.handle === publicCharactersCurrentUser?.handle
     );
 
-    // 根据登录状态显示不同的按钮
+    // Render buttons based on login state.
     const importButton = isLoggedIn ?
         `<button class="btn btn-primary import-btn" onclick="importCharacter('${character.id}')">
             <i class="fa-solid fa-download"></i>
-            导入
+            Import
         </button>` :
         `<button class="btn btn-secondary import-btn" onclick="showLoginPrompt()" disabled>
             <i class="fa-solid fa-lock"></i>
-            登录后导入
+            Log in to import
         </button>`;
 
-    // 删除按钮（仅对有权限的用户显示）
+    // Delete button (only for authorized users).
     const deleteButton = canDelete ?
         `<button class="btn btn-danger delete-btn" onclick="deleteCharacter('${character.id}', '${character.name}')">
             <i class="fa-solid fa-trash"></i>
-            删除
+            Delete
         </button>` : '';
 
     return `
@@ -504,7 +504,7 @@ function createCharacterCard(character) {
             <div class="character-info">
                 <div class="character-content">
                     <h3 class="character-name">${character.name}</h3>
-                    <p class="character-description">${character.description || '暂无描述'}</p>
+                    <p class="character-description">${character.description || 'No description yet.'}</p>
                 </div>
                 <div class="character-footer">
                     <div class="character-meta">
@@ -524,7 +524,7 @@ function createCharacterCard(character) {
                 ${importButton}
                 <button class="btn btn-secondary view-btn" onclick="viewCharacter('${character.id}')">
                     <i class="fa-solid fa-eye"></i>
-                    查看
+                    View
                 </button>
                 ${deleteButton}
             </div>
@@ -532,7 +532,7 @@ function createCharacterCard(character) {
     `;
 }
 
-// 搜索和筛选角色卡
+// Search and filter character cards.
 function filterCharacters() {
     const searchTerm = String($('#searchInput').val() || '').toLowerCase();
     const sortBy = String($('#sortSelect').val() || '');
@@ -546,7 +546,7 @@ function filterCharacters() {
         return nameMatch || descriptionMatch || uploaderMatch || tagsMatch;
     });
 
-    // 排序
+    // Sort.
     filteredCharacters.sort((a, b) => {
         switch (sortBy) {
             case 'name':
@@ -567,10 +567,10 @@ function filterCharacters() {
     renderCharacters();
 }
 
-// 导入角色卡
+// Import character card.
 async function importCharacter(characterId) {
     if (!isLoggedIn) {
-        showError('请先登录后再导入角色卡');
+        showError('Please log in to import character cards.');
         return;
     }
 
@@ -582,30 +582,30 @@ async function importCharacter(characterId) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || '导入失败');
+            throw new Error(errorData.error || 'Import failed.');
         }
 
         const data = await response.json();
-        showSuccess(data.message || '角色卡已成功导入到您的角色库！');
+        showSuccess(data.message || 'Character card imported to your library.');
 
-        // 可以选择跳转到角色库页面
+        // Optionally redirect to the library page.
         // window.location.href = '/';
 
     } catch (error) {
         console.error('Failed to import character:', error);
-        showError(`导入失败: ${error.message}`);
+        showError(`Import failed: ${error.message}`);
     }
 }
 
-// 删除角色卡
+// Delete character card.
 async function deleteCharacter(characterId, characterDisplayName) {
     if (!isLoggedIn) {
-        showError('请先登录后再删除角色卡');
+        showError('Please log in to delete character cards.');
         return;
     }
 
-    // 确认删除
-    if (!confirm(`确定要删除角色卡 "${characterDisplayName}" 吗？此操作不可撤销。`)) {
+    // Confirm deletion.
+    if (!confirm(`Are you sure you want to delete character card "${characterDisplayName}"? This action cannot be undone.`)) {
         return;
     }
 
@@ -617,21 +617,21 @@ async function deleteCharacter(characterId, characterDisplayName) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || '删除失败');
+            throw new Error(errorData.error || 'Delete failed.');
         }
 
         const result = await response.json();
-        showSuccess(`角色卡 "${characterDisplayName}" 删除成功！`);
+        showSuccess(`Character card "${characterDisplayName}" deleted successfully.`);
 
-        // 刷新角色卡列表
+        // Refresh list.
         await loadCharacters();
     } catch (error) {
         console.error('Failed to delete character:', error);
-        showError(`删除失败: ${error.message}`);
+        showError(`Delete failed: ${error.message}`);
     }
 }
 
-// 查看角色卡详情
+// View character card details.
 async function viewCharacter(characterId) {
     try {
         const response = await fetch(`/api/public-characters/${characterId}`, {
@@ -640,7 +640,7 @@ async function viewCharacter(characterId) {
         });
 
         if (!response.ok) {
-            throw new Error('获取角色卡详情失败');
+            throw new Error('Failed to fetch character card details.');
         }
 
         const character = await response.json();
@@ -648,21 +648,21 @@ async function viewCharacter(characterId) {
 
     } catch (error) {
         console.error('Failed to get character details:', error);
-        showError('获取角色卡详情失败');
+        showError('Failed to fetch character card details.');
     }
 }
 
-// 显示登录提示
+// Show login prompt.
 function showLoginPrompt() {
-    showError('请先登录后再导入角色卡');
+    showError('Please log in to import character cards.');
 }
 
-// 显示角色卡详情模态框
+// Show character card detail modal.
 function showCharacterModal(character) {
-    // 设置当前角色卡ID
+    // Set current character ID.
     currentCharacterId = character.id;
 
-    // 根据文件类型确定头像URL
+    // Determine avatar URL based on file type.
     const avatarUrl = getAvatarUrl(character);
 
     const tags = character.tags || [];
@@ -671,42 +671,42 @@ function showCharacterModal(character) {
     $('#characterModalTitle').text(character.name);
     $('#characterModalAvatar').attr('src', avatarUrl);
     $('#characterModalName').text(character.name);
-    $('#characterModalDescription').text(character.description || '暂无描述');
+    $('#characterModalDescription').text(character.description || 'No description yet.');
     $('#characterModalUploader').text(character.uploader?.name || character.uploader || 'Unknown');
     $('#characterModalDate').text(formatDate(character.uploaded_at || character.date_added));
     $('#characterModalTags').html(tagsHtml);
 
-    // 根据登录状态设置导入按钮
+    // Set import button based on login state.
     if (isLoggedIn) {
         $('#importCharacterButton').off('click').on('click', () => {
             importCharacter(character.id);
             $('#characterModal').hide();
         });
-        $('#importCharacterButton').prop('disabled', false).html('<i class="fa-solid fa-download"></i> 导入到我的角色库');
+        $('#importCharacterButton').prop('disabled', false).html('<i class="fa-solid fa-download"></i> Import to my library');
     } else {
         $('#importCharacterButton').off('click').on('click', () => {
             showLoginPrompt();
             $('#characterModal').hide();
         });
-        $('#importCharacterButton').prop('disabled', true).html('<i class="fa-solid fa-lock"></i> 登录后导入');
+        $('#importCharacterButton').prop('disabled', true).html('<i class="fa-solid fa-lock"></i> Log in to import');
     }
 
-    // 设置查看按钮事件
+    // Bind view button.
     $('#viewCharacterButton').off('click').on('click', () => {
-        // 这里可以跳转到角色卡详情页面或显示更多信息
+        // Could navigate to a detail page or show more info.
         $('#characterModal').hide();
     });
 
-    // 更新评论区域显示状态
+    // Update comment section visibility.
     updateCommentsSection();
 
-    // 加载评论
+    // Load comments.
     loadComments(character.id);
 
     $('#characterModal').show();
 }
 
-// 上传角色卡
+// Upload character card.
 async function uploadCharacter(formData) {
     try {
         const response = await fetch('/api/public-characters/upload', {
@@ -717,96 +717,96 @@ async function uploadCharacter(formData) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || '上传失败');
+            throw new Error(errorData.error || 'Upload failed.');
         }
 
         const data = await response.json();
-        showSuccess(`角色卡 "${data.name}" 上传成功！`);
+        showSuccess(`Character card "${data.name}" uploaded successfully.`);
 
-        // 重新加载角色卡列表
+        // Reload list.
         await loadCharacters();
 
-        // 关闭上传模态框
+        // Close upload modal.
         $('#uploadModal').hide();
         /** @type {HTMLFormElement} */ ($('#uploadForm')[0]).reset();
 
     } catch (error) {
         console.error('Failed to upload character:', error);
-        showError(`上传失败: ${error.message}`);
+        showError(`Upload failed: ${error.message}`);
     }
 }
 
-// 加载更多角色卡
+// Load more character cards.
 function loadMore() {
     const button = $('#loadMoreButton');
     const originalText = button.html();
 
-    // 显示加载状态
-    button.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 加载中...');
+    // Show loading state.
+    button.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Loading...');
 
-    // 模拟异步加载（给用户反馈）
+    // Simulate async loading for feedback.
     setTimeout(() => {
         appendMoreCharacters();
 
-        // 恢复按钮状态
+        // Restore button state.
         button.prop('disabled', false).html(originalText);
     }, 300);
 }
 
-// 事件监听器
+// Event listeners.
 $(document).ready(async function() {
     try {
-        // 检查登录状态
+        // Check login status.
         await checkLoginStatus();
 
-        // 根据登录状态更新界面
+        // Update UI based on login state.
         updateUIForLoginStatus();
 
-        // 加载角色卡列表
+        // Load character cards.
         await loadCharacters();
 
-        // 搜索输入事件
+        // Search input.
         $('#searchInput').on('input', filterCharacters);
 
-        // 排序选择事件
+        // Sort selection.
         $('#sortSelect').on('change', filterCharacters);
 
-        // 加载更多按钮
+        // Load more button.
         $('#loadMoreButton').on('click', loadMore);
 
-        // 上传按钮（只有登录用户才能看到）
+        // Upload button (only visible to logged-in users).
         $('#uploadButton').on('click', () => {
             if (!isLoggedIn) {
-                showError('请先登录后再上传角色卡');
+                showError('Please log in to upload character cards.');
                 return;
             }
             $('#uploadModal').show();
         });
 
-        // 关闭上传模态框
+        // Close upload modal.
         $('#closeUploadModal, #cancelUpload').on('click', () => {
             $('#uploadModal').hide();
             /** @type {HTMLFormElement} */ ($('#uploadForm')[0]).reset();
         });
 
-        // 关闭角色卡详情模态框
+        // Close detail modal.
         $('#closeCharacterModal').on('click', () => {
             $('#characterModal').hide();
         });
 
-        // 点击模态框外部关闭
+        // Close when clicking outside modal.
         $('.modal').on('click', function(e) {
             if (e.target === this) {
                 $(this).hide();
             }
         });
 
-        // 上传表单提交
+        // Upload form submit.
         $('#uploadForm').on('submit', async function(e) {
             e.preventDefault();
 
             if (!isLoggedIn) {
-                showError('请先登录后再上传角色卡');
+                showError('Please log in to upload character cards.');
                 return;
             }
 
@@ -816,24 +816,24 @@ $(document).ready(async function() {
             const tagsInput = String($('#characterTags').val() || '');
 
             if (!/** @type {HTMLInputElement} */ (fileInput).files || !/** @type {HTMLInputElement} */ (fileInput).files[0]) {
-                showError('请选择角色卡文件');
+                showError('Please choose a character card file.');
                 return;
             }
 
             if (!nameInput.trim()) {
-                showError('请输入角色名称');
+                showError('Please enter a character name.');
                 return;
             }
 
             const formData = new FormData();
             formData.append('avatar', /** @type {HTMLInputElement} */ (fileInput).files[0]);
 
-            // 获取文件扩展名
+            // Get file extension.
             const fileName = /** @type {HTMLInputElement} */ (fileInput).files[0].name;
             const extension = fileName.split('.').pop()?.toLowerCase() || '';
             formData.append('file_type', extension);
 
-            // 添加其他信息
+            // Add additional metadata.
             if (nameInput.trim()) {
                 formData.append('name', nameInput.trim());
             }
@@ -848,7 +848,7 @@ $(document).ready(async function() {
             await uploadCharacter(formData);
         });
 
-        // 文件选择时自动填充名称
+        // Auto-fill name when selecting file.
         $('#characterFile').on('change', async function() {
             const file = /** @type {HTMLInputElement} */ (this).files?.[0];
             if (!file) {
@@ -869,10 +869,10 @@ $(document).ready(async function() {
             }
         });
 
-        // 评论相关事件监听器
+        // Comment-related events.
         $('#submitCommentButton').on('click', submitComment);
 
-        // 回车键提交评论
+        // Submit comment with Ctrl + Enter.
         $('#commentInput').on('keydown', function(e) {
             if (e.ctrlKey && e.keyCode === 13) { // Ctrl + Enter
                 submitComment();
@@ -881,11 +881,11 @@ $(document).ready(async function() {
 
     } catch (error) {
         console.error('Failed to initialize page:', error);
-        showError('页面初始化失败，请刷新页面重试');
+        showError('Page initialization failed. Please refresh and try again.');
     }
 });
 
-// 添加一些样式到页面
+// Add styles to the page.
 $('<style>').text(`
     .no-characters {
         grid-column: 1 / -1;
@@ -905,9 +905,9 @@ $('<style>').text(`
     }
 `).appendTo('head');
 
-// 评论相关功能
+// Comment functionality.
 
-// 加载角色卡评论
+// Load character comments.
 async function loadComments(characterId) {
     try {
         const response = await fetch(`/api/public-characters/${characterId}/comments`, {
@@ -924,11 +924,11 @@ async function loadComments(characterId) {
         updateCommentsCount();
     } catch (error) {
         console.error('Failed to load comments:', error);
-        showError('加载评论失败');
+        showError('Failed to load comments.');
     }
 }
 
-// 渲染评论列表
+// Render comment list.
 function renderComments() {
     const commentsList = $('#commentsList');
     commentsList.empty();
@@ -937,7 +937,7 @@ function renderComments() {
         commentsList.html(`
             <div class="no-comments">
                 <i class="fa-solid fa-comment" style="font-size: 2rem; color: rgba(255,255,255,0.3); margin-bottom: 1rem;"></i>
-                <p>还没有评论，来发表第一条评论吧！</p>
+                <p>No comments yet. Be the first to comment!</p>
             </div>
         `);
         return;
@@ -949,21 +949,21 @@ function renderComments() {
     });
 }
 
-// 创建评论元素
+// Create comment element.
 function createCommentElement(comment, depth = 0) {
     const isAuthor = isLoggedIn && publicCharactersCurrentUser && comment.author.handle === publicCharactersCurrentUser.handle;
     const isAdmin = isLoggedIn && publicCharactersCurrentUser && publicCharactersCurrentUser.admin;
     const canDelete = isAuthor || isAdmin;
 
     const deleteButton = canDelete ?
-        `<button class="comment-delete" onclick="deleteComment('${comment.id}')" title="删除评论">
+        `<button class="comment-delete" onclick="deleteComment('${comment.id}')" title="Delete comment">
             <i class="fa-solid fa-trash"></i>
         </button>` : '';
 
     const replyButton = isLoggedIn ?
-        `<button class="comment-reply" onclick="showReplyInput('${comment.id}')" title="回复">
+        `<button class="comment-reply" onclick="showReplyInput('${comment.id}')" title="Reply">
             <i class="fa-solid fa-reply"></i>
-            回复
+            Reply
         </button>` : '';
 
     let repliesHtml = '';
@@ -992,14 +992,14 @@ function createCommentElement(comment, depth = 0) {
                 ${escapeHtml(comment.content)}
             </div>
             <div class="comment-reply-input" id="replyInput_${comment.id}" style="display: none;">
-                <textarea class="reply-textarea" placeholder="写下你的回复..." rows="2"></textarea>
+                <textarea class="reply-textarea" placeholder="Write your reply..." rows="2"></textarea>
                 <div class="reply-actions">
                     <button class="btn btn-primary btn-small" onclick="submitReply('${comment.id}')">
                         <i class="fa-solid fa-paper-plane"></i>
-                        回复
+                        Reply
                     </button>
                     <button class="btn btn-secondary btn-small" onclick="cancelReply('${comment.id}')">
-                        取消
+                        Cancel
                     </button>
                 </div>
             </div>
@@ -1008,20 +1008,20 @@ function createCommentElement(comment, depth = 0) {
     `;
 }
 
-// HTML转义函数
+// HTML escaping helper.
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML.replace(/\n/g, '<br>');
 }
 
-// 更新评论数量
+// Update comment count.
 function updateCommentsCount() {
     const totalComments = countTotalComments(comments);
-    $('#commentsCount').text(`${totalComments} 条评论`);
+    $('#commentsCount').text(`${totalComments} comments`);
 }
 
-// 递归计算总评论数
+// Recursively count comments.
 function countTotalComments(commentsList) {
     let count = commentsList.length;
     commentsList.forEach(comment => {
@@ -1032,16 +1032,16 @@ function countTotalComments(commentsList) {
     return count;
 }
 
-// 发表评论
+// Submit comment.
 async function submitComment() {
     if (!isLoggedIn) {
-        showError('请先登录后再发表评论');
+        showError('Please log in to post a comment.');
         return;
     }
 
     const content = String($('#commentInput').val() || '').trim();
     if (!content) {
-        showError('请输入评论内容');
+        showError('Please enter a comment.');
         return;
     }
 
@@ -1059,57 +1059,57 @@ async function submitComment() {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || '发表评论失败');
+            throw new Error(errorData.error || 'Comment failed.');
         }
 
         const newComment = await response.json();
         comments.push(newComment);
 
-        // 清空输入框
+        // Clear input.
         $('#commentInput').val('');
 
-        // 重新渲染评论
+        // Re-render comments.
         renderComments();
         updateCommentsCount();
 
-        showSuccess('评论发表成功！');
+        showSuccess('Comment posted successfully!');
     } catch (error) {
         console.error('Failed to submit comment:', error);
-        showError(`发表评论失败: ${error.message}`);
+        showError(`Comment failed: ${error.message}`);
     }
 }
 
-// 显示回复输入框
+// Show reply input.
 function showReplyInput(commentId) {
     if (!isLoggedIn) {
-        showError('请先登录后再回复评论');
+        showError('Please log in to reply to comments.');
         return;
     }
 
-    // 隐藏所有其他回复输入框
+    // Hide other reply inputs.
     $('.comment-reply-input').hide();
 
-    // 显示指定的回复输入框
+    // Show reply input for the selected comment.
     $(`#replyInput_${commentId}`).show();
     $(`#replyInput_${commentId} .reply-textarea`).focus();
 }
 
-// 取消回复
+// Cancel reply.
 function cancelReply(commentId) {
     $(`#replyInput_${commentId}`).hide();
     $(`#replyInput_${commentId} .reply-textarea`).val('');
 }
 
-// 提交回复
+// Submit reply.
 async function submitReply(parentId) {
     if (!isLoggedIn) {
-        showError('请先登录后再回复评论');
+        showError('Please log in to reply to comments.');
         return;
     }
 
     const content = String($(`#replyInput_${parentId} .reply-textarea`).val() || '').trim();
     if (!content) {
-        showError('请输入回复内容');
+        showError('Please enter a reply.');
         return;
     }
 
@@ -1128,30 +1128,30 @@ async function submitReply(parentId) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || '回复失败');
+            throw new Error(errorData.error || 'Reply failed.');
         }
 
-        // 重新加载评论
+        // Reload comments.
         await loadComments(currentCharacterId);
 
-        // 隐藏回复输入框
+        // Hide reply input.
         cancelReply(parentId);
 
-        showSuccess('回复发表成功！');
+        showSuccess('Reply posted successfully!');
     } catch (error) {
         console.error('Failed to submit reply:', error);
-        showError(`回复失败: ${error.message}`);
+        showError(`Reply failed: ${error.message}`);
     }
 }
 
-// 删除评论
+// Delete comment.
 async function deleteComment(commentId) {
     if (!isLoggedIn) {
-        showError('请先登录后再删除评论');
+        showError('Please log in to delete comments.');
         return;
     }
 
-    if (!confirm('确定要删除这条评论吗？此操作不可撤销。')) {
+    if (!confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
         return;
     }
 
@@ -1163,20 +1163,20 @@ async function deleteComment(commentId) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || '删除失败');
+            throw new Error(errorData.error || 'Delete failed.');
         }
 
-        // 重新加载评论
+        // Reload comments.
         await loadComments(currentCharacterId);
 
-        showSuccess('评论删除成功！');
+        showSuccess('Comment deleted successfully!');
     } catch (error) {
         console.error('Failed to delete comment:', error);
-        showError(`删除失败: ${error.message}`);
+        showError(`Delete failed: ${error.message}`);
     }
 }
 
-// 更新评论区域的显示状态
+// Update comment section visibility.
 function updateCommentsSection() {
     if (isLoggedIn) {
         $('#commentInputSection').show();

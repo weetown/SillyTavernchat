@@ -1,6 +1,6 @@
 /**
- * 用户心跳机制
- * 定期向服务器发送心跳信号，确保在线状态统计的准确性
+ * User heartbeat mechanism.
+ * Periodically send heartbeat signals to keep online status accurate.
  */
 
 class UserHeartbeat {
@@ -8,26 +8,26 @@ class UserHeartbeat {
         this.heartbeatInterval = null;
         this.isActive = false;
         this.lastActivity = Date.now();
-        this.heartbeatIntervalMs = 2 * 60 * 1000; // 2分钟（页面可见时）
-        this.hiddenHeartbeatIntervalMs = 5 * 60 * 1000; // 5分钟（页面隐藏时）
-        this.inactivityThreshold = 5 * 60 * 1000; // 5分钟无活动则暂停心跳
+        this.heartbeatIntervalMs = 2 * 60 * 1000; // 2 minutes (page visible).
+        this.hiddenHeartbeatIntervalMs = 5 * 60 * 1000; // 5 minutes (page hidden).
+        this.inactivityThreshold = 5 * 60 * 1000; // Pause after 5 minutes of inactivity.
 
-        // 绑定页面活动监听器
+        // Bind activity listeners.
         this.bindActivityListeners();
 
-        // 绑定页面可见性变化监听器
+        // Bind visibility listeners.
         this.bindVisibilityListeners();
 
-        // 绑定页面关闭监听器
+        // Bind page close listener.
         this.bindBeforeUnloadListener();
     }
 
     /**
-     * 开始心跳
+     * Start heartbeat.
      */
     start() {
         if (this.heartbeatInterval) {
-            // 如果已经在运行，立即发送一次心跳以确保状态更新
+            // If already running, send a heartbeat immediately to refresh status.
             this.sendHeartbeat();
             return;
         }
@@ -36,17 +36,17 @@ class UserHeartbeat {
         this.isActive = true;
         this.lastActivity = Date.now();
 
-        // 立即发送第一次心跳，确保用户状态及时更新（特别是页面重新打开时）
+        // Send the first heartbeat quickly to refresh status (especially after reload).
         setTimeout(() => {
             this.sendHeartbeat();
         }, 500);
 
-        // 设置定时心跳
+        // Schedule periodic heartbeat.
         this.scheduleHeartbeat();
     }
 
     /**
-     * 根据页面可见性调度心跳
+     * Schedule heartbeat based on page visibility.
      */
     scheduleHeartbeat() {
         if (this.heartbeatInterval) {
@@ -60,7 +60,7 @@ class UserHeartbeat {
     }
 
     /**
-     * 停止心跳
+     * Stop heartbeat.
      */
     stop() {
         if (this.heartbeatInterval) {
@@ -72,25 +72,25 @@ class UserHeartbeat {
     }
 
     /**
-     * 检查是否需要发送心跳
+     * Check whether a heartbeat should be sent.
      */
     checkAndSendHeartbeat() {
         const now = Date.now();
         const timeSinceLastActivity = now - this.lastActivity;
 
-        // 如果用户长时间无活动，暂停心跳（但页面隐藏时仍然发送，因为用户可能只是切换了应用）
+        // If inactive for too long, skip heartbeat (still send when hidden; user may just switch apps).
         if (!document.hidden && timeSinceLastActivity > this.inactivityThreshold) {
             console.log('User inactive, skipping heartbeat');
             return;
         }
 
-        // 页面隐藏时仍然发送心跳，但频率较低（已在scheduleHeartbeat中处理）
-        // 这样可以确保即使用户用任务管理器划掉页面，心跳仍然会继续
+        // When hidden, still send heartbeats at a lower frequency (handled in scheduleHeartbeat).
+        // This ensures heartbeats keep going even if the page is force-closed.
         this.sendHeartbeat();
     }
 
     /**
-     * 发送心跳到服务器
+     * Send heartbeat to server.
      */
     async sendHeartbeat() {
         try {
@@ -107,45 +107,45 @@ class UserHeartbeat {
             });
 
             if (response.ok) {
-                // 心跳发送成功
+                // Heartbeat sent successfully.
             } else if (response.status === 401 || response.status === 403) {
-                // 用户未认证或权限不足，停止心跳
+                // User not authenticated or unauthorized; stop heartbeat.
                 console.log('User session ended, stopping heartbeat');
                 this.stop();
             }
         } catch (error) {
-            // 网络错误，继续尝试
+            // Network error; continue trying.
             if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                // 网络连接问题，暂时停止心跳
+                // Network connection issue; pause heartbeat.
                 this.stop();
             }
         }
     }
 
     /**
-     * 获取请求头
+     * Build request headers.
      */
     getRequestHeaders() {
-        // 优先尝试使用全局的getRequestHeaders函数
+        // Prefer global getRequestHeaders if available.
         if (window.getRequestHeaders && typeof window.getRequestHeaders === 'function') {
             try {
                 return window.getRequestHeaders();
             } catch (e) {
-                // 降级到手动构建
+                // Fall back to manual headers.
             }
         }
 
-        // 降级方案：手动构建headers
+        // Fallback: build headers manually.
         const headers = { 'Content-Type': 'application/json' };
         let csrfToken = null;
 
-        // 尝试多种方式获取CSRF token
+        // Try multiple ways to get a CSRF token.
         if (window.csrfToken) {
             csrfToken = window.csrfToken;
         } else if (window.token) {
             csrfToken = window.token;
         } else {
-            // 从meta标签获取
+            // Get from meta tag.
             const metaTag = document.querySelector('meta[name="csrf-token"]');
             if (metaTag) {
                 csrfToken = metaTag.getAttribute('content');
@@ -161,19 +161,19 @@ class UserHeartbeat {
     }
 
     /**
-     * 记录用户活动
+     * Record user activity.
      */
     recordActivity() {
         this.lastActivity = Date.now();
 
-        // 如果心跳已停止但用户又开始活动，重新启动心跳
+        // Restart if heartbeat was stopped and activity resumes.
         if (!this.isActive && !this.heartbeatInterval) {
             this.start();
         }
     }
 
     /**
-     * 绑定用户活动监听器
+     * Bind user activity listeners.
      */
     bindActivityListeners() {
         const activityEvents = [
@@ -181,10 +181,10 @@ class UserHeartbeat {
             'mouseup', 'scroll', 'touchstart', 'touchend'
         ];
 
-        // 使用节流来避免过于频繁的活动记录
+        // Throttle to avoid excessive activity recording.
         const throttledRecordActivity = this.throttle(() => {
             this.recordActivity();
-        }, 1000); // 1秒内最多记录一次活动
+        }, 1000); // At most once per second.
 
         activityEvents.forEach(event => {
             document.addEventListener(event, throttledRecordActivity, { passive: true });
@@ -192,23 +192,23 @@ class UserHeartbeat {
     }
 
     /**
-     * 绑定页面可见性变化监听器
+     * Bind page visibility listeners.
      */
     bindVisibilityListeners() {
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                // 页面隐藏时调整心跳频率，但不停止
+                // Adjust frequency when hidden without stopping.
                 this.scheduleHeartbeat();
             } else {
-                // 页面重新可见时恢复活动
+                // Restore activity when visible again.
                 this.recordActivity();
 
-                // 页面重新可见时，立即发送一次心跳并调整频率
+                // Send a heartbeat immediately and adjust frequency when visible again.
                 if (this.isActive) {
                     this.sendHeartbeat();
                     this.scheduleHeartbeat();
                 } else {
-                    // 如果心跳已停止，重新启动
+                    // Restart if heartbeat was stopped.
                     this.start();
                 }
             }
@@ -216,17 +216,17 @@ class UserHeartbeat {
     }
 
     /**
-     * 绑定页面关闭监听器
+     * Bind page close listener.
      */
     bindBeforeUnloadListener() {
         window.addEventListener('beforeunload', () => {
-            // 页面关闭时停止心跳
+            // Stop heartbeat on page close.
             this.stop();
         });
     }
 
     /**
-     * 节流函数
+     * Throttle helper.
      */
     throttle(func, limit) {
         let inThrottle;
@@ -242,11 +242,11 @@ class UserHeartbeat {
     }
 }
 
-// 全局心跳实例
+// Global heartbeat instance.
 let userHeartbeat = null;
 
 /**
- * 初始化用户心跳
+ * Initialize user heartbeat.
  */
 function initUserHeartbeat() {
     if (!userHeartbeat) {
@@ -255,11 +255,11 @@ function initUserHeartbeat() {
     return userHeartbeat;
 }
 
-    /**
-     * 启动用户心跳（仅在用户已登录时）
-     */
+/**
+ * Start user heartbeat (only when logged in).
+ */
 function startUserHeartbeat() {
-    // 检查用户是否已登录 - 多种方式检测
+    // Check login status using multiple signals.
     const checkLoginStatus = () => {
         return (typeof window !== 'undefined' &&
             (window.currentUser ||
@@ -274,13 +274,13 @@ function startUserHeartbeat() {
         if (isLoggedIn) {
             const heartbeat = initUserHeartbeat();
             heartbeat.start();
-            // 页面加载时立即发送心跳，确保状态及时更新
+            // Send a heartbeat shortly after load to refresh status.
             setTimeout(() => {
                 heartbeat.sendHeartbeat();
             }, 1000);
             return true;
         } else if (attempt < 5) {
-            // 最多重试5次，每次延迟递增
+            // Retry up to 5 times with increasing delay.
             setTimeout(() => attemptStart(attempt + 1), attempt * 1000);
         }
         return false;
@@ -290,7 +290,7 @@ function startUserHeartbeat() {
 }
 
 /**
- * 停止用户心跳
+ * Stop user heartbeat.
  */
 function stopUserHeartbeat() {
     if (userHeartbeat) {
@@ -298,20 +298,20 @@ function stopUserHeartbeat() {
     }
 }
 
-// 页面加载完成后自动启动心跳
+// Auto-start heartbeat after page load.
 if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            // 延迟启动，确保其他脚本已加载和CSRF token初始化
+            // Delay start to ensure other scripts and CSRF token are ready.
             setTimeout(startUserHeartbeat, 3000);
         });
     } else {
-        // 页面已加载完成，延迟更长时间确保所有脚本初始化完成
+        // Page already loaded; delay longer to ensure initialization completes.
         setTimeout(startUserHeartbeat, 5000);
     }
 }
 
-// 导出函数供其他脚本使用
+// Export helpers for other scripts.
 if (typeof window !== 'undefined') {
     window.userHeartbeat = {
         init: initUserHeartbeat,
@@ -322,7 +322,7 @@ if (typeof window !== 'undefined') {
             console.log('Force starting user heartbeat...');
             const heartbeat = initUserHeartbeat();
             heartbeat.start();
-            // 强制启动时立即发送心跳
+            // Send a heartbeat immediately on force start.
             setTimeout(() => {
                 heartbeat.sendHeartbeat();
             }, 500);

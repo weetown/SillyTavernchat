@@ -47,89 +47,89 @@
 
                         <h2 id="logoBlock" class="flex-container">
                             <img src="img/logo.png" alt="SillyTavern" class="logo">
-                            <span>欢迎来到 SillyTavern</span>
+                            <span>Welcome to SillyTavern</span>
                         </h2>
                         <h3 id="normalLoginPrompt">
-                            选择一个账户
+                            Choose an account
                         </h3>
                         <h3 id="discreetLoginPrompt">
-                            输入登录信息
+                            Enter your login details
                         </h3>
                         <div id="userListBlock" class="wide100p">
                             <div id="userList" class="flex-container justifySpaceEvenly"></div>
                             <div id="handleEntryBlock" style="display:none;" class="flex-container flexFlowColumn alignItemsCenter">
-                                <input id="userHandle" class="text_pole" type="text" placeholder="用户名" autocomplete="username">
+                                <input id="userHandle" class="text_pole" type="text" placeholder="Username" autocomplete="username">
                             </div>
                             <div id="passwordEntryBlock" style="display:none;"
                                 class="flex-container flexFlowColumn alignItemsCenter">
-                                <input id="userPassword" class="text_pole" type="password" placeholder="密码" autocomplete="current-password">
-                                <a id="recoverPassword" href="#" onclick="return false;">忘记密码？</a>
+                                <input id="userPassword" class="text_pole" type="password" placeholder="Password" autocomplete="current-password">
+                                <a id="recoverPassword" href="#" onclick="return false;">Forgot password?</a>
                                 <div class="flex-container flexGap10">
-                                    <div id="loginButton" class="menu_button">登录</div>
-                                    <div id="registerButton" class="menu_button">注册</div>
+                                    <div id="loginButton" class="menu_button">Log in</div>
+                                    <div id="registerButton" class="menu_button">Register</div>
                                 </div>
 
                                 <!-- OAuth第三方登录分隔线 -->
                                 <div id="oauthDivider" class="oauth-divider" style="display:none;">
-                                    <span>或使用第三方登录</span>
+                                    <span>Or sign in with</span>
                                 </div>
 
                                 <!-- OAuth第三方登录按钮 -->
                                 <div id="oauthButtons" class="oauth-buttons" style="display:none;">
                                     <button id="githubLoginButton" class="oauth-button oauth-github" style="display:none;">
                                         <i class="fa-brands fa-github"></i>
-                                        <span>GitHub 登录</span>
+                                        <span>Sign in with GitHub</span>
                                     </button>
                                     <button id="discordLoginButton" class="oauth-button oauth-discord" style="display:none;">
                                         <i class="fa-brands fa-discord"></i>
-                                        <span>Discord 登录</span>
+                                        <span>Sign in with Discord</span>
                                     </button>
                                     <button id="linuxdoLoginButton" class="oauth-button oauth-linuxdo" style="display:none;">
                                         <i class="fa-brands fa-linux"></i>
-                                        <span>Linux.do 登录</span>
+                                        <span>Sign in with Linux.do</span>
                                     </button>
                                 </div>
                             </div>
                             <div id="passwordRecoveryBlock" style="display:none;" class="flex-container flexFlowColumn alignItemsCenter">
                                 <div id="recoverMessage">
-                                    恢复码已输出到服务器控制台。
+                                    Recovery code has been printed to the server console.
                                 </div>
-                                <input id="recoveryCode" class="text_pole" type="text" placeholder="恢复码">
-                                <input id="newPassword" class="text_pole" type="password" placeholder="新密码" autocomplete="new-password">
+                                <input id="recoveryCode" class="text_pole" type="text" placeholder="Recovery code">
+                                <input id="newPassword" class="text_pole" type="password" placeholder="New password" autocomplete="new-password">
                                 <div class="flex-container flexGap10">
-                                    <div id="sendRecovery" class="menu_button">发送</div>
-                                    <div id="cancelRecovery" class="menu_button">取消</div>
+                                    <div id="sendRecovery" class="menu_button">Send</div>
+                                    <div id="cancelRecovery" class="menu_button">Cancel</div>
                                 </div>
                             </div>
                         </div>
                         <div id="renewalBlock" class="wide100p" style="display:none;">
                             <div class="flex-container flexFlowColumn alignItemsCenter">
                                 <h3 style="color: #ff6b6b; margin-bottom: 10px; font-size: 1.2em;">
-                                    ⚠️ 账户已过期
+                                    ⚠️ Account expired
                                 </h3>
                                 <div id="renewalMessage" style="text-align: center; margin-bottom: 20px; line-height: 1.6; font-size: 1.05em;">
-                                    您的账户已过期，请输入续费码进行续费
+                                    Your account has expired. Enter a renewal code to continue.
                                 </div>
                                 <div id="renewalPurchaseLink" style="display:none; margin-bottom: 20px; padding: 15px; background: rgba(155,135,245,0.15); border: 1px solid rgba(155,135,245,0.3); border-radius: 8px; width: 100%; box-sizing: border-box;">
-                                    <div style="margin-bottom: 8px; font-size: 0.95em; opacity: 0.9; color: #ddd;">💳 如需购买续费码，请访问：</div>
+                                    <div style="margin-bottom: 8px; font-size: 0.95em; opacity: 0.9; color: #ddd;">💳 To purchase a renewal code, visit:</div>
                                     <a id="renewalPurchaseLinkUrl" href="#" target="_blank" style="color: #9b87f5; word-break: break-all; text-decoration: underline; font-weight: 500;"></a>
                                 </div>
                                 <div style="width: 100%; margin-bottom: 20px;">
                                     <label for="renewalCode" style="display: block; margin-bottom: 8px; font-size: 0.95em; color: #ccc; text-align: left;">
-                                        🔑 请在下方输入您的续费码：
+                                        🔑 Enter your renewal code below:
                                     </label>
-                                    <input id="renewalCode" class="text_pole" type="text" placeholder="在此输入续费码"
+                                    <input id="renewalCode" class="text_pole" type="text" placeholder="Enter renewal code"
                                            style="font-size: 1.1em; padding: 12px; border: 2px solid #9b87f5; background: rgba(255,255,255,0.05);"
                                            autocomplete="off" autofocus>
                                 </div>
                                 <div class="flex-container flexGap10">
                                     <div id="submitRenewal" class="menu_button flex-container alignItemsCenter justifyCenter flexGap5" style="background: #9b87f5; padding: 10px 25px; font-size: 1.05em; font-weight: 500;">
                                         <i class="fa-solid fa-check"></i>
-                                        <span>确认续费</span>
+                                        <span>Confirm renewal</span>
                                     </div>
                                     <div id="cancelRenewal" class="menu_button flex-container alignItemsCenter justifyCenter flexGap5" style="padding: 10px 20px;">
                                         <i class="fa-solid fa-times"></i>
-                                        <span>取消</span>
+                                        <span>Cancel</span>
                                     </div>
                                 </div>
                             </div>

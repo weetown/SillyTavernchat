@@ -31,7 +31,7 @@
     <link href="css/fontawesome.min.css" rel="stylesheet">
     <link href="css/solid.min.css" rel="stylesheet">
     <link href="css/user.css" rel="stylesheet">
-    <title>SillyTavern - 公用角色卡</title>
+    <title>SillyTavern - Public Characters</title>
 </head>
 
 <body>
@@ -39,30 +39,30 @@
         <!-- 头部导航 -->
         <header class="header">
             <div class="header-content">
-                <h1 class="header-title">公用角色卡库</h1>
-                <p class="header-subtitle">发现和分享精彩的角色卡</p>
+                <h1 class="header-title">Public Character Library</h1>
+                <p class="header-subtitle">Discover and share great character cards</p>
                 <div class="header-actions">
                     <button id="uploadButton" class="btn btn-primary" style="display: none;">
                         <i class="fa-solid fa-upload"></i>
-                        上传角色卡
+                        Upload character card
                     </button>
                     <div id="userInfo" class="user-info" style="display: none;">
-                        <span class="user-greeting">欢迎，<span id="userName"></span></span>
+                        <span class="user-greeting">Welcome, <span id="userName"></span></span>
                         <a href="/" class="btn btn-secondary">
                             <i class="fa-solid fa-user"></i>
-                            我的角色库
+                            My character library
                         </a>
                     </div>
                     <div id="loginPrompt" class="login-prompt">
-                        <span class="login-text">登录后可以上传和导入角色卡</span>
+                        <span class="login-text">Log in to upload and import character cards</span>
                         <a href="/login" class="btn btn-secondary">
                             <i class="fa-solid fa-sign-in-alt"></i>
-                            登录
+                            Log in
                         </a>
                     </div>
                     <a href="/" class="btn btn-secondary">
                         <i class="fa-solid fa-home"></i>
-                        返回主页
+                        Back to home
                     </a>
                 </div>
             </div>
@@ -73,13 +73,13 @@
             <div class="search-container">
                 <div class="search-box">
                     <i class="fa-solid fa-search search-icon"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="搜索角色卡...">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search character cards...">
                 </div>
                 <div class="filter-container">
                     <select id="sortSelect" class="filter-select">
-                        <option value="date">按上传时间</option>
-                        <option value="name">按名称</option>
-                        <option value="uploader">按上传者</option>
+                        <option value="date">Sort by upload date</option>
+                        <option value="name">Sort by name</option>
+                        <option value="uploader">Sort by uploader</option>
                     </select>
                 </div>
             </div>
@@ -93,7 +93,7 @@
         <!-- 加载更多按钮 -->
         <div class="load-more-container">
             <button id="loadMoreButton" class="btn btn-secondary" style="display: none;">
-                加载更多
+                Load more
             </button>
         </div>
 
@@ -101,31 +101,31 @@
         <div id="uploadModal" class="modal" style="display: none;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>上传角色卡</h2>
+                    <h2>Upload character card</h2>
                     <button class="modal-close" id="closeUploadModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <form id="uploadForm" class="upload-form">
                         <div class="form-group">
-                            <label for="characterFile" class="form-label">选择角色卡文件</label>
+                            <label for="characterFile" class="form-label">Select character card file</label>
                             <input type="file" id="characterFile" class="form-input" accept=".json,.png,.yaml,.yml" required>
-                            <small class="form-hint">支持 JSON、PNG、YAML 格式</small>
+                            <small class="form-hint">Supports JSON, PNG, and YAML formats</small>
                         </div>
                         <div class="form-group">
-                            <label for="characterName" class="form-label">角色名称</label>
-                            <input type="text" id="characterName" class="form-input" placeholder="请输入角色名称" required>
+                            <label for="characterName" class="form-label">Character name</label>
+                            <input type="text" id="characterName" class="form-input" placeholder="Enter character name" required>
                         </div>
                         <div class="form-group">
-                            <label for="characterDescription" class="form-label">角色描述</label>
-                            <textarea id="characterDescription" class="form-textarea" placeholder="请输入角色描述（可选）" rows="3"></textarea>
+                            <label for="characterDescription" class="form-label">Character description</label>
+                            <textarea id="characterDescription" class="form-textarea" placeholder="Enter a character description (optional)" rows="3"></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="characterTags" class="form-label">标签</label>
-                            <input type="text" id="characterTags" class="form-input" placeholder="用逗号分隔多个标签（可选）">
+                            <label for="characterTags" class="form-label">Tags</label>
+                            <input type="text" id="characterTags" class="form-input" placeholder="Separate tags with commas (optional)">
                         </div>
                         <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">上传</button>
-                            <button type="button" class="btn btn-secondary" id="cancelUpload">取消</button>
+                            <button type="submit" class="btn btn-primary">Upload</button>
+                            <button type="button" class="btn btn-secondary" id="cancelUpload">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -136,13 +136,13 @@
         <div id="characterModal" class="modal" style="display: none;">
             <div class="modal-content modal-large">
                 <div class="modal-header">
-                    <h2 id="characterModalTitle">角色卡详情</h2>
+                    <h2 id="characterModalTitle">Character card details</h2>
                     <button class="modal-close" id="closeCharacterModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="character-detail">
                         <div class="character-avatar">
-                            <img id="characterModalAvatar" src="" alt="角色头像">
+                            <img id="characterModalAvatar" src="" alt="Character avatar">
                         </div>
                         <div class="character-info">
                             <h3 id="characterModalName"></h3>
@@ -150,11 +150,11 @@
                             <div class="character-meta">
                                 <span class="meta-item">
                                     <i class="fa-solid fa-user"></i>
-                                    上传者: <span id="characterModalUploader"></span>
+                                    Uploaded by: <span id="characterModalUploader"></span>
                                 </span>
                                 <span class="meta-item">
                                     <i class="fa-solid fa-calendar"></i>
-                                    上传时间: <span id="characterModalDate"></span>
+                                    Uploaded on: <span id="characterModalDate"></span>
                                 </span>
                             </div>
                             <div class="character-tags" id="characterModalTags"></div>
@@ -163,29 +163,29 @@
                     <div class="character-actions">
                         <button id="importCharacterButton" class="btn btn-primary">
                             <i class="fa-solid fa-download"></i>
-                            导入到我的角色库
+                            Import to my library
                         </button>
                         <button id="viewCharacterButton" class="btn btn-secondary">
                             <i class="fa-solid fa-eye"></i>
-                            查看详情
+                            View details
                         </button>
                     </div>
 
                     <!-- 评论区域 -->
                     <div class="comments-section">
                         <div class="comments-header">
-                            <h3><i class="fa-solid fa-comments"></i> 评论讨论</h3>
-                            <span class="comments-count" id="commentsCount">0 条评论</span>
+                            <h3><i class="fa-solid fa-comments"></i> Comments &amp; discussion</h3>
+                            <span class="comments-count" id="commentsCount">0 comments</span>
                         </div>
 
                         <!-- 评论输入框（仅登录用户可见） -->
                         <div class="comment-input-section" id="commentInputSection" style="display: none;">
                             <div class="comment-input-box">
-                                <textarea id="commentInput" class="comment-textarea" placeholder="写下你对这个角色卡的看法..." rows="3"></textarea>
+                                <textarea id="commentInput" class="comment-textarea" placeholder="Share your thoughts on this character card..." rows="3"></textarea>
                                 <div class="comment-input-actions">
                                     <button id="submitCommentButton" class="btn btn-primary">
                                         <i class="fa-solid fa-paper-plane"></i>
-                                        发表评论
+                                        Post comment
                                     </button>
                                 </div>
                             </div>
@@ -195,8 +195,8 @@
                         <div class="comment-login-prompt" id="commentLoginPrompt">
                             <div class="login-prompt-box">
                                 <i class="fa-solid fa-lock"></i>
-                                <span>登录后可以参与评论讨论</span>
-                                <a href="/login" class="btn btn-secondary btn-small">登录</a>
+                                <span>Log in to join the discussion</span>
+                                <a href="/login" class="btn btn-secondary btn-small">Log in</a>
                             </div>
                         </div>
 
@@ -212,7 +212,7 @@
         <!-- 加载指示器 -->
         <div id="loadingIndicator" class="loading-indicator" style="display: none;">
             <div class="spinner"></div>
-            <p>加载中...</p>
+            <p>Loading...</p>
         </div>
     </div>
 
